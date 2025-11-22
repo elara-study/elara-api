@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Elara.Infrasturcture
+namespace Elara.Infrastructure
 {
     public static class InfrastructureServiceRegistration
     {

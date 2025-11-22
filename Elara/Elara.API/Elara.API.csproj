@@ -16,9 +16,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Elara,Infrasturcture\Elara.Infrasturcture.csproj" />
+    <ProjectReference Include="..\Elara.Infrastructure\Elara.Infrastructure.csproj" />
     <ProjectReference Include="..\Elara.Application\Elara.Application.csproj" />
-    <ProjectReference Include="..\ELara.Presistence\Elara.Presistence.csproj" />
+    <ProjectReference Include="..\Elara.Persistence\Elara.Persistence.csproj" />
   </ItemGroup>
 
 </Project>

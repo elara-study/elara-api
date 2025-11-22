@@ -1,6 +1,6 @@
 ﻿using Elara.Application;
-using Elara.Presistence;
-using Elara.Infrasturcture;
+using Elara.Persistence;
+using Elara.Infrastructure;
 using Microsoft.OpenApi.Models;
 
 namespace Elara.API

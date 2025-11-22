@@ -5,7 +5,7 @@ VisualStudioVersion = 17.10.35122.118
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{A54467F3-D2DB-462E-AE71-CBEF28704936}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infrasturcture", "Infrasturcture", "{34B3022E-4240-44EF-9C00-59D409D94670}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infrastructure", "Infrastructure", "{34B3022E-4240-44EF-9C00-59D409D94670}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{0CCF7C80-7562-4462-A89D-E2FC36A9945A}"
 EndProject
@@ -17,9 +17,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elara.Domain", "Elara.Domai
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elara.Application", "Elara.Application\Elara.Application.csproj", "{056A1F70-0C9A-47FF-8F80-4F2B2CD43DB8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elara.Presistence", "ELara.Presistence\Elara.Presistence.csproj", "{54FC529B-4E2B-44D8-B2B1-427A59D657BE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elara.Persistence", "Elara.Persistence\Elara.Persistence.csproj", "{54FC529B-4E2B-44D8-B2B1-427A59D657BE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elara.Infrasturcture", "Elara,Infrasturcture\Elara.Infrasturcture.csproj", "{AB24A1CC-EC04-4422-8E1E-23DF305551C0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elara.Infrastructure", "Elara.Infrastructure\Elara.Infrastructure.csproj", "{AB24A1CC-EC04-4422-8E1E-23DF305551C0}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elara.API", "Elara.API\Elara.API.csproj", "{C571F4BA-3B07-4BD3-A4A9-FB57F6D89634}"
 EndProject

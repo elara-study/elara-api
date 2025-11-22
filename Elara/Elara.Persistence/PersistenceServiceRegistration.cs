@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 
-namespace Elara.Presistence
+namespace Elara.Persistence
 {
     public static class PersistenceServiceRegistration
     {
