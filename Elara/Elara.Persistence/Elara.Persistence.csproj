@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Elara.Domain\Elara.Domain.csproj" />
+    <ProjectReference Include="..\Elara.Application\Elara.Application.csproj" />
   </ItemGroup>
 
 </Project>
