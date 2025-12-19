@@ -1,4 +1,5 @@
 ﻿using Elara.Domain.Entities.JunctionTables;
+using Elara.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -16,13 +17,12 @@ namespace Elara.Domain.Entities.Administrative
 
         [Required]
         [MaxLength(50)]
-        public string Level { get; set; } = string.Empty;
+        public GradeLevel Level { get; set; } 
 
-        public bool IsActive { get; set; } = true;
 
         // Navigation properties
-        public virtual ICollection<StudentClass> StudentClasses { get; set; } = new List<StudentClass>();
-        public virtual ICollection<ClassTeacher> ClassTeachers { get; set; } = new List<ClassTeacher>();
+        public virtual ICollection<StudentClass> StudentClasses { get; set; }
+        public virtual ICollection<ClassTeacher> ClassTeachers { get; set; } 
 
     }
 }
