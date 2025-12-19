@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Elara.Domain.Entities.Users
+﻿namespace Elara.Domain.Entities.Users
 {
     public class Parent : User
     {
+        public string ParentId { get; set; }
         // Navigation Properties
-        public virtual ICollection<Student> Children { get; set; } = new List<Student>();
+        public virtual User parent { get; set; }
+
+        public virtual ICollection<Student> Childrens { get; set; }
     }
 }

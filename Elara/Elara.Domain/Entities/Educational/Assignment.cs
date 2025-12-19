@@ -43,7 +43,7 @@ namespace Elara.Domain.Entities.Educational
         public int? LessonId { get; set; }
 
         [Required]
-        public int TeacherId { get; set; }
+        public string TeacherId { get; set; }
 
 
         // Navigation Properties

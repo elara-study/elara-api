@@ -13,7 +13,7 @@ namespace Elara.Domain.Entities.JunctionTables
     public class StudentClass : BaseEntity
     {
         // Foreign Keys
-        public int StudentId { get; set; }
+        public string StudentId { get; set; }
         public int ClassId { get; set; }
 
         // Navigation Properties

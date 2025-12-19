@@ -1,12 +1,7 @@
 ﻿using Elara.Domain.Entities.Users;
+using Elara.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace Elara.Infrastructure.Data.Configurations.UsersConfig
 {
     public class StudentConfiguration : IEntityTypeConfiguration<Student>
@@ -19,23 +14,24 @@ namespace Elara.Infrastructure.Data.Configurations.UsersConfig
 
             builder.Property(s => s.LearningLevel)
             .HasMaxLength(50)
-            .HasDefaultValue("Beginner");
+            .HasDefaultValue(LearningLevel.Beginner);
 
-            builder.Property(s => s.DailyHintsUsed)
-               .HasDefaultValue(0);
+            builder.HasOne(S=>S.student).WithOne()
+                .HasForeignKey<Student>(s=>s.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
+           
+            builder.HasMany(s => s.StudentClasses).WithOne(s => s.Student)
+                .HasForeignKey(s => s.StudentId);
 
-            // Relationship with Parent
-            builder.HasOne(s => s.Parent)
-                .WithMany(p => p.Children)
-                .HasForeignKey(s => s.ParentId)
-                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasMany(s => s.StudentTeachers).WithOne(s => s.Student)
+              .HasForeignKey(s => s.StudentId);
+
+            builder.HasMany(s => s.StudentAchievements).WithOne(s => s.Student)
+              .HasForeignKey(s => s.StudentId);
 
             // Indexes
             builder.HasIndex(s => s.GradeLevel)
                 .HasDatabaseName("IX_Students_GradeLevel");
-
-            builder.HasIndex(s => s.ParentId)
-                .HasDatabaseName("IX_Students_ParentId");
         }
     }
 }

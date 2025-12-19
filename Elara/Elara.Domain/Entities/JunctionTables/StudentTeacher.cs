@@ -11,18 +11,14 @@ namespace Elara.Domain.Entities.JunctionTables
     public class StudentTeacher : BaseEntity
     {
         // Foreign Keys
-        public int StudentId { get; set; }
-        public int TeacherId { get; set; }
+        public string StudentId { get; set; }
+        public string TeacherId { get; set; }
 
         // Navigation Properties
-        [ForeignKey(nameof(StudentId))]
+       
         public virtual Student Student { get; set; } = null!;
 
-        [ForeignKey(nameof(TeacherId))]
         public virtual Teacher Teacher { get; set; } = null!;
-
-        // Additional Properties
-        public bool IsActive { get; set; } = true;
 
     }
 }

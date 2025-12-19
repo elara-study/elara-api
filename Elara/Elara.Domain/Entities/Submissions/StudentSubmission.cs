@@ -16,16 +16,11 @@ namespace Elara.Domain.Entities.Submissions
         public string? Content { get; set; }
 
         [Range(0, int.MaxValue)]
-        public int Score { get; set; } = 0;
+        public double Score { get; set; } = 0;
 
-        [MaxLength(2000)]
+
         public string? TeacherFeedback { get; set; }
-
-        [MaxLength(2000)]
         public string? AIFeedback { get; set; }
-
-        [Range(0, 10)]
-        public int AttemptsCount { get; set; } = 1;
 
         [Required]
         public DateTime SubmittedAt { get; set; } = DateTime.UtcNow;
