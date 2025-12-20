@@ -1,16 +1,11 @@
-﻿using Elara.Domain.Entities;
+using Elara.Domain.Entities;
 using Elara.Domain.Entities.Administrative;
 using Elara.Domain.Entities.Educational;
 using Elara.Domain.Entities.JunctionTables;
 using Elara.Domain.Entities.Submissions;
 using Elara.Domain.Entities.Users;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Elara.Infrastructure.Data
 {
@@ -128,7 +123,7 @@ namespace Elara.Infrastructure.Data
                 switch (entry.State)
                 {
                     case EntityState.Added:
-                        entry.Entity.CreatedAt = DateTime.UtcNow;
+                        entry.Property(nameof(BaseEntity.CreatedAt)).CurrentValue = DateTime.UtcNow;
                         break;
 
                     case EntityState.Modified:

@@ -4,8 +4,6 @@ namespace Elara.Domain.Entities.Users
 {
     public class User : BaseEntity
     {
-       
-       
         public DateTime? DateOfBirth { get; set; }
 
         public Gender Gender { get; set; }

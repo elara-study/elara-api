@@ -5,13 +5,12 @@ namespace Elara.Domain.Entities.Users
 {
     public class Teacher : BaseEntity
     {
-
         // Foreign Key
         public int? SubjectId { get; set; }
 
         public string TeacherId { get; set; }
-        // Navigation Properties
 
+        // Navigation Properties
         public virtual Subject? Subject { get; set; }
         public virtual User teacher { get; set; }
         public virtual ICollection<StudentTeacher> StudentTeachers { get; set; }

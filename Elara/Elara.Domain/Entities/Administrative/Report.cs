@@ -3,9 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Elara.Domain.Entities.Administrative
 {
@@ -41,9 +38,6 @@ namespace Elara.Domain.Entities.Administrative
 
         // Navigation Properties
         [ForeignKey(nameof(StudentId))]
-        public virtual User Student { get; set; } = null!;           // Changed to User to reflect the base user entity
-
-
-
+        public virtual User Student { get; set; } = null!;
     }
 }

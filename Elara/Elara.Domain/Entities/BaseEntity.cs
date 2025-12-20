@@ -11,7 +11,7 @@ namespace Elara.Domain.Entities
         public int Id { get; set; }
 
         // Auditing fields
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
 
         // Soft delete

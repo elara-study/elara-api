@@ -2,6 +2,7 @@
 using Elara.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
 namespace Elara.Infrastructure.Data.Configurations.UsersConfig
 {
     public class StudentConfiguration : IEntityTypeConfiguration<Student>
@@ -16,18 +17,22 @@ namespace Elara.Infrastructure.Data.Configurations.UsersConfig
             .HasMaxLength(50)
             .HasDefaultValue(LearningLevel.Beginner);
 
-            builder.HasOne(S=>S.student).WithOne()
+            builder.HasOne(S=>S.student)
+                .WithOne()
                 .HasForeignKey<Student>(s=>s.StudentId)
                 .OnDelete(DeleteBehavior.Cascade);
            
-            builder.HasMany(s => s.StudentClasses).WithOne(s => s.Student)
+            builder.HasMany(s => s.StudentClasses)
+                .WithOne(s => s.Student)
                 .HasForeignKey(s => s.StudentId);
 
-            builder.HasMany(s => s.StudentTeachers).WithOne(s => s.Student)
-              .HasForeignKey(s => s.StudentId);
+            builder.HasMany(s => s.StudentTeachers)
+                .WithOne(s => s.Student)
+                .HasForeignKey(s => s.StudentId);
 
-            builder.HasMany(s => s.StudentAchievements).WithOne(s => s.Student)
-              .HasForeignKey(s => s.StudentId);
+            builder.HasMany(s => s.StudentAchievements)
+                .WithOne(s => s.Student)
+                .HasForeignKey(s => s.StudentId);
 
             // Indexes
             builder.HasIndex(s => s.GradeLevel)
