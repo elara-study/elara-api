@@ -1,4 +1,4 @@
-﻿using Elara.Domain.Entities.Educational;
+using Elara.Domain.Entities.Educational;
 using Elara.Domain.Entities.JunctionTables;
 
 namespace Elara.Domain.Entities.Users
@@ -12,7 +12,7 @@ namespace Elara.Domain.Entities.Users
 
         // Navigation Properties
         public virtual Subject? Subject { get; set; }
-        public virtual User teacher { get; set; }
+        public virtual User User { get; set; }
         public virtual ICollection<StudentTeacher> StudentTeachers { get; set; }
         public virtual ICollection<ClassTeacher> ClassTeachers { get; set; }
         public virtual ICollection<Assignment> Assignments { get; set; }

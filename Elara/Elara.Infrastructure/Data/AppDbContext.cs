@@ -58,26 +58,9 @@ namespace Elara.Infrastructure.Data
 
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
-            // Configure TPH (Table Per Hierarchy) for User inheritance
-             ConfigureUserInheritance(modelBuilder);
-
             // Apply soft delete query filter
             ApplySoftDeleteQueryFilter(modelBuilder);
 
-        }
-
-        private void ConfigureUserInheritance(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<User>()
-                .HasDiscriminator<string>("UserType")
-                .HasValue<Student>("Student")
-                .HasValue<Teacher>("Teacher")
-                .HasValue<Parent>("Parent")
-                .HasValue<User>("User");
-
-            modelBuilder.Entity<User>()
-              .HasIndex("UserType")
-              .HasDatabaseName("IX_Users_UserType");
         }
 
         private void ApplySoftDeleteQueryFilter(ModelBuilder modelBuilder)
