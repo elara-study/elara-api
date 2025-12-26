@@ -1,11 +1,12 @@
 ﻿using Elara.Domain.Entities.Administrative;
 using Elara.Domain.Enums;
-namespace Elara.Domain.Entities.Users
+using Microsoft.AspNetCore.Identity;
+namespace Elara.Domain.Entities.IdentityEntites
 {
-    public class User : BaseEntity
+    public class ApplicationUser : IdentityUser<Guid>
     {
+        public string Name { get; set; }
         public DateTime? DateOfBirth { get; set; }
-
         public Gender Gender { get; set; }
 
         // Navigation properties

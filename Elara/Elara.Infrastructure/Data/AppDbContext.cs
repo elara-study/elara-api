@@ -4,19 +4,21 @@ using Elara.Domain.Entities.Educational;
 using Elara.Domain.Entities.JunctionTables;
 using Elara.Domain.Entities.Submissions;
 using Elara.Domain.Entities.Users;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using Elara.Domain.Entities.IdentityEntites;
 
 namespace Elara.Infrastructure.Data
 {
-    public class AppDbContext : DbContext
+    public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
         }
 
         #region User DbSets
-        public DbSet<User> Users { get; set; }
         public DbSet<Student> Students { get; set; }
         public DbSet<Teacher> Teachers { get; set; }
         public DbSet<Parent> Parents { get; set; }
@@ -69,29 +71,13 @@ namespace Elara.Infrastructure.Data
             {
                 if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
                 {
-                    // For User inheritance, apply filter only on the root type
-                    if (entityType.ClrType == typeof(User))
-                    {
-                        var parameter = Expression.Parameter(entityType.ClrType, "e");
-                        var body = Expression.Equal(
-                            Expression.Property(parameter, nameof(BaseEntity.IsDeleted)),
-                            Expression.Constant(false)
-                        );
-                        modelBuilder.Entity(entityType.ClrType)
-                            .HasQueryFilter(Expression.Lambda(body, parameter));
-                    }
-
-                    // For other entities not inheriting from User, apply normally
-                    else if (!typeof(User).IsAssignableFrom(entityType.ClrType))
-                    {
-                        var parameter = Expression.Parameter(entityType.ClrType, "e");
-                        var body = Expression.Equal(
-                            Expression.Property(parameter, nameof(BaseEntity.IsDeleted)),
-                            Expression.Constant(false)
-                        );
-                        modelBuilder.Entity(entityType.ClrType)
-                            .HasQueryFilter(Expression.Lambda(body, parameter));
-                    }
+                    var parameter = Expression.Parameter(entityType.ClrType, "e");
+                    var body = Expression.Equal(
+                        Expression.Property(parameter, nameof(BaseEntity.IsDeleted)),
+                        Expression.Constant(false)
+                    );
+                    modelBuilder.Entity(entityType.ClrType)
+                        .HasQueryFilter(Expression.Lambda(body, parameter));
                 }
             }
         }

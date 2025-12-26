@@ -1,4 +1,4 @@
-﻿using Elara.Domain.Entities.Users;
+﻿using Elara.Domain.Entities.IdentityEntites;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -34,10 +34,10 @@ namespace Elara.Domain.Entities.Administrative
 
         // Foreign Key
         [Required]
-        public int StudentId { get; set; }
+        public Guid StudentId { get; set; }
 
         // Navigation Properties
         [ForeignKey(nameof(StudentId))]
-        public virtual User Student { get; set; } = null!;
+        public virtual ApplicationUser Student { get; set; } = null!;
     }
 }

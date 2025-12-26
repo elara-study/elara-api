@@ -17,7 +17,7 @@ namespace Elara.Infrastructure.Data.Configurations.UsersConfig
 
             builder.HasOne(t => t.User)
                 .WithOne()
-                .HasForeignKey<Teacher>(t=>t.TeacherId)
+                .HasForeignKey<Teacher>(t => t.TeacherId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // Indexes

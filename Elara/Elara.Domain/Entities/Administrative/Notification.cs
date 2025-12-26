@@ -1,4 +1,4 @@
-﻿using Elara.Domain.Entities.Users;
+﻿using Elara.Domain.Entities.IdentityEntites;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -16,10 +16,10 @@ namespace Elara.Domain.Entities.Administrative
 
         // Foreign Key
         [Required]
-        public int UserId { get; set; }
+        public Guid UserId { get; set; }
 
         // Navigation Properties
         [ForeignKey(nameof(UserId))]
-        public virtual User User { get; set; } = null!;
+        public virtual ApplicationUser User { get; set; } = null!;
     }
 }
