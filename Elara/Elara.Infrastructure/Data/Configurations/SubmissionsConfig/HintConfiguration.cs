@@ -27,6 +27,12 @@ namespace Elara.Infrastructure.Data.Configurations.SubmissionsConfig
             builder.Property(h => h.HintLevel)
                 .HasDefaultValue(1);
 
+            builder.Property(h => h.StudentId)
+                .IsRequired();
+            
+            builder.Property(h=>h.QuestionId)
+                .IsRequired();
+
             // Indexes
             builder.HasIndex(h => h.QuestionId)
                 .HasDatabaseName("IX_Hints_QuestionId");
@@ -44,9 +50,9 @@ namespace Elara.Infrastructure.Data.Configurations.SubmissionsConfig
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(h => h.Student)
-                .WithMany(s => s.Hints)
+                .WithMany()
                 .HasForeignKey(h => h.StudentId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

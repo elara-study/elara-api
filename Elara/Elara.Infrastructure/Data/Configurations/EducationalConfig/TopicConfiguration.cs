@@ -27,6 +27,9 @@ namespace Elara.Infrastructure.Data.Configurations.EducationalConfig
             builder.Property(t => t.Content)
                 .HasMaxLength(5000);
 
+            builder.Property(t => t.SubjectId)
+                .IsRequired();
+
             // Indexes
             builder.HasIndex(t => t.Title)
                 .HasDatabaseName("IX_Topics_Title");
@@ -39,16 +42,6 @@ namespace Elara.Infrastructure.Data.Configurations.EducationalConfig
                 .WithMany(s => s.Topics)
                 .HasForeignKey(t => t.SubjectId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            builder.HasMany(t => t.Lessons)
-                .WithOne(l => l.Topic)
-                .HasForeignKey(l => l.TopicId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            builder.HasMany(t => t.Assignments)
-                .WithOne(a => a.Topic)
-                .HasForeignKey(a => a.TopicId)
-                .OnDelete(DeleteBehavior.Restrict);
         }
 
     }

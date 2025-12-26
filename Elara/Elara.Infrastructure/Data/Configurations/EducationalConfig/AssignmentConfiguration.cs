@@ -39,6 +39,9 @@ namespace Elara.Infrastructure.Data.Configurations.EducationalConfig
                 .HasConversion<string>()
                 .HasDefaultValue(DifficultyLevel.Easy);
 
+            builder.Property(a => a.TopicId)
+                .IsRequired();
+
             // Indexes
             builder.HasIndex(a => a.DueDate)
                 .HasDatabaseName("IX_Assignments_DueDate");
@@ -53,27 +56,18 @@ namespace Elara.Infrastructure.Data.Configurations.EducationalConfig
             builder.HasOne(a => a.Topic)
                 .WithMany(t => t.Assignments)
                 .HasForeignKey(a => a.TopicId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(a => a.Lesson)
                 .WithMany(l => l.Assignments)
                 .HasForeignKey(a => a.LessonId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(a => a.Teacher)
                 .WithMany(t => t.Assignments)
                 .HasForeignKey(a => a.TeacherId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder.HasMany(a => a.Questions)
-                .WithOne(q => q.Assignment)
-                .HasForeignKey(q => q.AssignmentId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasMany(a => a.Submissions)
-                .WithOne(s => s.Assignment)
-                .HasForeignKey(s => s.AssignmentId)
-                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

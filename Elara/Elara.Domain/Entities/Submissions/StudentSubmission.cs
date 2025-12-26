@@ -7,33 +7,18 @@ namespace Elara.Domain.Entities.Submissions
 {
     public class StudentSubmission : BaseEntity
     {
-        [MaxLength(10000)]
         public string? Content { get; set; }
-
-        [Range(0, int.MaxValue)]
         public double Score { get; set; } = 0;
-
-
         public string? TeacherFeedback { get; set; }
         public string? AIFeedback { get; set; }
 
-        [Required]
-        public DateTime SubmittedAt { get; set; } = DateTime.UtcNow;
-
         // Foreign Keys
-        [Required]
         public int StudentId { get; set; }
-
-        [Required]
         public int AssignmentId { get; set; }
 
         // Navigation Properties
-        [ForeignKey(nameof(StudentId))]
         public virtual Student Student { get; set; } = null!;
-
-        [ForeignKey(nameof(AssignmentId))]
         public virtual Assignment Assignment { get; set; } = null!;
-
 
         // Validation
         public bool ValidateScore()

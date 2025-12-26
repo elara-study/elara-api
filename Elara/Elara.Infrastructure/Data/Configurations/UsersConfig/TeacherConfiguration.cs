@@ -20,18 +20,6 @@ namespace Elara.Infrastructure.Data.Configurations.UsersConfig
                 .HasForeignKey<Teacher>(t=>t.TeacherId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasMany(t=>t.ClassTeachers)
-                .WithOne(t=>t.Teacher)
-                .HasForeignKey(s => s.TeacherId);
-
-            builder.HasMany(t => t.Assignments)
-                .WithOne(t => t.Teacher)
-                .HasForeignKey(s => s.TeacherId);
-
-            builder.HasMany(t => t.StudentTeachers)
-                .WithOne(t => t.Teacher)
-                .HasForeignKey(s => s.TeacherId);
-            
             // Indexes
             builder.HasIndex(t => t.SubjectId)
                 .HasDatabaseName("IX_Teachers_SubjectId");

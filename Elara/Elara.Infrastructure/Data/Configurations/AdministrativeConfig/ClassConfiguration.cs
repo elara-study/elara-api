@@ -27,8 +27,6 @@ namespace Elara.Infrastructure.Data.Configurations.AdministrativeConfig
             builder.HasIndex(c => c.Level)
                 .HasDatabaseName("IX_Classes_Level");
 
-            builder.HasIndex(c => c.IsActive)
-                .HasDatabaseName("IX_Classes_IsActive");
         }
     }
 }

@@ -8,17 +8,9 @@ namespace Elara.Domain.Entities.Educational
 {
     public class Assignment : BaseEntity
     {
-        [Required]
-        [MaxLength(200)]
-        public string Title { get; set; } = string.Empty;
-
-        [MaxLength(2000)]
+        public string Title { get; set; } 
         public string? Description { get; set; }
-
-        [Required]
         public DateTime DueDate { get; set; }
-
-        public bool IsActive { get; set; } = true;
 
         [Range(0, 1000)]
         public int MaxScore { get; set; } = 100;
@@ -27,32 +19,21 @@ namespace Elara.Domain.Entities.Educational
 
         public bool IsAIGenerated { get; set; } = false;
 
-        [Required]
         public DifficultyLevel DifficultyLevel { get; set; } = DifficultyLevel.Easy;
 
 
         // Foreign Key
-        [Required]
         public int TopicId { get; set; }
-
         public int? LessonId { get; set; }
-
-        [Required]
-        public string TeacherId { get; set; }
+        public string? TeacherId { get; set; }
 
 
         // Navigation Properties
-        [ForeignKey(nameof(TopicId))]
         public virtual Topic Topic { get; set; } = null!;
-
-        [ForeignKey(nameof(LessonId))]
         public virtual Lesson? Lesson { get; set; }
-
-        [ForeignKey(nameof(TeacherId))]
-        public virtual Teacher Teacher { get; set; } = null!;
-
-        public virtual ICollection<Question> Questions { get; set; } = new List<Question>();
-        public virtual ICollection<StudentSubmission> Submissions { get; set; } = new List<StudentSubmission>();
+        public virtual Teacher?Teacher { get; set; } 
+        public virtual ICollection<Question> Questions { get; set; }
+        public virtual ICollection<StudentSubmission> Submissions { get; set; }
 
 
         // Validation Method

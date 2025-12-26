@@ -29,10 +29,10 @@ namespace Elara.Infrastructure.Data.Configurations.SubmissionsConfig
             builder.Property(s => s.AIFeedback)
                 .HasMaxLength(2000);
 
-            builder.Property(s => s.AttemptsCount)
-                .HasDefaultValue(1);
+            builder.Property(s => s.StudentId)
+                .IsRequired();
 
-            builder.Property(s => s.SubmittedAt)
+            builder.Property(s => s.AssignmentId)
                 .IsRequired();
 
             // Indexes
@@ -45,19 +45,16 @@ namespace Elara.Infrastructure.Data.Configurations.SubmissionsConfig
             builder.HasIndex(s => new { s.StudentId, s.AssignmentId })
                 .HasDatabaseName("IX_StudentSubmissions_StudentId_AssignmentId");
 
-            builder.HasIndex(s => s.SubmittedAt)
-                .HasDatabaseName("IX_StudentSubmissions_SubmittedAt");
-
             // Relationships
-            builder.HasOne(s => s.Student)
-                .WithMany(st => st.Submissions)
-                .HasForeignKey(s => s.StudentId)
-                .OnDelete(DeleteBehavior.Restrict);
-
             builder.HasOne(s => s.Assignment)
                 .WithMany(a => a.Submissions)
                 .HasForeignKey(s => s.AssignmentId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasOne(s=>s.Student)
+                .WithMany()
+                .HasForeignKey(s=>s.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

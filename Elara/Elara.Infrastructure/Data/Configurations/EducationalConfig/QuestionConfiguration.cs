@@ -41,6 +41,10 @@ namespace Elara.Infrastructure.Data.Configurations.EducationalConfig
                 .HasDefaultValue(10)
                 .HasPrecision(5, 2);
 
+            builder.Property(q => q.AssignmentId)
+                .IsRequired();
+
+
             // Indexes
             builder.HasIndex(q => q.AssignmentId)
                 .HasDatabaseName("IX_Questions_AssignmentId");
@@ -52,15 +56,12 @@ namespace Elara.Infrastructure.Data.Configurations.EducationalConfig
                 .HasDatabaseName("IX_Questions_DifficultyLevel");
 
             // Relationships
+
             builder.HasOne(q => q.Assignment)
                 .WithMany(a => a.Questions)
                 .HasForeignKey(q => q.AssignmentId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasMany(q => q.Hints)
-                .WithOne(h => h.Question)
-                .HasForeignKey(h => h.QuestionId)
-                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

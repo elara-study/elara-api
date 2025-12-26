@@ -19,7 +19,7 @@ namespace Elara.Infrastructure.Data.Configurations.EducationalConfig
 
             builder.Property(s => s.Name)
                 .IsRequired()
-                .HasMaxLength(100);
+                .HasMaxLength(100).HasDefaultValue();
 
             builder.Property(s => s.Description)
                 .HasMaxLength(500);
@@ -36,10 +36,6 @@ namespace Elara.Infrastructure.Data.Configurations.EducationalConfig
                 .HasDatabaseName("IX_Subjects_GradeLevel");
 
             // Relationships
-            builder.HasMany(s => s.Topics)
-                .WithOne(t => t.Subject)
-                .HasForeignKey(t => t.SubjectId)
-                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
