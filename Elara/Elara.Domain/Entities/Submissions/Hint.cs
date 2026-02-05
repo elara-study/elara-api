@@ -16,7 +16,7 @@ namespace Elara.Domain.Entities.Submissions
 
         // Foreign Keys
         public int QuestionId { get; set; }
-        public int StudentId { get; set; }
+        public Guid StudentId { get; set; }
 
         // Navigation Properties
         public virtual Question Question { get; set; } = null!;

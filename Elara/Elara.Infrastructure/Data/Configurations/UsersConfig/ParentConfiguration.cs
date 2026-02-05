@@ -8,15 +8,16 @@ namespace Elara.Infrastructure.Data.Configurations.UsersConfig
     {
         public void Configure(EntityTypeBuilder<Parent> builder)
         {
+            builder.HasKey(p => p.Id);
+            
+            builder.Property(p => p.Id)
+                .ValueGeneratedNever();
+
             builder.HasOne(p => p.User)
                 .WithOne()
-                .HasForeignKey<Parent>(p => p.ParentId)
+                .HasForeignKey<Parent>(p => p.Id)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasMany(p => p.Childrens)
-              .WithOne()
-              .HasForeignKey("ParentId")
-              .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

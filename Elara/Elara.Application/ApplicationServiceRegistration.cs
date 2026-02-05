@@ -1,36 +1,24 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using MediatR;
 using AutoMapper;
-using System.Threading.Tasks;
+using FluentValidation;
+using Elara.Application.Behaviors;
 
 namespace Elara.Application
 {
-
     public static class ApplicationServiceRegistration
     {
         public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
-            
-            services.AddAutoMapper(e=>
-            {
-                e.AddMaps(Assembly.GetExecutingAssembly());
-            });
+            var assembly = Assembly.GetExecutingAssembly();
 
-            
-            services.AddMediatR(m =>
-            {
-                m.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
-            });
+            services.AddAutoMapper(config => config.AddMaps(assembly));
+            services.AddMediatR(config => config.RegisterServicesFromAssembly(assembly));
+            services.AddValidatorsFromAssembly(assembly);
+            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
             return services;
         }
     }
-
-
-
 }

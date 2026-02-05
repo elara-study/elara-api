@@ -3,17 +3,14 @@ using Elara.Domain.Entities.JunctionTables;
 using Elara.Domain.Enums;
 namespace Elara.Domain.Entities.Users
 {
-    public class Student : BaseEntity
+    public class Student : BaseEntity<Guid>
     {
         public GradeLevel GradeLevel { get; set; }
-
         public LearningLevel LearningLevel { get; set; } = LearningLevel.Beginner;
-
         public bool IsActive { get; set; } = true;
 
         // Foreign Keys
-        public Guid StudentId { get; set; }
-        public int? ParentId { get; set; }
+        public Guid? ParentId { get; set; }
 
         // Navigation Properties
         public virtual Parent? Parent { get; set; }

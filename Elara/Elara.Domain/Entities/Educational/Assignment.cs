@@ -25,7 +25,7 @@ namespace Elara.Domain.Entities.Educational
         // Foreign Key
         public int TopicId { get; set; }
         public int? LessonId { get; set; }
-        public string? TeacherId { get; set; }
+        public Guid? TeacherId { get; set; }
 
 
         // Navigation Properties

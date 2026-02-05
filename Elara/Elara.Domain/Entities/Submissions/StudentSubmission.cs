@@ -13,7 +13,7 @@ namespace Elara.Domain.Entities.Submissions
         public string? AIFeedback { get; set; }
 
         // Foreign Keys
-        public int StudentId { get; set; }
+        public Guid StudentId { get; set; }
         public int AssignmentId { get; set; }
 
         // Navigation Properties

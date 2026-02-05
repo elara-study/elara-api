@@ -31,7 +31,7 @@ namespace Elara.Infrastructure.Data.Configurations.JunctionTablesConfig
             builder.HasOne(st => st.Teacher)
                 .WithMany(t => t.StudentTeachers)
                 .HasForeignKey(st => st.TeacherId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

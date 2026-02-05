@@ -8,7 +8,7 @@ namespace Elara.Domain.Entities.JunctionTables
     {
         // Foreign Keys
         public int ClassId { get; set; }
-        public string TeacherId { get; set; }
+        public Guid TeacherId { get; set; }
 
         // Navigation Properties
         [ForeignKey(nameof(ClassId))]

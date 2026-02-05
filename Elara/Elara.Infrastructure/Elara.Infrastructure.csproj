@@ -26,4 +26,8 @@
     <ProjectReference Include="..\Elara.Application\Elara.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Migrations\" />
+  </ItemGroup>
+
 </Project>

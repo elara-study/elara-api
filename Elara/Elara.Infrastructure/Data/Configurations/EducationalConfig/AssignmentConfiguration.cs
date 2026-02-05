@@ -56,17 +56,17 @@ namespace Elara.Infrastructure.Data.Configurations.EducationalConfig
             builder.HasOne(a => a.Topic)
                 .WithMany(t => t.Assignments)
                 .HasForeignKey(a => a.TopicId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasOne(a => a.Lesson)
                 .WithMany(l => l.Assignments)
                 .HasForeignKey(a => a.LessonId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.SetNull);
 
             builder.HasOne(a => a.Teacher)
                 .WithMany(t => t.Assignments)
                 .HasForeignKey(a => a.TeacherId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.SetNull);
 
         }
     }

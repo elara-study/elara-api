@@ -60,9 +60,24 @@ namespace Elara.Infrastructure.Data
 
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
+            // Configure Identity table names
+            ConfigureIdentityTables(modelBuilder);
+
             // Apply soft delete query filter
             ApplySoftDeleteQueryFilter(modelBuilder);
 
+        }
+
+        private void ConfigureIdentityTables(ModelBuilder modelBuilder)
+        {
+            // Rename Identity tables
+            modelBuilder.Entity<ApplicationUser>().ToTable("Users");
+            modelBuilder.Entity<ApplicationRole>().ToTable("Roles");
+            modelBuilder.Entity<IdentityUserRole<Guid>>().ToTable("UserRoles");
+            modelBuilder.Entity<IdentityUserClaim<Guid>>().ToTable("UserClaims");
+            modelBuilder.Entity<IdentityUserLogin<Guid>>().ToTable("UserLogins");
+            modelBuilder.Entity<IdentityUserToken<Guid>>().ToTable("UserTokens");
+            modelBuilder.Entity<IdentityRoleClaim<Guid>>().ToTable("RoleClaims");
         }
 
         private void ApplySoftDeleteQueryFilter(ModelBuilder modelBuilder)

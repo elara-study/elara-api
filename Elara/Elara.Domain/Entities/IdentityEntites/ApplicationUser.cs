@@ -1,5 +1,4 @@
 ﻿using Elara.Domain.Entities.Administrative;
-using Elara.Domain.Enums;
 using Microsoft.AspNetCore.Identity;
 namespace Elara.Domain.Entities.IdentityEntites
 {
@@ -7,7 +6,6 @@ namespace Elara.Domain.Entities.IdentityEntites
     {
         public string Name { get; set; }
         public DateTime? DateOfBirth { get; set; }
-        public Gender Gender { get; set; }
 
         // Navigation properties
         public virtual ICollection<Notification> Notifications { get; set; }

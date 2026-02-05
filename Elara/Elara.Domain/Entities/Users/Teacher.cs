@@ -4,12 +4,10 @@ using Elara.Domain.Entities.JunctionTables;
 
 namespace Elara.Domain.Entities.Users
 {
-    public class Teacher : BaseEntity
+    public class Teacher : BaseEntity<Guid>
     {
         // Foreign Key
         public int? SubjectId { get; set; }
-
-        public Guid TeacherId { get; set; }
 
         // Navigation Properties
         public virtual Subject? Subject { get; set; }
