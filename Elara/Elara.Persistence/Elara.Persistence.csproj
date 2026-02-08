@@ -8,7 +8,6 @@
 
   <ItemGroup>
     <Folder Include="Configurations\" />
-    <Folder Include="Repositories\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -18,6 +17,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Elara.Domain\Elara.Domain.csproj" />
     <ProjectReference Include="..\Elara.Application\Elara.Application.csproj" />
+    <ProjectReference Include="..\Elara.Infrastructure\Elara.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

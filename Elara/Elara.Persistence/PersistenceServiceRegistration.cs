@@ -1,11 +1,11 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Elara.Application.Contracts.Persistence;
+using Elara.Application.Contracts.Persistence.Administrative;
+using Elara.Application.Contracts.Persistence.Users;
+using Elara.Persistence.Repositories;
+using Elara.Persistence.Repositories.Administrative;
+using Elara.Persistence.Repositories.Users;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 
 namespace Elara.Persistence
 {
@@ -13,6 +13,13 @@ namespace Elara.Persistence
     {
         public static IServiceCollection AddPersistenceServices(this IServiceCollection services, IConfiguration configuration)
         {
+            // Register generic repository
+            services.AddScoped(typeof(IAsyncRepository<,>), typeof(BaseRepository<,>));
+            
+            // Register specific repositories
+            services.AddScoped<ITeacherRepository, TeacherRepository>();
+            services.AddScoped<IClassRepository, ClassRepository>();
+
             return services;
         }
     }

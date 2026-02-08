@@ -15,5 +15,9 @@ namespace Elara.Domain.Entities.Users
         public virtual ICollection<StudentTeacher> StudentTeachers { get; set; }
         public virtual ICollection<ClassTeacher> ClassTeachers { get; set; }
         public virtual ICollection<Assignment> Assignments { get; set; }
+
+        public virtual ICollection<Roadmap> Roadmaps { get; set; }
+        
+
     }
 }

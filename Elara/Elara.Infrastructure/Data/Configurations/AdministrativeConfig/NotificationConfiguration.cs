@@ -21,7 +21,7 @@ namespace Elara.Infrastructure.Data.Configurations.AdministrativeConfig
 
             builder.Property(n => n.NotificationDate)
                .IsRequired()
-               .HasDefaultValueSql("GETUTCDATE()");
+               .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
             // Indexes
             builder.HasIndex(n => n.UserId)

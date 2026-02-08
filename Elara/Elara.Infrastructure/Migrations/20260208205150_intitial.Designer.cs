@@ -3,6 +3,7 @@ using System;
 using Elara.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Elara.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260208205150_intitial")]
+    partial class intitial
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -109,7 +112,7 @@ namespace Elara.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("integer");
 
-                    b.Property<int?>("RoadmapId")
+                    b.Property<int>("RoadmapId")
                         .HasColumnType("integer");
 
                     b.Property<int>("SubjectId")
@@ -1294,7 +1297,8 @@ namespace Elara.Infrastructure.Migrations
                     b.HasOne("Elara.Domain.Entities.Educational.Roadmap", "Roadmap")
                         .WithMany("Classes")
                         .HasForeignKey("RoadmapId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .IsRequired();
 
                     b.HasOne("Elara.Domain.Entities.Educational.Subject", "Subject")
                         .WithMany()

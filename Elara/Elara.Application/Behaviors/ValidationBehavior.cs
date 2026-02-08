@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Elara.Application.Exceptions;
+using System;
 
 namespace Elara.Application.Behaviors
 {
@@ -30,7 +31,7 @@ namespace Elara.Application.Behaviors
 
                 if (failures.Count != 0)
                 {
-                    throw new ValidationException(failures);
+                    throw new Exceptions.ValidationException(failures);
                 }
             }
 

@@ -11,10 +11,12 @@ namespace Elara.Domain.Entities.Educational
 
         // Foreign Key
         public int SubjectId { get; set; }
+        
+        public int RoadmapId { get; set; }
 
         // Navigation Property
         public virtual Subject Subject { get; set; } = null!;
-
+        public virtual Roadmap Roadmap { get; set; }
         public virtual ICollection<Lesson> Lessons { get; set; }
         public virtual ICollection<Assignment> Assignments { get; set; }
     }

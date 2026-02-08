@@ -14,7 +14,7 @@ namespace Elara.Infrastructure.Data.Configurations.AdministrativeConfig
 
             builder.Property(r => r.GeneratedDate)
                 .IsRequired()
-                .HasDefaultValueSql("GETUTCDATE()");
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
             builder.Property(r => r.AverageScore)
                 .HasDefaultValue(0)
