@@ -8,8 +8,7 @@ namespace Elara.Infrastructure.Data
         public AppDbContext CreateDbContext(string[] args)
         {
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-            optionsBuilder.UseSqlServer(
-                "Server=.;Database=ElaraDb;Trusted_Connection=True;",
+            optionsBuilder.UseNpgsql(
                 b => b.MigrationsAssembly("Elara.Infrastructure")
             ); 
 

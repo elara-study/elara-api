@@ -30,6 +30,7 @@ namespace Elara.Infrastructure.Data
         public DbSet<Lesson> Lessons { get; set; }
         public DbSet<Assignment> Assignments { get; set; }
         public DbSet<Question> Questions { get; set; }
+        public DbSet<Roadmap> Roadmaps { get; set; }
         public DbSet<EducationalVideo> EducationalVideos { get; set; }
         #endregion
 

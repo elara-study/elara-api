@@ -19,7 +19,7 @@ namespace Elara.Infrastructure.Data.Configurations.JunctionTablesConfig
 
             builder.Property(sa => sa.EarnedAt)
                 .IsRequired()
-                .HasDefaultValueSql("GETUTCDATE()");
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
 
             // Composite Index
