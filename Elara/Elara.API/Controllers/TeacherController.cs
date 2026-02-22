@@ -1,4 +1,5 @@
-﻿using Elara.Application.Exceptions;
+using Asp.Versioning;
+using Elara.Application.Exceptions;
 using Elara.Application.Features.Administrative.Classes.Commands.Create_Class;
 using Elara.Application.Features.Users.Teachers.Queries.Get_Class_Info;
 using Elara.Application.Features.Users.Teachers.Queries.GetTeacherClasses;
@@ -10,7 +11,8 @@ using System.Security.Claims;
 namespace Elara.API.Controllers
 {
     [ApiController]
-    [Route("api/teacher")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/teacher")]
     public class TeacherController : ControllerBase
     {
         private readonly IMediator _mediator;

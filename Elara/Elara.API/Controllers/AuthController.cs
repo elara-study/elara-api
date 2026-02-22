@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Elara.Application.Exceptions;
 using Elara.Application.Features.Auth.Commands.RegisterUser;
 using MediatR;
@@ -6,7 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace Elara.API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     public class AuthController : ControllerBase
     {
         private readonly IMediator _mediator;
