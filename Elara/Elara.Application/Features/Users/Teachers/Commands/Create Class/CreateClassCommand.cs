@@ -1,19 +1,22 @@
-﻿using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using MediatR;
 
 namespace Elara.Application.Features.Administrative.Classes.Commands.Create_Class
 {
     public class CreateClassCommand : IRequest
     {
-        public string Name { get; set; } = string.Empty;
-        public int Grade { get; set; }
+        public CreateClassCommand(string name, int grade, string subject, Guid teacherId, string? roadmapName = null)
+        {
+            Name = name;
+            Grade = grade;
+            Subject = subject;
+            TeacherId = teacherId;
+            RoadmapName = roadmapName;
+        }
 
-        public string Subject { get; set; } = string.Empty;
-        public string? RoadmapName { get; set; }
-        public Guid TeacherId { get; set; }
+        public string Name { get; }
+        public int Grade { get; }
+        public string Subject { get; }
+        public string? RoadmapName { get; }
+        public Guid TeacherId { get; }
     }
 }

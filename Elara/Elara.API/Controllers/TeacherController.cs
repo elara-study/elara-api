@@ -58,7 +58,7 @@ namespace Elara.API.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> CreateClass([FromBody] CreateClassCommand command)
+        public async Task<IActionResult> CreateClass([FromBody] CreateClassRequest request)
         {
             var teacherId = GetTeacherIdFromToken();
             if (teacherId is null)
@@ -66,7 +66,7 @@ namespace Elara.API.Controllers
 
             try
             {
-                command.TeacherId = teacherId.Value;
+                var command = new CreateClassCommand(request.Name, request.Grade, request.Subject, teacherId.Value, request.RoadmapName);
                 await _mediator.Send(command);
                 return NoContent();
             }
