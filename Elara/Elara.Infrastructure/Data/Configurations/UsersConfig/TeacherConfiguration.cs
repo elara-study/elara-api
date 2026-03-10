@@ -1,4 +1,5 @@
 using Elara.Domain.Entities.Users;
+using Elara.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -13,7 +14,7 @@ namespace Elara.Infrastructure.Data.Configurations.UsersConfig
             builder.Property(t => t.Id)
                 .ValueGeneratedNever();
 
-            builder.HasOne(t => t.User)
+            builder.HasOne<ApplicationUser>()
                 .WithOne()
                 .HasForeignKey<Teacher>(t => t.Id)
                 .OnDelete(DeleteBehavior.Cascade);

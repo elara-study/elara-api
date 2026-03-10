@@ -1,14 +1,6 @@
-﻿using AutoMapper;
-using Elara.Application.Contracts.Persistence;
+using AutoMapper;
 using Elara.Application.Contracts.Persistence.Administrative;
-using Elara.Domain.Entities.Administrative;
 using MediatR;
-using Microsoft.AspNetCore.Mvc.Filters;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Elara.Application.Features.Users.Teachers.Queries.Get_Class_Info
 {

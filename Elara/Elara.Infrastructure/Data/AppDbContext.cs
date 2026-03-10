@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
-using Elara.Domain.Entities.IdentityEntites;
+using Elara.Infrastructure.Identity;
 
 namespace Elara.Infrastructure.Data
 {

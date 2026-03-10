@@ -1,5 +1,6 @@
 using Elara.Domain.Entities.Users;
 using Elara.Domain.Enums;
+using Elara.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -22,7 +23,7 @@ namespace Elara.Infrastructure.Data.Configurations.UsersConfig
                 .HasMaxLength(50)
                 .HasDefaultValue(LearningLevel.Beginner);
 
-            builder.HasOne(s => s.User)
+            builder.HasOne<ApplicationUser>()
                 .WithOne()
                 .HasForeignKey<Student>(s => s.Id)
                 .OnDelete(DeleteBehavior.Cascade);

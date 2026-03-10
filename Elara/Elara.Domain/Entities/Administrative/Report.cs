@@ -1,8 +1,4 @@
-﻿using Elara.Domain.Entities.IdentityEntites;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Elara.Domain.Entities.Administrative
 {
@@ -18,7 +14,8 @@ namespace Elara.Domain.Entities.Administrative
         public string? ImprovementTips { get; set; }
 
         [MaxLength(2000)]
-        public string? WeakAreas { get; set; } 
+        public string? WeakAreas { get; set; }
+
         [MaxLength(2000)]
         public string? StrengthAreas { get; set; }
 
@@ -35,9 +32,5 @@ namespace Elara.Domain.Entities.Administrative
         // Foreign Key
         [Required]
         public Guid StudentId { get; set; }
-
-        // Navigation Properties
-        [ForeignKey(nameof(StudentId))]
-        public virtual ApplicationUser Student { get; set; } = null!;
     }
 }

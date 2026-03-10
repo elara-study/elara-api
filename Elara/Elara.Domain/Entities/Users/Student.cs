@@ -1,6 +1,6 @@
-using Elara.Domain.Entities.IdentityEntites;
 using Elara.Domain.Entities.JunctionTables;
 using Elara.Domain.Enums;
+
 namespace Elara.Domain.Entities.Users
 {
     public class Student : BaseEntity<Guid>
@@ -14,9 +14,8 @@ namespace Elara.Domain.Entities.Users
 
         // Navigation Properties
         public virtual Parent? Parent { get; set; }
-        public virtual ApplicationUser User { get; set; }
-        public virtual ICollection<StudentClass> StudentClasses { get; set; } 
-        public virtual ICollection<StudentTeacher> StudentTeachers { get; set; }
-        public virtual ICollection<StudentAchievement> StudentAchievements { get; set; } 
+        public virtual ICollection<StudentClass> StudentClasses { get; set; } = [];
+        public virtual ICollection<StudentTeacher> StudentTeachers { get; set; } = [];
+        public virtual ICollection<StudentAchievement> StudentAchievements { get; set; } = [];
     }
 }

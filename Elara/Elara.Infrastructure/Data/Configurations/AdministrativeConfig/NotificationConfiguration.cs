@@ -1,4 +1,5 @@
-﻿using Elara.Domain.Entities.Administrative;
+using Elara.Domain.Entities.Administrative;
+using Elara.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -37,7 +38,7 @@ namespace Elara.Infrastructure.Data.Configurations.AdministrativeConfig
                 .HasDatabaseName("IX_Notifications_UserId_IsRead");
 
             // Relationships
-            builder.HasOne(n => n.User)
+            builder.HasOne<ApplicationUser>()
                 .WithMany(u => u.Notifications)
                 .HasForeignKey(n => n.UserId)
                 .OnDelete(DeleteBehavior.Cascade);

@@ -1,7 +1,6 @@
-﻿using System;
 using Microsoft.AspNetCore.Identity;
 
-namespace Elara.Domain.Entities.IdentityEntites
+namespace Elara.Infrastructure.Identity
 {
     public class ApplicationRole : IdentityRole<Guid>
     {

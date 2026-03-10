@@ -1,7 +1,7 @@
 using Elara.Application.Contracts.Identity;
-using Elara.Domain.Entities.IdentityEntites;
 using Elara.Infrastructure.Auth;
 using Elara.Infrastructure.Data;
+using Elara.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -16,6 +16,7 @@ namespace Elara.Infrastructure
                 .AddDefaultTokenProviders();
 
             services.AddScoped<ITokenService, JwtTokenService>();
+            services.AddScoped<IIdentityService, IdentityService>();
 
             return services;
         }

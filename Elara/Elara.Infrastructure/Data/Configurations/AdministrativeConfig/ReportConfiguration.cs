@@ -1,4 +1,5 @@
-﻿using Elara.Domain.Entities.Administrative;
+using Elara.Domain.Entities.Administrative;
+using Elara.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -53,8 +54,8 @@ namespace Elara.Infrastructure.Data.Configurations.AdministrativeConfig
                 .HasDatabaseName("IX_Reports_StudentId_GeneratedDate");
 
             // Relationships
-            builder.HasOne(r => r.Student)
-                .WithMany(s => s.Reports)
+            builder.HasOne<ApplicationUser>()
+                .WithMany(u => u.Reports)
                 .HasForeignKey(r => r.StudentId)
                 .OnDelete(DeleteBehavior.Cascade);
         }

@@ -1,4 +1,4 @@
-using Elara.Domain.Entities.IdentityEntites;
+using Elara.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
