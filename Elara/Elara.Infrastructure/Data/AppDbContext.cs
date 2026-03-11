@@ -4,6 +4,7 @@ using Elara.Domain.Entities.Educational;
 using Elara.Domain.Entities.JunctionTables;
 using Elara.Domain.Entities.Submissions;
 using Elara.Domain.Entities.Users;
+
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -49,7 +50,6 @@ namespace Elara.Infrastructure.Data
         #region Junction Tables DbSets
         public DbSet<StudentTeacher> StudentTeachers { get; set; }
         public DbSet<StudentClass> StudentClasses { get; set; }
-        public DbSet<ClassTeacher> ClassTeachers { get; set; }
         public DbSet<StudentAchievement> StudentAchievements { get; set; }
         public DbSet<LessonVideo> LessonVideos { get; set; }
         #endregion

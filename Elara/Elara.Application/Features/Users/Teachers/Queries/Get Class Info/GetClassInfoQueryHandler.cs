@@ -21,8 +21,7 @@ namespace Elara.Application.Features.Users.Teachers.Queries.Get_Class_Info
             if (classEntity == null)
                 throw new KeyNotFoundException($"Class with ID {request.ClassId} not found.");
 
-            var isOwner = classEntity.ClassTeachers.Any(ct => ct.TeacherId == request.TeacherId);
-            if (!isOwner)
+            if (classEntity.TeacherId != request.TeacherId)
                 throw new UnauthorizedAccessException("You do not have access to this class.");
 
             return _mapper.Map<GetClassInfoResponse>(classEntity);

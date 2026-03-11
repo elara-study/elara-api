@@ -1,4 +1,5 @@
-﻿using Elara.Domain.Entities.Administrative;
+using Elara.Domain.Entities.Administrative;
+using Elara.Domain.Entities.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -20,6 +21,11 @@ namespace Elara.Infrastructure.Data.Configurations.AdministrativeConfig
                 .IsRequired()
                 .HasMaxLength(50);
 
+            builder.HasOne(c => c.Teacher)
+                .WithMany(t => t.Classes)
+                .HasForeignKey(c => c.TeacherId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // Indexes
             builder.HasIndex(c => c.ClassName)
                 .HasDatabaseName("IX_Classes_ClassName");
@@ -27,6 +33,8 @@ namespace Elara.Infrastructure.Data.Configurations.AdministrativeConfig
             builder.HasIndex(c => c.Level)
                 .HasDatabaseName("IX_Classes_Level");
 
+            builder.HasIndex(c => c.TeacherId)
+                .HasDatabaseName("IX_Classes_TeacherId");
         }
     }
 }

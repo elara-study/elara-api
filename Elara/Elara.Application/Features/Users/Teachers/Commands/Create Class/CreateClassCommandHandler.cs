@@ -1,10 +1,9 @@
-﻿using Elara.Application.Common;
+using Elara.Application.Common;
 using Elara.Application.Contracts.Persistence;
 using Elara.Application.Contracts.Persistence.Administrative;
 using Elara.Application.Contracts.Persistence.Users;
 using Elara.Application.Features.Administrative.Classes.Commands.Create_Class;
 using Elara.Domain.Entities.Administrative;
-using Elara.Domain.Entities.JunctionTables;
 using Elara.Domain.Enums;
 using MediatR;
 
@@ -71,15 +70,9 @@ namespace Elara.Application.Features.Users.Teachers.Commands.Create_Class
                 ClassName = request.Name,
                 Level = (GradeLevel)request.Grade,
                 SubjectId = teacher.SubjectId.Value,
-                RoadmapId = roadmap?.Id,             
+                TeacherId = request.TeacherId,
+                RoadmapId = roadmap?.Id,
                 JoinCode = joinCode,
-                ClassTeachers = new List<ClassTeacher>
-                {
-                    new ClassTeacher
-                    {
-                        TeacherId = request.TeacherId
-                    }
-                }
             };
             await _classRepository.AddAsync(newClass);
         }

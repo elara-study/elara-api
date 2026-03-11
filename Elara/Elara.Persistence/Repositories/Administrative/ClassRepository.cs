@@ -11,10 +11,10 @@ namespace Elara.Persistence.Repositories.Administrative
         {
 
         }
-        public async Task<List<GetTeacherClassesResponse>> GetClassesByTeacherIdAsync( Guid teacherId,CancellationToken cancellationToken)
+        public async Task<List<GetTeacherClassesResponse>> GetClassesByTeacherIdAsync(Guid teacherId, CancellationToken cancellationToken)
         {
             return await _context.Classes
-                .Where(c => c.ClassTeachers.Any(ct => ct.TeacherId == teacherId))
+                .Where(c => c.TeacherId == teacherId)
                 .Select(c => new GetTeacherClassesResponse
                 {
                     Id = c.Id,
@@ -25,11 +25,11 @@ namespace Elara.Persistence.Repositories.Administrative
                 })
                 .ToListAsync(cancellationToken);
         }
+
         public async Task<Class?> GetClassWithSubjectAsync(int id, CancellationToken cancellationToken = default)
         {
             return await _context.Classes
                 .Include(c => c.Subject)
-                .Include(c => c.ClassTeachers)
                 .FirstOrDefaultAsync(c => c.Id == id && !c.IsDeleted, cancellationToken);
         }
         public async Task<int> GetStudentsCountAsync(int classId, CancellationToken cancellationToken = default)

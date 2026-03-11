@@ -1,5 +1,6 @@
-﻿using Elara.Domain.Entities.Educational;
+using Elara.Domain.Entities.Educational;
 using Elara.Domain.Entities.JunctionTables;
+using Elara.Domain.Entities.Users;
 using Elara.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
 
@@ -18,14 +19,15 @@ namespace Elara.Domain.Entities.Administrative
         [MaxLength(20)]
         public string JoinCode { get; set; } = string.Empty;
 
-        // Navigation properties
+        // Foreign Keys
         public int SubjectId { get; set; }
+        public Guid TeacherId { get; set; }
+        public int? RoadmapId { get; set; }
+
+        // Navigation properties
         public Subject Subject { get; set; }
-        public int? RoadmapId { get; set; } 
+        public Teacher Teacher { get; set; } = null!;
         public Roadmap? Roadmap { get; set; }
-
         public virtual ICollection<StudentClass> StudentClasses { get; set; }
-        public virtual ICollection<ClassTeacher> ClassTeachers { get; set; } 
-
     }
 }
