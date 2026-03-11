@@ -1,4 +1,4 @@
-﻿using Elara.Application.Contracts.Persistence.Administrative;
+using Elara.Application.Contracts.Persistence.Administrative;
 using Elara.Application.Features.Users.Teachers.Queries.GetTeacherClasses;
 using Elara.Domain.Entities.Administrative;
 using Elara.Infrastructure.Data;
@@ -29,6 +29,7 @@ namespace Elara.Persistence.Repositories.Administrative
         {
             return await _context.Classes
                 .Include(c => c.Subject)
+                .Include(c => c.ClassTeachers)
                 .FirstOrDefaultAsync(c => c.Id == id && !c.IsDeleted, cancellationToken);
         }
         public async Task<int> GetStudentsCountAsync(int classId, CancellationToken cancellationToken = default)

@@ -19,11 +19,13 @@ namespace Elara.Application.Features.Users.Teachers.Queries.Get_Class_Info
             var classEntity = await _classRepository.GetClassWithSubjectAsync(request.ClassId, cancellationToken);
 
             if (classEntity == null)
-            {
                 throw new KeyNotFoundException($"Class with ID {request.ClassId} not found.");
-            }
-            var response = _mapper.Map<GetClassInfoResponse>(classEntity);
-           return response;
+
+            var isOwner = classEntity.ClassTeachers.Any(ct => ct.TeacherId == request.TeacherId);
+            if (!isOwner)
+                throw new UnauthorizedAccessException("You do not have access to this class.");
+
+            return _mapper.Map<GetClassInfoResponse>(classEntity);
         }
     }
 }
