@@ -1,8 +1,10 @@
-﻿using Elara.Application.Contracts.Persistence;
+using Elara.Application.Contracts.Persistence;
 using Elara.Application.Contracts.Persistence.Administrative;
+using Elara.Application.Contracts.Persistence.Educational;
 using Elara.Application.Contracts.Persistence.Users;
 using Elara.Persistence.Repositories;
 using Elara.Persistence.Repositories.Administrative;
+using Elara.Persistence.Repositories.Educational;
 using Elara.Persistence.Repositories.Users;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +21,8 @@ namespace Elara.Persistence
             // Register specific repositories
             services.AddScoped<ITeacherRepository, TeacherRepository>();
             services.AddScoped<IClassRepository, ClassRepository>();
+            services.AddScoped<IRoadmapRepository, RoadmapRepository>();
+            services.AddScoped<ISubjectRepository, SubjectRepository>();
 
             return services;
         }

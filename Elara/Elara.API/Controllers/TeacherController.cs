@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using Elara.Application.Exceptions;
 using Elara.Application.Features.Administrative.Classes.Commands.Create_Class;
+using Elara.Application.Features.Users.Teachers.Commands.Create_Roadmap;
 using Elara.Application.Features.Users.Teachers.Queries.Get_Class_Info;
 using Elara.Application.Features.Users.Teachers.Queries.GetTeacherClasses;
 using Elara.Domain.Constants;
@@ -88,6 +89,42 @@ namespace Elara.API.Controllers
             catch (UnauthorizedAccessException ex)
             {
                 return Unauthorized(new { error = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        [HttpPost("roadmaps")]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> CreateRoadmap([FromBody] CreateRoadmapRequest request)
+        {
+            var teacherId = GetTeacherIdFromToken();
+            if (teacherId is null)
+                return Unauthorized(new { error = "Invalid or missing token." });
+
+            try
+            {
+                var command = new CreateRoadmapCommand(request.Name, request.Grade, request.SubjectId, teacherId.Value);
+                var result = await _mediator.Send(command);
+                return CreatedAtAction(nameof(CreateRoadmap), result);
+            }
+            catch (ValidationException ex)
+            {
+                return ValidationProblem(new ValidationProblemDetails(ex.Errors)
+                {
+                    Title = "Validation failed",
+                    Status = StatusCodes.Status400BadRequest
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
             }
             catch (InvalidOperationException ex)
             {
