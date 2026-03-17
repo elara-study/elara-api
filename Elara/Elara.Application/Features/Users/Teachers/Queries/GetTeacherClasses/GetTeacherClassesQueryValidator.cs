@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,8 +11,6 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetTeacherClasses
     {
         public GetTeacherClassesQueryValidator()
         {
-            RuleFor(x => x.TeacherId)
-                .NotEmpty().WithMessage("Teacher ID is required.");
         }
     }
 }

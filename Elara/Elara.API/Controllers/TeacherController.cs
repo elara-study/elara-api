@@ -25,25 +25,15 @@ namespace Elara.API.Controllers
             _mediator = mediator;
         }
 
-        private Guid? GetTeacherIdFromToken()
-        {
-            var value = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return Guid.TryParse(value, out var id) ? id : null;
-        }
-
         [HttpGet("classes")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> GetTeacherClasses()
         {
-            var teacherId = GetTeacherIdFromToken();
-            if (teacherId is null)
-                return Unauthorized(new { error = "Invalid or missing token." });
-
             try
             {
-                var query = new GetTeacherClassesQuery { TeacherId = teacherId.Value };
+                var query = new GetTeacherClassesQuery();
                 var result = await _mediator.Send(query);
                 return Ok(result);
             }
@@ -64,13 +54,9 @@ namespace Elara.API.Controllers
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> CreateClass([FromBody] CreateClassRequest request)
         {
-            var teacherId = GetTeacherIdFromToken();
-            if (teacherId is null)
-                return Unauthorized(new { error = "Invalid or missing token." });
-
             try
             {
-                var command = new CreateClassCommand(request.Name, request.Grade, request.Subject, teacherId.Value, request.RoadmapName);
+                var command = new CreateClassCommand(request.Name, request.Grade, request.Subject, request.RoadmapName);
                 await _mediator.Send(command);
                 return NoContent();
             }
@@ -104,13 +90,9 @@ namespace Elara.API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> CreateRoadmap([FromBody] CreateRoadmapRequest request)
         {
-            var teacherId = GetTeacherIdFromToken();
-            if (teacherId is null)
-                return Unauthorized(new { error = "Invalid or missing token." });
-
             try
             {
-                var command = new CreateRoadmapCommand(request.Name, request.Grade, request.SubjectId, teacherId.Value);
+                var command = new CreateRoadmapCommand(request.Name, request.Grade, request.Subject);
                 var result = await _mediator.Send(command);
                 return CreatedAtAction(nameof(CreateRoadmap), result);
             }
@@ -126,6 +108,10 @@ namespace Elara.API.Controllers
             {
                 return NotFound(new { error = ex.Message });
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { error = ex.Message });
+            }
             catch (InvalidOperationException ex)
             {
                 return BadRequest(new { error = ex.Message });
@@ -140,13 +126,9 @@ namespace Elara.API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetClassInfo(int id)
         {
-            var teacherId = GetTeacherIdFromToken();
-            if (teacherId is null)
-                return Unauthorized(new { error = "Invalid or missing token." });
-
             try
             {
-                var query = new GetClassInfoQuery { ClassId = id, TeacherId = teacherId.Value };
+                var query = new GetClassInfoQuery { ClassId = id };
                 var result = await _mediator.Send(query);
                 return Ok(result);
             }

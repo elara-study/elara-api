@@ -4,12 +4,11 @@ namespace Elara.Application.Features.Administrative.Classes.Commands.Create_Clas
 {
     public class CreateClassCommand : IRequest
     {
-        public CreateClassCommand(string name, int grade, string subject, Guid teacherId, string? roadmapName = null)
+        public CreateClassCommand(string name, int grade, string subject, string? roadmapName = null)
         {
             Name = name;
             Grade = grade;
             Subject = subject;
-            TeacherId = teacherId;
             RoadmapName = roadmapName;
         }
 
@@ -17,6 +16,5 @@ namespace Elara.Application.Features.Administrative.Classes.Commands.Create_Clas
         public int Grade { get; }
         public string Subject { get; }
         public string? RoadmapName { get; }
-        public Guid TeacherId { get; }
     }
 }

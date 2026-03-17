@@ -1,20 +1,19 @@
+using Elara.Domain.Enums;
 using MediatR;
 
 namespace Elara.Application.Features.Users.Teachers.Commands.Create_Roadmap
 {
     public class CreateRoadmapCommand : IRequest<CreateRoadmapResponse>
     {
-        public CreateRoadmapCommand(string name, int grade, int subjectId, Guid teacherId)
+        public CreateRoadmapCommand(string name, int grade, Subject subject)
         {
             Name = name;
             Grade = grade;
-            SubjectId = subjectId;
-            TeacherId = teacherId;
+            Subject = subject;
         }
 
         public string Name { get; }
         public int Grade { get; }
-        public int SubjectId { get; }
-        public Guid TeacherId { get; }
+        public Subject Subject { get; }
     }
 }

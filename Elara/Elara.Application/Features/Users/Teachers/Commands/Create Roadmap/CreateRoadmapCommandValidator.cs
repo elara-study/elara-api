@@ -1,3 +1,4 @@
+using Elara.Domain.Enums;
 using FluentValidation;
 
 namespace Elara.Application.Features.Users.Teachers.Commands.Create_Roadmap
@@ -12,12 +13,11 @@ namespace Elara.Application.Features.Users.Teachers.Commands.Create_Roadmap
                 .MaximumLength(100).WithMessage("Roadmap name cannot exceed 100 characters.");
 
             RuleFor(x => x.Grade)
-                .Must(BeValidGrade).WithMessage("Grade must be 10, 11, or 12.");
+                .Must(grade => Enum.IsDefined(typeof(GradeLevel), grade))
+                .WithMessage("Grade must be one of the allowed domain grade levels.");
 
-            RuleFor(x => x.SubjectId)
-                .GreaterThan(0).WithMessage("SubjectId must be a positive integer.");
+            RuleFor(x => x.Subject)
+                .IsInEnum().WithMessage("Subject must be a valid value.");
         }
-
-        private bool BeValidGrade(int grade) => grade == 10 || grade == 11 || grade == 12;
     }
 }

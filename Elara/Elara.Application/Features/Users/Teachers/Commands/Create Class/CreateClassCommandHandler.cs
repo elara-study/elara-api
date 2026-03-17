@@ -1,6 +1,6 @@
 using Elara.Application.Common;
+using Elara.Application.Common.Interfaces;
 using Elara.Application.Contracts.Persistence;
-using Elara.Application.Contracts.Persistence.Administrative;
 using Elara.Application.Contracts.Persistence.Users;
 using Elara.Application.Features.Administrative.Classes.Commands.Create_Class;
 using Elara.Domain.Entities.Administrative;
@@ -13,20 +13,29 @@ namespace Elara.Application.Features.Users.Teachers.Commands.Create_Class
     {
         private readonly IAsyncRepository<Class,int> _classRepository;
         private readonly ITeacherRepository _teacherRepository;
+        private readonly ICurrentUserService _currentUserService;
 
-        public CreateClassCommandHandler(IAsyncRepository<Class, int> classRepository,ITeacherRepository teacherRepository)
+        public CreateClassCommandHandler(
+            IAsyncRepository<Class, int> classRepository,
+            ITeacherRepository teacherRepository,
+            ICurrentUserService currentUserService)
         {
             _classRepository = classRepository;
             _teacherRepository = teacherRepository;
+            _currentUserService = currentUserService;
         }
 
         public async Task Handle(CreateClassCommand request, CancellationToken cancellationToken)
         {
-            var (teacher, roadmap) = await _teacherRepository.GetTeacherWithSubjectAndRoadmapAsync( request.TeacherId,request.RoadmapName, cancellationToken);
+            var teacherId = _currentUserService.UserId
+                ?? throw new UnauthorizedAccessException("User is not authenticated.");
+
+            var (teacher, roadmap) = await _teacherRepository.GetTeacherWithSubjectAndRoadmapAsync(
+                teacherId, request.RoadmapName, cancellationToken);
 
             if (teacher == null)
             {
-                throw new KeyNotFoundException($"Teacher with ID {request.TeacherId} not found.");
+                throw new KeyNotFoundException($"Teacher with ID {teacherId} not found.");
             }
 
             if (teacher.Subject == null || teacher.SubjectId == null)
@@ -43,7 +52,7 @@ namespace Elara.Application.Features.Users.Teachers.Commands.Create_Class
                         $"Please check the roadmap name and try again.");
                 }
 
-                if (roadmap.TeacherId != request.TeacherId)
+                if (roadmap.TeacherId != teacherId)
                 {
                     throw new UnauthorizedAccessException("You can only use your own roadmaps.");
                 }
@@ -70,7 +79,7 @@ namespace Elara.Application.Features.Users.Teachers.Commands.Create_Class
                 ClassName = request.Name,
                 Level = (GradeLevel)request.Grade,
                 SubjectId = teacher.SubjectId.Value,
-                TeacherId = request.TeacherId,
+                TeacherId = teacherId,
                 RoadmapId = roadmap?.Id,
                 JoinCode = joinCode,
             };
