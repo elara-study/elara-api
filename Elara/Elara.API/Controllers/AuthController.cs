@@ -28,7 +28,19 @@ namespace Elara.API.Controllers
             try
             {
                 var result = await _mediator.Send(command);
-                return Ok(result);
+                return Ok(new
+                {
+                    status = "Success",
+                    message = "User registered and logged in successfully.",
+                    data = new
+                    {
+                        userId = result.UserId,
+                        email = result.Email,
+                        userName = result.Name,
+                        role = result.Role,
+                        token = result.Token
+                    }
+                });
             }
             catch (ValidationException ex)
             {

@@ -7,15 +7,27 @@ namespace Elara.Application.Features.Auth.Commands.RegisterUser
     public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, AuthUserData>
     {
         private readonly IIdentityService _identityService;
+        private readonly ITokenService _tokenService;
 
-        public RegisterUserCommandHandler(IIdentityService identityService)
+        public RegisterUserCommandHandler(IIdentityService identityService, ITokenService tokenService)
         {
             _identityService = identityService;
+            _tokenService = tokenService;
         }
 
         public async Task<AuthUserData> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
         {
-            return await _identityService.RegisterAsync(request.Email, request.Name, request.DateOfBirth, request.Password);
+            var registeredUser = await _identityService.RegisterAsync(new RegisterUserData
+            {
+                Email = request.Email,
+                Password = request.Password,
+                Name = request.Name,
+                DateOfBirth = request.DateOfBirth
+            });
+
+            registeredUser.Token = _tokenService.CreateToken(registeredUser);
+
+            return registeredUser;
         }
     }
 }

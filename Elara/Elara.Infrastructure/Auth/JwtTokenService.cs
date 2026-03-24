@@ -1,4 +1,5 @@
 using Elara.Application.Contracts.Identity;
+using Elara.Application.Models.Auth;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -16,7 +17,7 @@ namespace Elara.Infrastructure.Auth
             _configuration = configuration;
         }
 
-        public string CreateToken(Guid userId, string email, string fullName, string role)
+        public string CreateToken(AuthUserData userData)
         {
             var jwtSection = _configuration.GetSection("Jwt");
             var key = Encoding.UTF8.GetBytes(
@@ -24,11 +25,11 @@ namespace Elara.Infrastructure.Auth
 
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, email),
-                new Claim(JwtRegisteredClaimNames.Name, fullName),
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-                new Claim(ClaimTypes.Role, role)
+                new Claim(JwtRegisteredClaimNames.Sub, userData.UserId.ToString()),
+                new Claim(JwtRegisteredClaimNames.Email, userData.Email),
+                new Claim(JwtRegisteredClaimNames.Name, userData.Name),
+                new Claim(ClaimTypes.NameIdentifier, userData.UserId.ToString()),
+                new Claim(ClaimTypes.Role, userData.Role)
             };
 
             var tokenDescriptor = new SecurityTokenDescriptor

@@ -4,6 +4,7 @@ namespace Elara.Application.Contracts.Identity
 {
     public interface IIdentityService
     {
-        Task<AuthUserData> RegisterAsync(string email, string name, DateTime? dateOfBirth, string password);
+        Task<AuthUserData> RegisterAsync(RegisterUserData registerData);
+        Task<AuthUserData?> ValidateUserCredentialsAsync(string email, string password);
     }
 }
