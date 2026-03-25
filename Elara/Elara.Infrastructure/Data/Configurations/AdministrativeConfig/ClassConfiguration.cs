@@ -21,6 +21,9 @@ namespace Elara.Infrastructure.Data.Configurations.AdministrativeConfig
                 .IsRequired()
                 .HasMaxLength(50);
 
+            builder.Property(c => c.TeacherId)
+                .HasColumnName("TeacherId");
+
             builder.HasOne(c => c.Teacher)
                 .WithMany(t => t.Classes)
                 .HasForeignKey(c => c.TeacherId)
