@@ -2,14 +2,13 @@ using Elara.Application.Common;
 using Elara.Application.Common.Interfaces;
 using Elara.Application.Contracts.Persistence;
 using Elara.Application.Contracts.Persistence.Users;
-using Elara.Application.Features.Administrative.Classes.Commands.Create_Class;
 using Elara.Domain.Entities.Administrative;
 using Elara.Domain.Enums;
 using MediatR;
 
-namespace Elara.Application.Features.Users.Teachers.Commands.Create_Class
+namespace Elara.Application.Features.Users.Teachers.Commands.CreateClass
 {
-    public class CreateClassCommandHandler : IRequestHandler<CreateClassCommand>
+    public class CreateClassCommandHandler : IRequestHandler<CreateClassCommand, CreateClassResponse>
     {
         private readonly IAsyncRepository<Class,int> _classRepository;
         private readonly ITeacherRepository _teacherRepository;
@@ -25,7 +24,7 @@ namespace Elara.Application.Features.Users.Teachers.Commands.Create_Class
             _currentUserService = currentUserService;
         }
 
-        public async Task Handle(CreateClassCommand request, CancellationToken cancellationToken)
+        public async Task<CreateClassResponse> Handle(CreateClassCommand request, CancellationToken cancellationToken)
         {
             var teacherId = _currentUserService.UserId
                 ?? throw new UnauthorizedAccessException("User is not authenticated.");
@@ -84,6 +83,16 @@ namespace Elara.Application.Features.Users.Teachers.Commands.Create_Class
                 JoinCode = joinCode,
             };
             await _classRepository.AddAsync(newClass);
+
+            return new CreateClassResponse
+            {
+                Id = newClass.Id,
+                Name = newClass.ClassName,
+                Grade = (int)newClass.Level,
+                JoinCode = newClass.JoinCode,
+                SubjectId = newClass.SubjectId,
+                TeacherId = newClass.TeacherId
+            };
         }
 
     }

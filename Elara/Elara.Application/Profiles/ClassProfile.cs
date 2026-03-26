@@ -1,5 +1,5 @@
-﻿using AutoMapper;
-using Elara.Application.Features.Users.Teachers.Queries.Get_Class_Info;
+using AutoMapper;
+using Elara.Application.Features.Users.Teachers.Queries.GetClassInfo;
 using Elara.Application.Features.Users.Teachers.Queries.GetTeacherClasses;
 using Elara.Domain.Entities.Administrative;
 using System;

@@ -1,7 +1,7 @@
 using Elara.Domain.Enums;
 using MediatR;
 
-namespace Elara.Application.Features.Users.Teachers.Commands.Create_Roadmap
+namespace Elara.Application.Features.Users.Teachers.Commands.CreateRoadmap
 {
     public class CreateRoadmapCommand : IRequest<CreateRoadmapResponse>
     {

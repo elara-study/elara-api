@@ -1,4 +1,5 @@
 using FluentValidation;
+using System;
 
 namespace Elara.Application.Features.Auth.Commands.RegisterUser
 {
@@ -25,8 +26,13 @@ namespace Elara.Application.Features.Auth.Commands.RegisterUser
                 .MaximumLength(100).WithMessage("Name cannot exceed 100 characters");
 
             RuleFor(x => x.DateOfBirth)
-                .LessThan(DateTime.UtcNow).WithMessage("Date of birth must be in the past")
-                .When(x => x.DateOfBirth.HasValue);
+                .NotEmpty().WithMessage("Date of birth is required")
+                .LessThan(DateTime.UtcNow).WithMessage("Date of birth must be in the past");
+
+            RuleFor(x => x.SubjectId)
+                .NotNull().WithMessage("SubjectId is required for teachers")
+                .GreaterThan(0).WithMessage("SubjectId must be a valid ID")
+                .When(x => string.Equals(x.Role?.Trim(), "teacher", StringComparison.OrdinalIgnoreCase));
         }
     }
 }

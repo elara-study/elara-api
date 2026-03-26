@@ -1,5 +1,4 @@
 using Elara.Application.Contracts.Persistence.Administrative;
-using Elara.Application.Features.Users.Teachers.Queries.GetTeacherClasses;
 using Elara.Domain.Entities.Administrative;
 using Elara.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -11,18 +10,12 @@ namespace Elara.Persistence.Repositories.Administrative
         {
 
         }
-        public async Task<List<GetTeacherClassesResponse>> GetClassesByTeacherIdAsync(Guid teacherId, CancellationToken cancellationToken)
+        public async Task<List<Class>> GetClassesByTeacherIdAsync(Guid teacherId, CancellationToken cancellationToken)
         {
             return await _context.Classes
-                .Where(c => c.TeacherId == teacherId)
-                .Select(c => new GetTeacherClassesResponse
-                {
-                    Id = c.Id,
-                    Name = c.ClassName,
-                    Subject = c.Subject.Name,
-                    Grade = (int)c.Level,
-                    StudentsCount = c.StudentClasses.Count()
-                })
+                .Where(c => c.TeacherId == teacherId && !c.IsDeleted)
+                .Include(c => c.Subject)
+                .Include(c => c.StudentClasses)
                 .ToListAsync(cancellationToken);
         }
 

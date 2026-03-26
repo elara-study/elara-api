@@ -22,7 +22,9 @@ namespace Elara.Application.Features.Auth.Commands.RegisterUser
                 Email = request.Email,
                 Password = request.Password,
                 Name = request.Name,
-                DateOfBirth = request.DateOfBirth
+                DateOfBirth = request.DateOfBirth,
+                Role = request.Role,
+                SubjectId = request.SubjectId
             });
 
             registeredUser.Token = _tokenService.CreateToken(registeredUser);

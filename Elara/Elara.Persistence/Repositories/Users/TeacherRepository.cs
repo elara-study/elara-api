@@ -1,4 +1,4 @@
-﻿using Elara.Application.Contracts.Persistence.Users;
+using Elara.Application.Contracts.Persistence.Users;
 using Elara.Domain.Entities.Educational;
 using Elara.Domain.Entities.Users;
 using Elara.Infrastructure.Data;
@@ -22,8 +22,9 @@ namespace Elara.Persistence.Repositories.Users
             Roadmap? roadmap = null;
             if (!string.IsNullOrWhiteSpace(roadmapName))
             {
+                var lowerRoadmapName = roadmapName.ToLower();
                 roadmap = await _context.Roadmaps.Include(r => r.Subject)
-                    .Include(r => r.Topics).FirstOrDefaultAsync(r => r.TeacherId == teacherId && r.Name == roadmapName && !r.IsDeleted, cancellationToken);
+                    .Include(r => r.Topics).FirstOrDefaultAsync(r => r.TeacherId == teacherId && r.Name.ToLower() == lowerRoadmapName && !r.IsDeleted, cancellationToken);
             }
             return (teacher, roadmap);
         }

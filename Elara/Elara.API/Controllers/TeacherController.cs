@@ -1,13 +1,14 @@
 using Asp.Versioning;
 using Elara.Application.Exceptions;
-using Elara.Application.Features.Administrative.Classes.Commands.Create_Class;
-using Elara.Application.Features.Users.Teachers.Commands.Create_Roadmap;
-using Elara.Application.Features.Users.Teachers.Queries.Get_Class_Info;
+using Elara.Application.Features.Users.Teachers.Commands.CreateClass;
+using Elara.Application.Features.Users.Teachers.Commands.CreateRoadmap;
+using Elara.Application.Features.Users.Teachers.Queries.GetClassInfo;
 using Elara.Application.Features.Users.Teachers.Queries.GetTeacherClasses;
 using Elara.Domain.Constants;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Elara.Application.Responses;
 using System.Security.Claims;
 
 namespace Elara.API.Controllers
@@ -26,7 +27,7 @@ namespace Elara.API.Controllers
         }
 
         [HttpGet("classes")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse<List<GetTeacherClassesResponse>>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> GetTeacherClasses()
@@ -35,7 +36,11 @@ namespace Elara.API.Controllers
             {
                 var query = new GetTeacherClassesQuery();
                 var result = await _mediator.Send(query);
-                return Ok(result);
+                return Ok(new BaseResponse<List<GetTeacherClassesResponse>>
+                {
+                    Message = "Teacher classes retrieved successfully.",
+                    Data = result
+                });
             }
             catch (ValidationException ex)
             {
@@ -48,7 +53,7 @@ namespace Elara.API.Controllers
         }
 
         [HttpPost("classes")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(BaseResponse<CreateClassResponse>), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -56,9 +61,13 @@ namespace Elara.API.Controllers
         {
             try
             {
-                var command = new CreateClassCommand(request.Name, request.Grade, request.Subject, request.RoadmapName);
-                await _mediator.Send(command);
-                return NoContent();
+                var command = new CreateClassCommand(request.Name, request.Grade, request.RoadmapName);
+                var result = await _mediator.Send(command);
+                return CreatedAtAction(nameof(GetClassInfo), new { id = result.Id }, new BaseResponse<CreateClassResponse>
+                {
+                    Message = "Class created successfully.",
+                    Data = result
+                });
             }
             catch (ValidationException ex)
             {
@@ -83,7 +92,7 @@ namespace Elara.API.Controllers
         }
 
         [HttpPost("roadmaps")]
-        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(BaseResponse<CreateRoadmapResponse>), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -94,7 +103,11 @@ namespace Elara.API.Controllers
             {
                 var command = new CreateRoadmapCommand(request.Name, request.Grade, request.Subject);
                 var result = await _mediator.Send(command);
-                return CreatedAtAction(nameof(CreateRoadmap), result);
+                return CreatedAtAction(nameof(CreateRoadmap), new BaseResponse<CreateRoadmapResponse>
+                {
+                    Message = "Roadmap created successfully.",
+                    Data = result
+                });
             }
             catch (ValidationException ex)
             {
@@ -119,7 +132,7 @@ namespace Elara.API.Controllers
         }
 
         [HttpGet("classes/{id}/info")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse<GetClassInfoResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -130,7 +143,11 @@ namespace Elara.API.Controllers
             {
                 var query = new GetClassInfoQuery { ClassId = id };
                 var result = await _mediator.Send(query);
-                return Ok(result);
+                return Ok(new BaseResponse<GetClassInfoResponse>
+                {
+                    Message = "Class information retrieved successfully.",
+                    Data = result
+                });
             }
             catch (UnauthorizedAccessException)
             {

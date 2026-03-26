@@ -1,3 +1,4 @@
+using AutoMapper;
 using Elara.Application.Common.Interfaces;
 using Elara.Application.Contracts.Persistence.Educational;
 using Elara.Application.Contracts.Persistence.Users;
@@ -5,7 +6,7 @@ using Elara.Domain.Entities.Educational;
 using Elara.Domain.Enums;
 using MediatR;
 
-namespace Elara.Application.Features.Users.Teachers.Commands.Create_Roadmap
+namespace Elara.Application.Features.Users.Teachers.Commands.CreateRoadmap
 {
     public class CreateRoadmapCommandHandler : IRequestHandler<CreateRoadmapCommand, CreateRoadmapResponse>
     {
@@ -13,17 +14,20 @@ namespace Elara.Application.Features.Users.Teachers.Commands.Create_Roadmap
         private readonly ISubjectRepository _subjectRepository;
         private readonly ITeacherRepository _teacherRepository;
         private readonly ICurrentUserService _currentUserService;
+        private readonly IMapper _mapper;
 
         public CreateRoadmapCommandHandler(
             IRoadmapRepository roadmapRepository,
             ISubjectRepository subjectRepository,
             ITeacherRepository teacherRepository,
-            ICurrentUserService currentUserService)
+            ICurrentUserService currentUserService,
+            IMapper mapper)
         {
             _roadmapRepository = roadmapRepository;
             _subjectRepository = subjectRepository;
             _teacherRepository = teacherRepository;
             _currentUserService = currentUserService;
+            _mapper = mapper;
         }
 
         public async Task<CreateRoadmapResponse> Handle(CreateRoadmapCommand request, CancellationToken cancellationToken)
@@ -50,15 +54,7 @@ namespace Elara.Application.Features.Users.Teachers.Commands.Create_Roadmap
 
             var created = await _roadmapRepository.AddAsync(roadmap, cancellationToken);
 
-            return new CreateRoadmapResponse
-            {
-                Id = created.Id,
-                Name = created.Name,
-                Grade = (int)created.Grade,
-                SubjectId = created.SubjectId,
-                TeacherId = created.TeacherId,
-                CreatedAt = created.CreatedAt,
-            };
+            return _mapper.Map<CreateRoadmapResponse>(created);
         }
     }
 }

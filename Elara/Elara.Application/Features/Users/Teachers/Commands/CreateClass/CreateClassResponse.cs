@@ -1,12 +1,12 @@
-namespace Elara.Application.Features.Users.Teachers.Commands.Create_Roadmap
+namespace Elara.Application.Features.Users.Teachers.Commands.CreateClass
 {
-    public class CreateRoadmapResponse
+    public class CreateClassResponse
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public int Grade { get; set; }
+        public string JoinCode { get; set; } = string.Empty;
         public int SubjectId { get; set; }
         public Guid TeacherId { get; set; }
-        public DateTime CreatedAt { get; set; }
     }
 }

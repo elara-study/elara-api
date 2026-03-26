@@ -1,11 +1,11 @@
-﻿using FluentValidation;
+using FluentValidation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Elara.Application.Features.Users.Teachers.Queries.Get_Class_Info
+namespace Elara.Application.Features.Users.Teachers.Queries.GetClassInfo
 {
     public class GetClassInfoQueryValidator:AbstractValidator<GetClassInfoQuery>
     {

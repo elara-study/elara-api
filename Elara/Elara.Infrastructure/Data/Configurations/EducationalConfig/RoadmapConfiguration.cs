@@ -1,4 +1,4 @@
-﻿using Elara.Domain.Entities.Educational;
+using Elara.Domain.Entities.Educational;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -73,7 +73,8 @@ namespace Elara.Infrastructure.Data.Configurations.EducationalConfig
                 .HasDatabaseName("IX_Roadmaps_SubjectId");
 
             builder.HasIndex(r => new { r.TeacherId, r.Name })
-                .HasDatabaseName("IX_Roadmaps_TeacherId_Name"); 
+                .HasDatabaseName("IX_Roadmaps_TeacherId_Name")
+                .IsUnique(); 
 
             builder.HasIndex(r => new { r.Grade, r.SubjectId })
                 .HasDatabaseName("IX_Roadmaps_Grade_SubjectId");

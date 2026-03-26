@@ -1,6 +1,6 @@
 using MediatR;
 
-namespace Elara.Application.Features.Users.Teachers.Queries.Get_Class_Info
+namespace Elara.Application.Features.Users.Teachers.Queries.GetClassInfo
 {
     public class GetClassInfoQuery : IRequest<GetClassInfoResponse>
     {

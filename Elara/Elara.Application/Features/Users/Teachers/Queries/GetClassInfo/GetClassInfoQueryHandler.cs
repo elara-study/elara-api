@@ -3,7 +3,7 @@ using Elara.Application.Common.Interfaces;
 using Elara.Application.Contracts.Persistence.Administrative;
 using MediatR;
 
-namespace Elara.Application.Features.Users.Teachers.Queries.Get_Class_Info
+namespace Elara.Application.Features.Users.Teachers.Queries.GetClassInfo
 {
     public class GetClassInfoQueryHandler : IRequestHandler<GetClassInfoQuery, GetClassInfoResponse>
     {
@@ -31,7 +31,10 @@ namespace Elara.Application.Features.Users.Teachers.Queries.Get_Class_Info
             if (classEntity.TeacherId != teacherId)
                 throw new UnauthorizedAccessException("You do not have access to this class.");
 
-            return _mapper.Map<GetClassInfoResponse>(classEntity);
+            var response = _mapper.Map<GetClassInfoResponse>(classEntity);
+            response.StudentsCount = await _classRepository.GetStudentsCountAsync(request.ClassId, cancellationToken);
+            
+            return response;
         }
     }
 }
