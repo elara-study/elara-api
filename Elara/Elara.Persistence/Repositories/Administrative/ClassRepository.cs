@@ -28,6 +28,13 @@ namespace Elara.Persistence.Repositories.Administrative
                 .FirstOrDefaultAsync(c => c.Id == id && !c.IsDeleted, cancellationToken);
         }
 
+        public async Task<Class?> GetClassWithSubjectByPublicIdAsync(Guid publicId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Classes
+                .Include(c => c.Subject)
+                .FirstOrDefaultAsync(c => c.PublicId == publicId && !c.IsDeleted, cancellationToken);
+        }
+
         public async Task<Class?> GetClassByJoinCodeAsync(string joinCode, CancellationToken cancellationToken = default)
         {
             return await _context.Classes
@@ -42,12 +49,12 @@ namespace Elara.Persistence.Repositories.Administrative
                 .Select(r => r.CompletionRate)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            return await _context.StudentClasses
-                .Where(sc => sc.StudentId == studentId && sc.IsActive)
-                .Select(sc => sc.Class)
+            return await _context.Classes
+                .AsNoTracking()
+                .Where(c => c.StudentClasses.Any(sc => sc.StudentId == studentId && sc.IsActive))
                 .Select(c => new GetStudentGroupItem
                 {
-                    Id = c.Id.ToString(),
+                    Id = c.PublicId,
                     Name = c.ClassName,
                     Subject = c.Subject.Name,
                     Grade = (int)c.Level,
@@ -72,6 +79,67 @@ namespace Elara.Persistence.Repositories.Administrative
                     }
                 })
                 .ToListAsync(cancellationToken);
+        }
+
+        public async Task<GetStudentGroupItem?> GetStudentGroupByPublicIdAsync(Guid studentId, Guid groupPublicId, CancellationToken cancellationToken = default)
+        {
+            var completionRate = await _context.Reports
+                .Where(r => r.StudentId == studentId)
+                .OrderByDescending(r => r.GeneratedDate)
+                .Select(r => r.CompletionRate)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            var groupProjection = await _context.Classes
+                .AsNoTracking()
+                .Where(c => c.PublicId == groupPublicId)
+                .Where(c => c.StudentClasses.Any(sc => sc.StudentId == studentId && sc.IsActive))
+                .Select(c => new
+                {
+                    c.PublicId,
+                    c.ClassName,
+                    SubjectName = c.Subject.Name,
+                    Grade = (int)c.Level,
+                    c.TeacherId,
+                    StudentsCount = c.StudentClasses.Count(sc => sc.IsActive),
+                    TotalLessons = c.Roadmap == null
+                        ? 0
+                        : c.Roadmap.Topics.SelectMany(t => t.Lessons).Count()
+                })
+                .FirstOrDefaultAsync(
+                    cancellationToken);
+
+            if (groupProjection == null)
+            {
+                return null;
+            }
+
+            var teacherName = await _context.Users
+                .Where(u => u.Id == groupProjection.TeacherId)
+                .Select(u => u.Name)
+                .FirstOrDefaultAsync(cancellationToken) ?? string.Empty;
+
+            var totalLessons = groupProjection.TotalLessons;
+            var completedLessons = totalLessons == 0
+                ? 0
+                : (int)Math.Round(totalLessons * (completionRate / 100.0));
+
+            return new GetStudentGroupItem
+            {
+                Id = groupProjection.PublicId,
+                Name = groupProjection.ClassName,
+                Subject = groupProjection.SubjectName,
+                Grade = groupProjection.Grade,
+                Teacher = teacherName,
+                Stats = new GetStudentGroupStats
+                {
+                    StudentsCount = groupProjection.StudentsCount,
+                    Lessons = new GetStudentGroupLessons
+                    {
+                        Total = totalLessons,
+                        Completed = completedLessons
+                    }
+                }
+            };
         }
 
         public async Task<int> GetStudentsCountAsync(int classId, CancellationToken cancellationToken = default)

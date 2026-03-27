@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using Elara.Application.Features.Users.Students.Commands.JoinGroup;
+using Elara.Application.Features.Users.Students.Queries.GetStudentGroupOverview;
 using Elara.Application.Features.Users.Students.Queries.GetStudentGroups;
 using Elara.Application.Responses;
 using Elara.Domain.Constants;
@@ -36,6 +37,22 @@ namespace Elara.API.Controllers
             return Ok(new BaseResponse<GetStudentGroupsResponse>
             {
                 Message = "Student groups retrieved successfully.",
+                Data = response
+            });
+        }
+
+        [HttpGet("groups/{id:guid}")]
+        [ProducesResponseType(typeof(BaseResponse<GetStudentGroupOverviewResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetGroupOverview(Guid id)
+        {
+            var response = await _mediator.Send(new GetStudentGroupOverviewQuery(StudentId, id));
+            return Ok(new BaseResponse<GetStudentGroupOverviewResponse>
+            {
+                Message = "Student group overview retrieved successfully.",
                 Data = response
             });
         }

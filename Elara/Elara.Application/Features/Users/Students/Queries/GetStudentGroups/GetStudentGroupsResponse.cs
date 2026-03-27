@@ -1,3 +1,5 @@
+using System;
+
 namespace Elara.Application.Features.Users.Students.Queries.GetStudentGroups
 {
     public sealed class GetStudentGroupsResponse
@@ -7,7 +9,7 @@ namespace Elara.Application.Features.Users.Students.Queries.GetStudentGroups
 
     public sealed class GetStudentGroupItem
     {
-        public string Id { get; init; } = string.Empty;
+        public Guid Id { get; init; }
         public string Name { get; init; } = string.Empty;
         public string Subject { get; init; } = string.Empty;
         public int Grade { get; init; }

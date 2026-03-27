@@ -1,6 +1,7 @@
 using Elara.Application.Exceptions;
 using Elara.Application.Models;
 using System.Text.Json;
+using Elara.Domain.Constants;
 
 namespace Elara.API.Middlewares
 {
@@ -50,10 +51,12 @@ namespace Elara.API.Middlewares
 
             var response = new ErrorResponse
             {
+                Status = ResponseStatus.Error,
                 Message = message
             };
 
-            await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+            var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+            await context.Response.WriteAsync(JsonSerializer.Serialize(response, options));
         }
 
         private static async Task HandleExceptionAsync(HttpContext context, Exception exception)
@@ -65,27 +68,31 @@ namespace Elara.API.Middlewares
                     StatusCodes.Status400BadRequest,
                     (object)new ErrorResponse
                     {
-                        Message = "Validation failed."
+                        Status = ResponseStatus.ValidationError,
+                        Message = "Validation failed.",
+                        Data = validationException.Errors
                     }),
                 KeyNotFoundException => (
                     StatusCodes.Status404NotFound,
-                    new ErrorResponse { Message = exception.Message }),
+                    ErrorResponse.Create(exception.Message)),
                 UnauthorizedAccessException => (
                     StatusCodes.Status401Unauthorized,
-                    new ErrorResponse { Message = exception.Message }),
+                    ErrorResponse.Create(exception.Message)),
                 InvalidOperationException => (
                     StatusCodes.Status400BadRequest,
-                    new ErrorResponse { Message = exception.Message }),
+                    ErrorResponse.Create(exception.Message)),
                 _ => (
                     StatusCodes.Status500InternalServerError,
                     new ErrorResponse
                     {
+                        Status = ResponseStatus.Error,
                         Message = "An unexpected error occurred."
                     })
             };
 
             context.Response.StatusCode = statusCode;
-            await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+            var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+            await context.Response.WriteAsync(JsonSerializer.Serialize(response, options));
         }
     }
 }

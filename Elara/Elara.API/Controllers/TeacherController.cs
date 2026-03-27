@@ -8,6 +8,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Elara.Application.Responses;
+using System;
 
 namespace Elara.API.Controllers
 {
@@ -72,13 +73,13 @@ namespace Elara.API.Controllers
             });
         }
 
-        [HttpGet("classes/{id}/info")]
+        [HttpGet("classes/{id:guid}")]
         [ProducesResponseType(typeof(BaseResponse<GetClassInfoResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> GetClassInfo(int id)
+        public async Task<IActionResult> GetClassInfo(Guid id)
         {
             var query = new GetClassInfoQuery { ClassId = id };
             var result = await _mediator.Send(query);

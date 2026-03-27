@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Elara.Domain.Constants;
 
 namespace Elara.Application.Models
 {
@@ -39,7 +40,7 @@ namespace Elara.Application.Models
         {
             return new ErrorResponse
             {
-                Success = this.Success,
+                Status = this.Success ? ResponseStatus.Success : ResponseStatus.Error,
                 Message = this.Message ?? string.Empty
             };
         }

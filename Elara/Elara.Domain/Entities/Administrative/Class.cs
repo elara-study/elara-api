@@ -9,6 +9,9 @@ namespace Elara.Domain.Entities.Administrative
     public class Class : BaseEntity
     {
         [Required]
+        public Guid PublicId { get; set; } = Guid.NewGuid();
+
+        [Required]
         [MaxLength(100)]
         public string ClassName { get; set; } = string.Empty;
 

@@ -1,9 +1,10 @@
 using MediatR;
+using System;
 
 namespace Elara.Application.Features.Users.Teachers.Queries.GetClassInfo
 {
     public class GetClassInfoQuery : IRequest<GetClassInfoResponse>
     {
-        public int ClassId { get; set; }
+        public Guid ClassId { get; set; }
     }
 }
