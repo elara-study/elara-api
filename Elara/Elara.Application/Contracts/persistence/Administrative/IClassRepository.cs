@@ -20,5 +20,7 @@ namespace Elara.Application.Contracts.Persistence.Administrative
         Task<bool> IsStudentJoinedClassAsync(Guid studentId, int classId, CancellationToken cancellationToken = default);
         Task JoinClassAsync(Guid studentId, int classId, CancellationToken cancellationToken = default);
         Task<int> GetStudentsCountAsync(int classId, CancellationToken cancellationToken = default);
+        Task<bool> ExistsAndOwnedByTeacherAsync(Guid classPublicId, Guid teacherId, CancellationToken cancellationToken = default);
+        Task<int?> GetInternalIdByPublicIdAsync(Guid publicId, Guid teacherId, CancellationToken cancellationToken = default);
     }
 }

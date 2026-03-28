@@ -167,5 +167,24 @@ namespace Elara.Persistence.Repositories.Administrative
 
             await _context.SaveChangesAsync(cancellationToken);
         }
+
+        public async Task<bool> ExistsAndOwnedByTeacherAsync(Guid classPublicId, Guid teacherId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Classes
+                .AsNoTracking()
+                .AnyAsync(c => c.PublicId == classPublicId && c.TeacherId == teacherId && !c.IsDeleted, cancellationToken);
+        }
+
+        public async Task<int?> GetInternalIdByPublicIdAsync(Guid publicId, Guid teacherId, CancellationToken cancellationToken = default)
+        {
+            var result = await _context.Classes
+                .AsNoTracking()
+                .Where(c => c.PublicId == publicId && c.TeacherId == teacherId && !c.IsDeleted)
+                .Select(c => c.Id)
+                .Cast<int?>()
+                .FirstOrDefaultAsync(cancellationToken);
+            
+            return result;
+        }
     }
 }

@@ -31,6 +31,7 @@ namespace Elara.Domain.Entities.Administrative
         public Educational.Subject Subject { get; set; }
         public Teacher Teacher { get; set; } = null!;
         public Roadmap? Roadmap { get; set; }
-        public virtual ICollection<StudentClass> StudentClasses { get; set; }
+        public virtual ICollection<StudentClass> StudentClasses { get; set; } = [];
+        public virtual ICollection<Announcement> Announcements { get; set; } = [];
     }
 }
