@@ -16,6 +16,10 @@ namespace Elara.Application.Profiles
         {
             CreateMap<Class, GetClassInfoResponse>()
                 .ForMember(
+                    dest => dest.Id,
+                    opt => opt.MapFrom(src => src.PublicId)
+                )
+                .ForMember(
                     dest => dest.Name,
                     opt => opt.MapFrom(src => src.ClassName)
                 )
@@ -31,6 +35,7 @@ namespace Elara.Application.Profiles
 
 
             CreateMap<Class, GetTeacherClassesResponse>()
+              .ForMember(d => d.Id, o => o.MapFrom(s => s.PublicId))
               .ForMember(d => d.Name, o => o.MapFrom(s => s.ClassName))
               .ForMember(d => d.Subject, o => o.MapFrom(s => s.Subject.Name))
               .ForMember(d => d.Grade, o => o.MapFrom(s => (int)s.Level))

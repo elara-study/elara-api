@@ -13,6 +13,10 @@ namespace Elara.Infrastructure.Data.Configurations.AdministrativeConfig
 
             builder.HasKey(c => c.Id);
 
+            builder.Property(c => c.PublicId)
+                .IsRequired()
+                .HasDefaultValueSql("gen_random_uuid()");
+
             builder.Property(c => c.ClassName)
                 .IsRequired()
                 .HasMaxLength(100);
@@ -38,6 +42,10 @@ namespace Elara.Infrastructure.Data.Configurations.AdministrativeConfig
 
             builder.HasIndex(c => c.TeacherId)
                 .HasDatabaseName("IX_Classes_TeacherId");
+
+            builder.HasIndex(c => c.PublicId)
+                .IsUnique()
+                .HasDatabaseName("IX_Classes_PublicId");
         }
     }
 }

@@ -86,7 +86,7 @@ namespace Elara.Application.Features.Users.Teachers.Commands.CreateClass
 
             return new CreateClassResponse
             {
-                Id = newClass.Id,
+                Id = newClass.PublicId,
                 Name = newClass.ClassName,
                 Grade = (int)newClass.Level,
                 JoinCode = newClass.JoinCode,

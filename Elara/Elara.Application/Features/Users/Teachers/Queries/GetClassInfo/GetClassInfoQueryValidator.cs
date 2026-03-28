@@ -12,7 +12,7 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetClassInfo
         public GetClassInfoQueryValidator()
         {
             RuleFor(x => x.ClassId).NotEmpty().WithMessage("Class id is required.")
-                .GreaterThan(0).WithMessage("Class ID must be greater than 0.");
+                .NotEqual(Guid.Empty).WithMessage("Class ID must be a valid UUID.");
         }
     }
 }

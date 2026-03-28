@@ -23,7 +23,7 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetClassInfo
             var teacherId = _currentUserService.UserId
                 ?? throw new UnauthorizedAccessException("User is not authenticated.");
 
-            var classEntity = await _classRepository.GetClassWithSubjectAsync(request.ClassId, cancellationToken);
+            var classEntity = await _classRepository.GetClassWithSubjectByPublicIdAsync(request.ClassId, cancellationToken);
 
             if (classEntity == null)
                 throw new KeyNotFoundException($"Class with ID {request.ClassId} not found.");
@@ -32,7 +32,7 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetClassInfo
                 throw new UnauthorizedAccessException("You do not have access to this class.");
 
             var response = _mapper.Map<GetClassInfoResponse>(classEntity);
-            response.StudentsCount = await _classRepository.GetStudentsCountAsync(request.ClassId, cancellationToken);
+            response.StudentsCount = await _classRepository.GetStudentsCountAsync(classEntity.Id, cancellationToken);
             
             return response;
         }

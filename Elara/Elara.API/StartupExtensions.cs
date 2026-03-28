@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
 using Elara.Application;
 using Elara.Application.Common.Interfaces;
+using Elara.API.Middlewares;
 using Elara.API.Services;
 using Elara.Persistence;
 using Elara.Infrastructure;
@@ -41,6 +42,19 @@ namespace Elara.API
                     ValidAudience = jwtSection["Audience"],
                     IssuerSigningKey = new SymmetricSecurityKey(key)
                 };
+
+                options.Events = new JwtBearerEvents
+                {
+                    OnAuthenticationFailed = context =>
+                    {
+                        if (context.Exception is SecurityTokenExpiredException)
+                        {
+                            context.Response.Headers["Token-Expired"] = "true";
+                        }
+
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
             builder.Services.AddControllers();
@@ -76,6 +90,7 @@ namespace Elara.API
             }
 
             app.UseHttpsRedirection();
+            app.UseMiddleware<ExceptionHandlingMiddleware>();
 
             app.UseAuthentication();
             app.UseAuthorization();

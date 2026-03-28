@@ -1,5 +1,7 @@
 using Elara.Application.Contracts.Persistence.Administrative;
+using Elara.Application.Features.Users.Students.Queries.GetStudentGroups;
 using Elara.Domain.Entities.Administrative;
+using Elara.Domain.Entities.JunctionTables;
 using Elara.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 namespace Elara.Persistence.Repositories.Administrative
@@ -25,11 +27,145 @@ namespace Elara.Persistence.Repositories.Administrative
                 .Include(c => c.Subject)
                 .FirstOrDefaultAsync(c => c.Id == id && !c.IsDeleted, cancellationToken);
         }
+
+        public async Task<Class?> GetClassWithSubjectByPublicIdAsync(Guid publicId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Classes
+                .Include(c => c.Subject)
+                .FirstOrDefaultAsync(c => c.PublicId == publicId && !c.IsDeleted, cancellationToken);
+        }
+
+        public async Task<Class?> GetClassByJoinCodeAsync(string joinCode, CancellationToken cancellationToken = default)
+        {
+            return await _context.Classes
+                .FirstOrDefaultAsync(c => c.JoinCode == joinCode && !c.IsDeleted, cancellationToken);
+        }
+
+        public async Task<List<GetStudentGroupItem>> GetStudentGroupsByStudentIdAsync(Guid studentId, CancellationToken cancellationToken = default)
+        {
+            var completionRate = await _context.Reports
+                .Where(r => r.StudentId == studentId)
+                .OrderByDescending(r => r.GeneratedDate)
+                .Select(r => r.CompletionRate)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            return await _context.Classes
+                .AsNoTracking()
+                .Where(c => c.StudentClasses.Any(sc => sc.StudentId == studentId && sc.IsActive))
+                .Select(c => new GetStudentGroupItem
+                {
+                    Id = c.PublicId,
+                    Name = c.ClassName,
+                    Subject = c.Subject.Name,
+                    Grade = (int)c.Level,
+                    Teacher = _context.Users
+                        .Where(u => u.Id == c.TeacherId)
+                        .Select(u => u.Name)
+                        .FirstOrDefault() ?? string.Empty,
+                    Stats = new GetStudentGroupStats
+                    {
+                        StudentsCount = c.StudentClasses.Count(s => s.IsActive),
+                        Lessons = new GetStudentGroupLessons
+                        {
+                            Total = c.Roadmap == null
+                                ? 0
+                                : c.Roadmap.Topics.SelectMany(t => t.Lessons).Count(),
+                            Completed = c.Roadmap == null
+                                ? 0
+                                : (int)Math.Round(
+                                    c.Roadmap.Topics.SelectMany(t => t.Lessons).Count()
+                                    * (completionRate / 100.0))
+                        }
+                    }
+                })
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<GetStudentGroupItem?> GetStudentGroupByPublicIdAsync(Guid studentId, Guid groupPublicId, CancellationToken cancellationToken = default)
+        {
+            var completionRate = await _context.Reports
+                .Where(r => r.StudentId == studentId)
+                .OrderByDescending(r => r.GeneratedDate)
+                .Select(r => r.CompletionRate)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            var groupProjection = await _context.Classes
+                .AsNoTracking()
+                .Where(c => c.PublicId == groupPublicId)
+                .Where(c => c.StudentClasses.Any(sc => sc.StudentId == studentId && sc.IsActive))
+                .Select(c => new
+                {
+                    c.PublicId,
+                    c.ClassName,
+                    SubjectName = c.Subject.Name,
+                    Grade = (int)c.Level,
+                    c.TeacherId,
+                    StudentsCount = c.StudentClasses.Count(sc => sc.IsActive),
+                    TotalLessons = c.Roadmap == null
+                        ? 0
+                        : c.Roadmap.Topics.SelectMany(t => t.Lessons).Count()
+                })
+                .FirstOrDefaultAsync(
+                    cancellationToken);
+
+            if (groupProjection == null)
+            {
+                return null;
+            }
+
+            var teacherName = await _context.Users
+                .Where(u => u.Id == groupProjection.TeacherId)
+                .Select(u => u.Name)
+                .FirstOrDefaultAsync(cancellationToken) ?? string.Empty;
+
+            var totalLessons = groupProjection.TotalLessons;
+            var completedLessons = totalLessons == 0
+                ? 0
+                : (int)Math.Round(totalLessons * (completionRate / 100.0));
+
+            return new GetStudentGroupItem
+            {
+                Id = groupProjection.PublicId,
+                Name = groupProjection.ClassName,
+                Subject = groupProjection.SubjectName,
+                Grade = groupProjection.Grade,
+                Teacher = teacherName,
+                Stats = new GetStudentGroupStats
+                {
+                    StudentsCount = groupProjection.StudentsCount,
+                    Lessons = new GetStudentGroupLessons
+                    {
+                        Total = totalLessons,
+                        Completed = completedLessons
+                    }
+                }
+            };
+        }
+
         public async Task<int> GetStudentsCountAsync(int classId, CancellationToken cancellationToken = default)
         {
             return await _context.StudentClasses
                 .Where(sc => sc.ClassId == classId)
                 .CountAsync(cancellationToken);
+        }
+
+        public async Task<bool> IsStudentJoinedClassAsync(Guid studentId, int classId, CancellationToken cancellationToken = default)
+        {
+            return await _context.StudentClasses
+                .AnyAsync(sc => sc.StudentId == studentId && sc.ClassId == classId && sc.IsActive, cancellationToken);
+        }
+
+        public async Task JoinClassAsync(Guid studentId, int classId, CancellationToken cancellationToken = default)
+        {
+            await _context.StudentClasses.AddAsync(new StudentClass
+            {
+                StudentId = studentId,
+                ClassId = classId,
+                IsActive = true,
+                EnrolledDate = DateTime.UtcNow
+            }, cancellationToken);
+
+            await _context.SaveChangesAsync(cancellationToken);
         }
     }
 }

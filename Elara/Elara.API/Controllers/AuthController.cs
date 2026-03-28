@@ -1,5 +1,4 @@
 using Asp.Versioning;
-using Elara.Application.Exceptions;
 using Elara.Application.Features.Auth.Commands.LoginUser;
 using Elara.Application.Features.Auth.Commands.RegisterUser;
 using Elara.Application.Models.Auth;
@@ -26,27 +25,12 @@ namespace Elara.API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Register([FromBody] RegisterUserCommand command)
         {
-            try
+            var result = await _mediator.Send(command);
+            return Ok(new BaseResponse<AuthUserData>
             {
-                var result = await _mediator.Send(command);
-                return Ok(new BaseResponse<AuthUserData>
-                {
-                    Message = "User registered and logged in successfully.",
-                    Data = result
-                });
-            }
-            catch (ValidationException ex)
-            {
-                return ValidationProblem(new ValidationProblemDetails(ex.Errors)
-                {
-                    Title = "Validation failed",
-                    Status = StatusCodes.Status400BadRequest
-                });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { error = ex.Message });
-            }
+                Message = "User registered and logged in successfully.",
+                Data = result
+            });
         }
 
         [HttpPost("login")]
@@ -55,27 +39,12 @@ namespace Elara.API.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Login([FromBody] LoginCommand command)
         {
-            try
+            var result = await _mediator.Send(command);
+            return Ok(new BaseResponse<LoginResponse>
             {
-                var result = await _mediator.Send(command);
-                return Ok(new BaseResponse<LoginResponse>
-                {
-                    Message = "User logged in successfully.",
-                    Data = result
-                });
-            }
-            catch (ValidationException ex)
-            {
-                return ValidationProblem(new ValidationProblemDetails(ex.Errors)
-                {
-                    Title = "Validation failed",
-                    Status = StatusCodes.Status400BadRequest
-                });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(new { error = ex.Message });
-            }
+                Message = "User logged in successfully.",
+                Data = result
+            });
         }
     }
 }
