@@ -6,5 +6,8 @@ namespace Elara.Application.Contracts.Identity
     {
         Task<AuthUserData> RegisterAsync(RegisterUserData registerData);
         Task<AuthUserData?> ValidateUserCredentialsAsync(string email, string password);
+        Task<string> GenerateRefreshTokenAsync(Guid userId, TimeSpan? expiresIn = null);
+        Task<AuthUserData?> GetUserByRefreshTokenAsync(string refreshToken);
+        Task<bool> RevokeRefreshTokenAsync(string refreshToken);
     }
 }

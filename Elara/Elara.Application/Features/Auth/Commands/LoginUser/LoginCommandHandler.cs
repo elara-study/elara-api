@@ -24,8 +24,9 @@ namespace Elara.Application.Features.Auth.Commands.LoginUser
             }
 
             var token = _tokenService.CreateToken(user);
+            var refresh = await _identityService.GenerateRefreshTokenAsync(user.UserId);
 
-            return new LoginResponse { Token = token };
+            return new LoginResponse { Token = token, RefreshToken = refresh };
         }
     }
 }
