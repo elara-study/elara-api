@@ -28,6 +28,8 @@ namespace Elara.Application.Features.Auth.Commands.RegisterUser
             });
 
             registeredUser.Token = _tokenService.CreateToken(registeredUser);
+            // generate refresh token
+            registeredUser.RefreshToken = await _identityService.GenerateRefreshTokenAsync(registeredUser.UserId);
 
             return registeredUser;
         }
