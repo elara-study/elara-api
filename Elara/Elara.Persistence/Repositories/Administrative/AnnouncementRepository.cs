@@ -41,5 +41,11 @@ namespace Elara.Persistence.Repositories.Administrative
                 })
                 .ToListAsync(cancellationToken);
         }
+
+        public async Task<Announcement?> GetByPublicIdAndClassIdAsync(Guid announcementPublicId, int classId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Announcements
+                .FirstOrDefaultAsync(a => a.PublicId == announcementPublicId && a.ClassId == classId && !a.IsDeleted, cancellationToken);
+        }
     }
 }

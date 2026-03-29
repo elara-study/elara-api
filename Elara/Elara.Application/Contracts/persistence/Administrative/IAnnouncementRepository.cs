@@ -11,5 +11,6 @@ namespace Elara.Application.Contracts.Persistence.Administrative
     {
         Task<List<Announcement>> GetByClassPublicIdAsync(Guid classPublicId, CancellationToken cancellationToken = default);
         Task<List<GetAnnouncementsResponse>> GetByClassPublicIdProjectedAsync(Guid classPublicId, CancellationToken cancellationToken = default);
+        Task<Announcement?> GetByPublicIdAndClassIdAsync(Guid announcementPublicId, int classId, CancellationToken cancellationToken = default);
     }
 }

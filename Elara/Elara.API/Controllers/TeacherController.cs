@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Elara.Application.Features.Users.Teachers.Commands.CreateClass;
 using Elara.Application.Features.Users.Teachers.Commands.CreateRoadmap;
 using Elara.Application.Features.Users.Teachers.Commands.AddAnnouncement;
+using Elara.Application.Features.Users.Teachers.Commands.DeleteAnnouncement;
 using Elara.Application.Features.Users.Teachers.Queries.GetAnnouncements;
 using Elara.Application.Features.Users.Teachers.Queries.GetClassInfo;
 using Elara.Application.Features.Users.Teachers.Queries.GetTeacherClasses;
@@ -122,6 +123,23 @@ namespace Elara.API.Controllers
             {
                 Message = "Announcements retrieved successfully.",
                 Data = result
+            });
+        }
+
+        [HttpDelete("groups/{id:guid}/announcements/{announcementId:guid}")]
+        [ProducesResponseType(typeof(BaseResponse<System.Guid>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteAnnouncement(Guid id, Guid announcementId)
+        {
+            var command = new DeleteAnnouncementCommand(id, announcementId);
+            await _mediator.Send(command);
+            return Ok(new BaseResponse<System.Guid>
+            {
+                Message = "Announcement deleted successfully.",
+                Data = announcementId
             });
         }
     }
