@@ -23,6 +23,7 @@ namespace Elara.Persistence
             services.AddScoped<IClassRepository, ClassRepository>();
             services.AddScoped<IRoadmapRepository, RoadmapRepository>();
             services.AddScoped<ISubjectRepository, SubjectRepository>();
+            services.AddScoped<IAnnouncementRepository, AnnouncementRepository>();
 
             return services;
         }
