@@ -16,6 +16,12 @@ namespace Elara.Infrastructure.Data.Configurations.IdentityConfig
                 .IsRequired()
                 .HasMaxLength(100);
 
+            builder.Property(u => u.ImageUrl)
+                .HasMaxLength(500);
+
+            builder.Property(u => u.ImagePublicId)
+                .HasMaxLength(255);
+
             // Indexes
             builder.HasIndex(u => u.Email)
                 .IsUnique()
