@@ -14,17 +14,7 @@ namespace Elara.API.Extensions
                 return false;
             }
 
-            if (file.Length > ProfileImageValidation.MaxImageSizeBytes)
-            {
-                return false;
-            }
-
-            if (!ProfileImageValidation.IsAllowedContentType(file.ContentType))
-            {
-                return false;
-            }
-
-            const int headerLength = 12;
+            var headerLength = ProfileImageValidation.MaxSignatureLength;
             var headerBytes = new byte[headerLength];
             var totalRead = 0;
 
@@ -53,7 +43,7 @@ namespace Elara.API.Extensions
                 return false;
             }
 
-            return ProfileImageValidation.HasValidSignature(headerBytes.AsSpan(0, Math.Min(totalRead, headerLength)), file.ContentType ?? string.Empty);
+            return ProfileImageValidation.IsValidHeader(headerBytes.AsSpan(0, Math.Min(totalRead, headerLength)), file.ContentType, file.Length);
         }
     }
 }

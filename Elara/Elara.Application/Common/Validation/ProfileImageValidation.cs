@@ -6,6 +6,7 @@ namespace Elara.Application.Common.Validation
     public static class ProfileImageValidation
     {
         public const long MaxImageSizeBytes = 5 * 1024 * 1024;
+        public const int MaxSignatureLength = 12;
         public static readonly string[] AllowedContentTypes = new[] { "image/jpeg", "image/png", "image/webp" };
 
         public static bool IsAllowedContentType(string? contentType)
@@ -20,7 +21,7 @@ namespace Elara.Application.Common.Validation
 
         public static bool HasValidSignature(ReadOnlySpan<byte> fileBytes, string contentType)
         {
-            if (fileBytes.Length < 12)
+            if (fileBytes.Length < MaxSignatureLength)
             {
                 return false;
             }
@@ -61,6 +62,21 @@ namespace Elara.Application.Common.Validation
                 && fileBytes[11] == 0x50;
 
             return webp;
+        }
+        
+        public static bool IsValidHeader(ReadOnlySpan<byte> headerBytes, string? contentType, long fileLength)
+        {
+            if (fileLength <= 0 || fileLength > MaxImageSizeBytes)
+            {
+                return false;
+            }
+
+            if (!IsAllowedContentType(contentType))
+            {
+                return false;
+            }
+
+            return HasValidSignature(headerBytes, contentType ?? string.Empty);
         }
     }
 }
