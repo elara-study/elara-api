@@ -7,11 +7,6 @@ namespace Elara.API.Extensions
 {
     public static class FormFileExtensions
     {
-        /// <summary>
-        /// Lightweight header-only validation for profile images.
-        /// Returns false for null/empty files, disallowed types, oversized files,
-        /// or when the file's magic bytes do not match the declared content type.
-        /// </summary>
         public static async Task<bool> IsValidProfileImageAsync(this IFormFile? file)
         {
             if (file == null || file.Length == 0)
