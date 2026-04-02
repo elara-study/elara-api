@@ -127,7 +127,7 @@ namespace Elara.API.Controllers
         }
 
         [HttpDelete("groups/{id:guid}/announcements/{announcementId:guid}")]
-        [ProducesResponseType(typeof(BaseResponse<System.Guid>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse<object>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -136,10 +136,10 @@ namespace Elara.API.Controllers
         {
             var command = new DeleteAnnouncementCommand(id, announcementId);
             await _mediator.Send(command);
-            return Ok(new BaseResponse<System.Guid>
+            return Ok(new BaseResponse<object>
             {
                 Message = "Announcement deleted successfully.",
-                Data = announcementId
+                Data = null
             });
         }
     }

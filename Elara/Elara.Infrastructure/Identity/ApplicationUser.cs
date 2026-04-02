@@ -7,6 +7,8 @@ namespace Elara.Infrastructure.Identity
     {
         public string Name { get; set; } = string.Empty;
         public DateTime? DateOfBirth { get; set; }
+        public string? ImageUrl { get; set; }
+        public string? ImagePublicId { get; set; }
 
         public virtual ICollection<Notification> Notifications { get; set; } = [];
         public virtual ICollection<Report> Reports { get; set; } = [];

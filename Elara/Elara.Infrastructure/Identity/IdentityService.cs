@@ -9,6 +9,7 @@ using Elara.Domain.Entities.Users;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
+using Elara.Application.Models.Users;
 
 namespace Elara.Infrastructure.Identity
 {
@@ -242,6 +243,41 @@ namespace Elara.Infrastructure.Identity
                 .ExecuteDeleteAsync();
 
             return affectedRows > 0;
+        }
+
+        public async Task<UserImageData> GetUserImageDataAsync(Guid userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null)
+            {
+                throw new KeyNotFoundException($"User with ID {userId} was not found.");
+            }
+
+            return new UserImageData
+            {
+                UserId = user.Id,
+                ImageUrl = user.ImageUrl,
+                ImagePublicId = user.ImagePublicId
+            };
+        }
+
+        public async Task UpdateUserImageAsync(Guid userId, string? imageUrl, string? imagePublicId)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null)
+            {
+                throw new KeyNotFoundException($"User with ID {userId} was not found.");
+            }
+
+            user.ImageUrl = imageUrl;
+            user.ImagePublicId = imagePublicId;
+
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join("; ", result.Errors.Select(e => e.Description));
+                throw new InvalidOperationException($"Failed to update user image: {errors}");
+            }
         }
 
         private static string BuildRefreshTokenName(string refreshToken)

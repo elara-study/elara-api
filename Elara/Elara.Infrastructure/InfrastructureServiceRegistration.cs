@@ -5,15 +5,20 @@ using Elara.Infrastructure.Identity;
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using System.Reflection;
+using Elara.Application.Common.Interfaces;
+using Elara.Infrastructure.Media;
 
 namespace Elara.Infrastructure
 {
     public static class InfrastructureServiceRegistration
     {
-        public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
+        public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddAutoMapper(config => config.AddMaps(Assembly.GetExecutingAssembly()));
+
+            services.Configure<CloudinaryOptions>(configuration.GetSection(CloudinaryOptions.SectionName));
 
             services.AddIdentity<ApplicationUser, ApplicationRole>()
                 .AddEntityFrameworkStores<AppDbContext>()
@@ -21,6 +26,7 @@ namespace Elara.Infrastructure
 
             services.AddScoped<ITokenService, JwtTokenService>();
             services.AddScoped<IIdentityService, IdentityService>();
+            services.AddScoped<IImageStorageService, CloudinaryImageStorageService>();
 
             return services;
         }
