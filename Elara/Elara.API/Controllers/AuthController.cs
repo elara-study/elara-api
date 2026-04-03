@@ -23,12 +23,12 @@ namespace Elara.API.Controllers
         }
 
         [HttpPost("register")]
-        [ProducesResponseType(typeof(BaseResponse<AuthUserData>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse<AuthUserData>), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Register([FromBody] RegisterUserCommand command)
         {
             var result = await _mediator.Send(command);
-            return Ok(new BaseResponse<AuthUserData>
+            return StatusCode(StatusCodes.Status201Created, new BaseResponse<AuthUserData>
             {
                 Message = "User registered and logged in successfully.",
                 Data = result
