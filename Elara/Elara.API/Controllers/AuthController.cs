@@ -63,7 +63,7 @@ namespace Elara.API.Controllers
         }
 
 
-        [HttpPost("logout/token")]
+        [HttpPost("logout")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> LogoutByToken([FromBody] RefreshTokenRequest request)
         {
