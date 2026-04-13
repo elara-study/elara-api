@@ -7,6 +7,8 @@ using Elara.Application.Features.Auth.Commands.Logout;
 using Elara.Application.Responses;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Elara.Application.Features.Auth.Commands.ForgotPassword;
+using Elara.Application.Features.Auth.Commands.ResetPassword;
 
 namespace Elara.API.Controllers
 {
@@ -62,6 +64,32 @@ namespace Elara.API.Controllers
             });
         }
 
+        [HttpPost("forgot-password")]
+        [ProducesResponseType(typeof(BaseResponse<ForgotPasswordResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordCommand command)
+        {
+            var result = await _mediator.Send(command);
+            return Ok(new BaseResponse<ForgotPasswordResponse>
+            {
+                Message = result.Message,
+                Data = result
+            });
+        }
+
+        [HttpPost("reset-password")]
+        [ProducesResponseType(typeof(BaseResponse<object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordCommand command)
+        {
+            await _mediator.Send(command);
+            return Ok(new BaseResponse<object>
+            {
+                Message = "Password has been reset successfully.",
+                Data = null
+            });
+        }
 
         [HttpPost("logout/token")]
         [ProducesResponseType(StatusCodes.Status200OK)]

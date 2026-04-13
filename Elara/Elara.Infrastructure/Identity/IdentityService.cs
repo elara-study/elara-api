@@ -319,5 +319,27 @@ namespace Elara.Infrastructure.Identity
                     .ExecuteDeleteAsync();
             }
         }
+        public async Task<Guid> GetUserIdByEmailAsync(string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+                throw new KeyNotFoundException("No account found with this email.");
+            return user.Id;
+        }
+
+        public async Task ResetPasswordWithOtpAsync(Guid userId, string newPassword)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null)
+                throw new KeyNotFoundException("User not found.");
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join("; ", result.Errors.Select(e => e.Description));
+                throw new InvalidOperationException($"Password reset failed: {errors}");
+            }
+        }
     }
 }
