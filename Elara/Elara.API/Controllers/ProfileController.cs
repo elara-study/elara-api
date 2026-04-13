@@ -75,7 +75,7 @@ namespace Elara.API.Controllers
         }
 
         [HttpDelete("image")]
-        [ProducesResponseType(typeof(BaseResponse<object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -89,11 +89,7 @@ namespace Elara.API.Controllers
 
             await _mediator.Send(new DeleteProfileImageCommand(currentUserId.Value));
 
-            return Ok(new BaseResponse<object>
-            {
-                Message = "Profile image deleted successfully.",
-                Data = null
-            });
+            return NoContent();
         }
     }
 }
