@@ -341,5 +341,18 @@ namespace Elara.Infrastructure.Identity
                 throw new InvalidOperationException($"Password reset failed: {errors}");
             }
         }
+        public async Task ChangePasswordAsync(Guid userId, string currentPassword, string newPassword)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null)
+                throw new KeyNotFoundException($"User with ID {userId} was not found.");
+
+            var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join("; ", result.Errors.Select(e => e.Description));
+                throw new InvalidOperationException($"Password change failed: {errors}");
+            }
+        }
     }
 }

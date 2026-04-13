@@ -1,5 +1,4 @@
-﻿using Elara.Application.Common.Interfaces;
-using Elara.Application.Contracts.Identity;
+﻿using Elara.Application.Contracts.Identity;
 using Elara.Application.Contracts.Persistence;
 using Elara.Domain.Entities.Administrative;
 using MediatR;

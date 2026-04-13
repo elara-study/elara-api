@@ -8,7 +8,9 @@ using Elara.Application.Responses;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Elara.Application.Features.Auth.Commands.ForgotPassword;
-using Elara.Application.Features.Auth.Commands.ResetPassword;
+using Elara.API.Controllers.Requests;
+using Elara.Application.Common.Interfaces;
+using Elara.Application.Features.Auth.Commands.ChangePassword;
 
 namespace Elara.API.Controllers
 {
@@ -18,10 +20,12 @@ namespace Elara.API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IMediator _mediator;
+        private readonly ICurrentUserService _currentUserService;
 
-        public AuthController(IMediator mediator)
+        public AuthController(IMediator mediator, ICurrentUserService currentUserService)
         {
             _mediator = mediator;
+            _currentUserService = currentUserService;
         }
 
         [HttpPost("register")]
@@ -87,6 +91,31 @@ namespace Elara.API.Controllers
             return Ok(new BaseResponse<object>
             {
                 Message = "Password has been reset successfully.",
+                Data = null
+            });
+        }
+
+        [HttpPost("change-password")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+        {
+            var currentUserId = _currentUserService.UserId;
+            if (!currentUserId.HasValue)
+                return Unauthorized();
+
+            await _mediator.Send(new ChangePasswordCommand
+            {
+                UserId = currentUserId.Value,
+                CurrentPassword = request.CurrentPassword,
+                NewPassword = request.NewPassword,
+                ConfirmNewPassword = request.ConfirmNewPassword
+            });
+
+            return Ok(new BaseResponse<string>
+            {
+                Message = "Password changed successfully.",
                 Data = null
             });
         }
