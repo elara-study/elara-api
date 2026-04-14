@@ -18,8 +18,8 @@ namespace Elara.Infrastructure.Data
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
         }
-        #region Identity DbSets
-        public DbSet<PasswordResetOtp> PasswordResetOtps { get; set; }
+        #region Verification
+        public DbSet<OtpCode> OtpCodes { get; set; }
         #endregion
 
         #region User DbSets

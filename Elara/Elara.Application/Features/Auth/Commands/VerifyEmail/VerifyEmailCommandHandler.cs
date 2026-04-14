@@ -3,26 +3,24 @@ using Elara.Application.Contracts.Persistence;
 using Elara.Domain.Entities.Administrative;
 using MediatR;
 
-namespace Elara.Application.Features.Auth.Commands.ResetPassword
+namespace Elara.Application.Features.Auth.Commands.VerifyEmail
 {
-    public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand>
+    public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand>
     {
         private readonly IIdentityService _identityService;
         private readonly IOtpRepository _otpRepository;
 
-        public ResetPasswordCommandHandler(
-            IIdentityService identityService,
-            IOtpRepository otpRepository)
+        public VerifyEmailCommandHandler(IIdentityService identityService,IOtpRepository otpRepository)
         {
             _identityService = identityService;
             _otpRepository = otpRepository;
         }
 
-        public async Task Handle(ResetPasswordCommand request, CancellationToken cancellationToken)
+        public async Task Handle(VerifyEmailCommand request, CancellationToken cancellationToken)
         {
             var userId = await _identityService.GetUserIdByEmailAsync(request.Email);
 
-            var otpEntity = await _otpRepository.GetValidOtpAsync(userId, OtpType.PasswordReset, cancellationToken);
+            var otpEntity = await _otpRepository.GetValidOtpAsync(userId, OtpType.EmailVerification, cancellationToken);
             if (otpEntity == null)
                 throw new InvalidOperationException("OTP has expired or does not exist.");
 
@@ -40,7 +38,7 @@ namespace Elara.Application.Features.Auth.Commands.ResetPassword
             otpEntity.IsUsed = true;
             await _otpRepository.SaveChangesAsync(cancellationToken);
 
-            await _identityService.ResetPasswordWithOtpAsync(userId, request.NewPassword);
+            await _identityService.ConfirmEmailAsync(userId);
         }
 
         private static string ComputeHash(string value)

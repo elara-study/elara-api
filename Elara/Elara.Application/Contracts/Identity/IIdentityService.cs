@@ -15,5 +15,6 @@ namespace Elara.Application.Contracts.Identity
         Task<Guid> GetUserIdByEmailAsync(string email);
         Task ResetPasswordWithOtpAsync(Guid userId, string newPassword);
         Task ChangePasswordAsync(Guid userId, string currentPassword, string newPassword);
+        Task ConfirmEmailAsync(Guid userId);
     }
 }

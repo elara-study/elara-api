@@ -11,6 +11,7 @@ using Elara.Application.Features.Auth.Commands.ForgotPassword;
 using Elara.API.Controllers.Requests;
 using Elara.Application.Common.Interfaces;
 using Elara.Application.Features.Auth.Commands.ChangePassword;
+using Elara.Application.Features.Auth.Commands.VerifyEmail;
 
 namespace Elara.API.Controllers
 {
@@ -116,6 +117,20 @@ namespace Elara.API.Controllers
             return Ok(new BaseResponse<string>
             {
                 Message = "Password changed successfully.",
+                Data = null
+            });
+        }
+
+        [HttpPost("verify-email")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailCommand command)
+        {
+            await _mediator.Send(command);
+            return Ok(new BaseResponse<string>
+            {
+                Message = "Email verified successfully.",
                 Data = null
             });
         }

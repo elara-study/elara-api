@@ -354,5 +354,20 @@ namespace Elara.Infrastructure.Identity
                 throw new InvalidOperationException($"Password change failed: {errors}");
             }
         }
+
+        public async Task ConfirmEmailAsync(Guid userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null)
+                throw new KeyNotFoundException($"User with ID {userId} was not found.");
+
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var result = await _userManager.ConfirmEmailAsync(user, token);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join("; ", result.Errors.Select(e => e.Description));
+                throw new InvalidOperationException($"Email confirmation failed: {errors}");
+            }
+        }
     }
 }
