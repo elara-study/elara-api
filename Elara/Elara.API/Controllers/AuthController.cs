@@ -11,6 +11,7 @@ using Elara.Application.Features.Auth.Commands.ForgotPassword;
 using Elara.API.Controllers.Requests;
 using Elara.Application.Common.Interfaces;
 using Elara.Application.Features.Auth.Commands.ChangePassword;
+using Elara.Application.Features.Auth.Commands.ResetPassword;
 using Elara.Application.Features.Auth.Commands.VerifyEmail;
 
 namespace Elara.API.Controllers
@@ -108,7 +109,6 @@ namespace Elara.API.Controllers
 
             await _mediator.Send(new ChangePasswordCommand
             {
-                UserId = currentUserId.Value,
                 CurrentPassword = request.CurrentPassword,
                 NewPassword = request.NewPassword,
                 ConfirmNewPassword = request.ConfirmNewPassword
