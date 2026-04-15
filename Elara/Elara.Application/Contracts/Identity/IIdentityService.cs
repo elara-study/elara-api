@@ -12,5 +12,9 @@ namespace Elara.Application.Contracts.Identity
         Task<bool> RevokeRefreshTokenAsync(string refreshToken);
         Task<UserImageData> GetUserImageDataAsync(Guid userId);
         Task UpdateUserImageAsync(Guid userId, string? imageUrl, string? imagePublicId);
+        Task<Guid> GetUserIdByEmailAsync(string email);
+        Task ResetPasswordWithOtpAsync(Guid userId, string newPassword);
+        Task ChangePasswordAsync(Guid userId, string currentPassword, string newPassword);
+        Task ConfirmEmailAsync(Guid userId);
     }
 }

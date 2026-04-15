@@ -7,6 +7,12 @@ using Elara.Application.Features.Auth.Commands.Logout;
 using Elara.Application.Responses;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Elara.Application.Features.Auth.Commands.ForgotPassword;
+using Elara.API.Controllers.Requests;
+using Elara.Application.Common.Interfaces;
+using Elara.Application.Features.Auth.Commands.ChangePassword;
+using Elara.Application.Features.Auth.Commands.ResetPassword;
+using Elara.Application.Features.Auth.Commands.VerifyEmail;
 
 namespace Elara.API.Controllers
 {
@@ -16,10 +22,12 @@ namespace Elara.API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IMediator _mediator;
+        private readonly ICurrentUserService _currentUserService;
 
-        public AuthController(IMediator mediator)
+        public AuthController(IMediator mediator, ICurrentUserService currentUserService)
         {
             _mediator = mediator;
+            _currentUserService = currentUserService;
         }
 
         [HttpPost("register")]
@@ -62,6 +70,70 @@ namespace Elara.API.Controllers
             });
         }
 
+        [HttpPost("forgot-password")]
+        [ProducesResponseType(typeof(BaseResponse<ForgotPasswordResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordCommand command)
+        {
+            var result = await _mediator.Send(command);
+            return Ok(new BaseResponse<ForgotPasswordResponse>
+            {
+                Message = result.Message,
+                Data = result
+            });
+        }
+
+        [HttpPost("reset-password")]
+        [ProducesResponseType(typeof(BaseResponse<object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordCommand command)
+        {
+            await _mediator.Send(command);
+            return Ok(new BaseResponse<object>
+            {
+                Message = "Password has been reset successfully.",
+                Data = null
+            });
+        }
+
+        [HttpPost("change-password")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+        {
+            var currentUserId = _currentUserService.UserId;
+            if (!currentUserId.HasValue)
+                return Unauthorized();
+
+            await _mediator.Send(new ChangePasswordCommand
+            {
+                CurrentPassword = request.CurrentPassword,
+                NewPassword = request.NewPassword,
+                ConfirmNewPassword = request.ConfirmNewPassword
+            });
+
+            return Ok(new BaseResponse<string>
+            {
+                Message = "Password changed successfully.",
+                Data = null
+            });
+        }
+
+        [HttpPost("verify-email")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailCommand command)
+        {
+            await _mediator.Send(command);
+            return Ok(new BaseResponse<string>
+            {
+                Message = "Email verified successfully.",
+                Data = null
+            });
+        }
 
         [HttpPost("logout")]
         [ProducesResponseType(StatusCodes.Status200OK)]
