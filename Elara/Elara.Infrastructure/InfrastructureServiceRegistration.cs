@@ -28,7 +28,7 @@ namespace Elara.Infrastructure
             services.AddScoped<IIdentityService, IdentityService>();
             services.AddScoped<IImageStorageService, CloudinaryImageStorageService>();
 
-            services.Configure<SmtpOptions>(configuration.GetSection(SmtpOptions.SectionName));
+            services.Configure<BrevoOptions>(configuration.GetSection(BrevoOptions.SectionName));
             services.AddScoped<IEmailService, EmailService>();
             return services;
         }

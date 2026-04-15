@@ -1,57 +1,59 @@
-﻿using System.Net;
-using System.Net.Mail;
+﻿using brevo_csharp.Api;
+using brevo_csharp.Model;
 using Microsoft.Extensions.Options;
+using Configuration = brevo_csharp.Client.Configuration;
 
 namespace Elara.Infrastructure.Email
 {
     public class EmailService : IEmailService
     {
-        private readonly SmtpOptions _options;
-        public EmailService(IOptions<SmtpOptions> options)
+        private readonly BrevoOptions _options;
+
+        public EmailService(IOptions<BrevoOptions> options)
         {
             _options = options.Value;
         }
-        public async Task SendPasswordResetEmailAsync(string toEmail, string userName, string otp, CancellationToken cancellationToken = default)
+
+        public async System.Threading.Tasks.Task SendPasswordResetEmailAsync(string toEmail, string userName, string otp, CancellationToken cancellationToken = default)
         {
             var subject = "Password Reset OTP";
             var body = $@"
-                 <h2>Password Reset OTP</h2>
-                 <p>Hi {userName},</p>
-                 <p>Your OTP code is:</p>
-                 <h1 style='letter-spacing: 8px'>{otp}</h1>
-                 <p>This code expires in <strong>10 minutes</strong>. Do not share it with anyone.</p>";
+                <h2>Password Reset OTP</h2>
+                <p>Hi {userName},</p>
+                <p>Your OTP code is:</p>
+                <h1 style='letter-spacing: 8px'>{otp}</h1>
+                <p>This code expires in <strong>10 minutes</strong>. Do not share it with anyone.</p>";
 
-            await SendEmailAsync(toEmail, subject, body, cancellationToken);
+            await SendEmailAsync(toEmail, subject, body);
         }
-        public async Task SendEmailVerificationAsync(string toEmail, string otp, CancellationToken cancellationToken = default)
+
+        public async System.Threading.Tasks.Task SendEmailVerificationAsync(string toEmail, string otp, CancellationToken cancellationToken = default)
         {
             var subject = "Verify Your Email";
             var body = $@"
-                   <h2>Email Verification</h2>
-                   <p>Your verification code is:</p>
-                   <h1 style='letter-spacing: 8px'>{otp}</h1>
-                   <p>This code expires in <strong>10 minutes</strong>. Do not share it with anyone.</p>";
+                <h2>Email Verification</h2>
+                <p>Your verification code is:</p>
+                <h1 style='letter-spacing: 8px'>{otp}</h1>
+                <p>This code expires in <strong>10 minutes</strong>. Do not share it with anyone.</p>";
 
-            await SendEmailAsync(toEmail, subject, body, cancellationToken);
+            await SendEmailAsync(toEmail, subject, body);
         }
-        private async Task SendEmailAsync(string to, string subject, string htmlBody, CancellationToken cancellationToken)
+
+        private async System.Threading.Tasks.Task SendEmailAsync(string toEmail, string subject, string htmlBody)
         {
-            using var client = new SmtpClient(_options.Host, _options.Port)
-            {
-                Credentials = new NetworkCredential(_options.Username, _options.Password),
-                EnableSsl = true
-            };
+            var config = new Configuration();
+            config.ApiKey["api-key"] = _options.ApiKey;
+                                                                        
+            var apiInstance = new TransactionalEmailsApi(config);
 
-            using var message = new MailMessage
-            {
-                From = new MailAddress(_options.FromEmail, _options.FromName),
-                Subject = subject,
-                Body = htmlBody,
-                IsBodyHtml = true
-            };
-            message.To.Add(to);
+            var sendSmtpEmail = new SendSmtpEmail(
+                sender: new SendSmtpEmailSender(_options.FromName, _options.FromEmail),
+                to: new List<SendSmtpEmailTo> { new SendSmtpEmailTo(toEmail) },
+                subject: subject,
+                htmlContent: htmlBody
+            );
 
-            await client.SendMailAsync(message, cancellationToken);
+            await apiInstance.SendTransacEmailAsync(sendSmtpEmail);
         }
     }
 }
