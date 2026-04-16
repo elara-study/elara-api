@@ -10,9 +10,7 @@ namespace Elara.Application.Features.Auth.Commands.CompleteOAuthRegistration
         private readonly IIdentityService _identityService;
         private readonly ITokenService    _tokenService;
 
-        public CompleteOAuthRegistrationCommandHandler(
-            IIdentityService identityService,
-            ITokenService tokenService)
+        public CompleteOAuthRegistrationCommandHandler(IIdentityService identityService,ITokenService tokenService)
         {
             _identityService = identityService;
             _tokenService    = tokenService;

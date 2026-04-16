@@ -1,4 +1,4 @@
-namespace Elara.Application.Models.Auth
+namespace Elara.Application.Models.OAuth
 {
     public class PendingOAuthResponse
     {

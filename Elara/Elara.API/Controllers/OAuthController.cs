@@ -1,12 +1,11 @@
 using Asp.Versioning;
-using Elara.API.Filters;
+using Elara.Application.Contracts.Identity;
 using Elara.Application.Features.Auth.Commands.CompleteOAuthRegistration;
 using Elara.Application.Features.Auth.Commands.OAuthCallback;
 using Elara.Application.Models.Auth;
+using Elara.Application.Models.OAuth;
 using Elara.Application.Responses;
 using MediatR;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -18,49 +17,44 @@ namespace Elara.API.Controllers
     [Route("api/v{version:apiVersion}/oauth")]
     public class OAuthController : ControllerBase
     {
-        private readonly IMediator _mediator;
+        private readonly IMediator            _mediator;
+        private readonly IOAuthTokenValidator  _tokenValidator;
+        private readonly IPendingTokenService  _pendingTokenService;
 
-        public OAuthController(IMediator mediator)
+        public OAuthController(IMediator mediator,IOAuthTokenValidator tokenValidator,IPendingTokenService pendingTokenService)
         {
-            _mediator = mediator;
+            _mediator            = mediator;
+            _tokenValidator      = tokenValidator;
+            _pendingTokenService = pendingTokenService;
         }
 
-        [HttpGet("google")]
-        public IActionResult LoginWithGoogle()
+        [HttpPost("google")]
+        [ProducesResponseType(typeof(BaseResponse<object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> GoogleLogin([FromBody] ExternalTokenRequest request)
         {
-            var props = new AuthenticationProperties
-            {
-                RedirectUri = Url.Action(nameof(GoogleCallback), "OAuth", null, Request.Scheme)
-            };
-            return Challenge(props, "Google");
+            var userInfo = await _tokenValidator.ValidateGoogleTokenAsync(request.Token);
+            return await HandleOAuthAsync("Google", userInfo);
         }
 
-        [HttpGet("google/callback")]
-        public async Task<IActionResult> GoogleCallback()
-            => await HandleCallbackAsync("Google");
-
-        [HttpGet("facebook")]
-        public IActionResult LoginWithFacebook()
+        [HttpPost("facebook")]
+        [ProducesResponseType(typeof(BaseResponse<object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> FacebookLogin([FromBody] ExternalTokenRequest request)
         {
-            var props = new AuthenticationProperties
-            {
-                RedirectUri = Url.Action(nameof(FacebookCallback), "OAuth", null, Request.Scheme)
-            };
-            return Challenge(props, "Facebook");
+            var userInfo = await _tokenValidator.ValidateFacebookTokenAsync(request.Token);
+            return await HandleOAuthAsync("Facebook", userInfo);
         }
-
-        [HttpGet("facebook/callback")]
-        public async Task<IActionResult> FacebookCallback()
-            => await HandleCallbackAsync("Facebook");
 
         [HttpPost("complete-registration")]
-        [ServiceFilter(typeof(ExtractPendingTokenClaimsFilter))]
         [ProducesResponseType(typeof(BaseResponse<LoginResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> CompleteRegistration([FromBody] CompleteRegistrationRequest request)
         {
-            var claims = (ClaimsPrincipal)HttpContext.Items["PendingClaims"]!;
+            var claims = _pendingTokenService.ValidatePendingToken(request.PendingToken);
+            if (claims == null)
+                return Unauthorized(new BaseResponse<string> { Message = "Invalid or expired pending token." });
 
             var command = new CompleteOAuthRegistrationCommand
             {
@@ -81,58 +75,30 @@ namespace Elara.API.Controllers
             });
         }
 
-        private async Task<IActionResult> HandleCallbackAsync(string scheme)
+        private async Task<IActionResult> HandleOAuthAsync(string provider, OAuthUserInfo userInfo)
         {
-            try
+            var command = new OAuthCallbackCommand
             {
-                var result = await HttpContext.AuthenticateAsync(IdentityConstants.ExternalScheme);
-                if (!result.Succeeded || result.Principal == null)
-                    return Unauthorized(new BaseResponse<string>
-                    {
-                        Message = $"Authentication failed. Reason: {result.Failure?.Message ?? "unknown"}"
-                    });
+                Provider       = provider,
+                ProviderUserId = userInfo.ProviderUserId,
+                Email          = userInfo.Email,
+                Name           = userInfo.Name
+            };
 
-                await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+            var response = await _mediator.Send(command);
 
-                var claims = result.Principal.Claims.ToList();
-
-                var providerUserId = claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
-                var email          = claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
-                var name           = claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value ?? email ?? "Unknown";
-
-                if (string.IsNullOrWhiteSpace(providerUserId) || string.IsNullOrWhiteSpace(email))
-                    return BadRequest(new BaseResponse<string> { Message = "Could not retrieve required profile info from provider." });
-
-                var command = new OAuthCallbackCommand
+            if (!response.IsPending)
+                return Ok(new BaseResponse<LoginResponse>
                 {
-                    Provider       = scheme,
-                    ProviderUserId = providerUserId,
-                    Email          = email,
-                    Name           = name
-                };
-
-                var response = await _mediator.Send(command);
-
-                if (!response.IsPending)
-                    return Ok(new BaseResponse<LoginResponse>
-                    {
-                        Message = "Logged in successfully.",
-                        Data    = response.LoginResponse
-                    });
-
-                return Ok(new BaseResponse<PendingOAuthResponse>
-                {
-                    Message = "Please complete your registration.",
-                    Data    = new PendingOAuthResponse { PendingToken = response.PendingToken! }
+                    Message = "Logged in successfully.",
+                    Data    = response.LoginResponse
                 });
-            }
-            catch (Exception ex)
+
+            return Ok(new BaseResponse<PendingOAuthResponse>
             {
-                return StatusCode(500, new BaseResponse<string>
-                {
-                    Message = $"[DEBUG] {ex.GetType().Name}: {ex.Message}"
-                });
-            }
+                Message = "Please complete your registration.",
+                Data    = new PendingOAuthResponse { PendingToken = response.PendingToken! }
+            });
         }
     }
 }

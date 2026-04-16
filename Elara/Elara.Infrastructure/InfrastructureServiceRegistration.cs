@@ -28,6 +28,7 @@ namespace Elara.Infrastructure
             services.AddScoped<IPendingTokenService, PendingTokenService>();
             services.AddScoped<IIdentityService, IdentityService>();
             services.AddScoped<IImageStorageService, CloudinaryImageStorageService>();
+            services.AddHttpClient<IOAuthTokenValidator, OAuthTokenValidator>();
 
             return services;
         }

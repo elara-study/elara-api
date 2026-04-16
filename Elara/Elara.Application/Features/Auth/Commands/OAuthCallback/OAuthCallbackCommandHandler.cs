@@ -11,10 +11,7 @@ namespace Elara.Application.Features.Auth.Commands.OAuthCallback
         private readonly ITokenService       _tokenService;
         private readonly IPendingTokenService _pendingTokenService;
 
-        public OAuthCallbackCommandHandler(
-            IIdentityService identityService,
-            ITokenService tokenService,
-            IPendingTokenService pendingTokenService)
+        public OAuthCallbackCommandHandler(IIdentityService identityService,ITokenService tokenService,IPendingTokenService pendingTokenService)
         {
             _identityService    = identityService;
             _tokenService       = tokenService;

@@ -1,4 +1,5 @@
 using Elara.Application.Models.Auth;
+using Elara.Application.Models.OAuth;
 using MediatR;
 
 namespace Elara.Application.Features.Auth.Commands.OAuthCallback
