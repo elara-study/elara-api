@@ -16,5 +16,9 @@ namespace Elara.Application.Contracts.Identity
 
         Task<AuthUserData?> FindExistingOAuthUserAsync(OAuthUserData data);
         Task<AuthUserData> CompleteOAuthRegistrationAsync(CompleteOAuthData data);
+        Task<Guid> GetUserIdByEmailAsync(string email);
+        Task ResetPasswordWithOtpAsync(Guid userId, string newPassword);
+        Task ChangePasswordAsync(Guid userId, string currentPassword, string newPassword);
+        Task ConfirmEmailAsync(Guid userId);
     }
 }

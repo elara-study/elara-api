@@ -2,13 +2,13 @@ using Elara.Application.Contracts.Identity;
 using Elara.Infrastructure.Auth;
 using Elara.Infrastructure.Data;
 using Elara.Infrastructure.Identity;
-using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using System.Reflection;
 using Elara.Application.Common.Interfaces;
 using Elara.Infrastructure.Media;
+using Elara.Infrastructure.Email;
 
 namespace Elara.Infrastructure
 {
@@ -30,6 +30,8 @@ namespace Elara.Infrastructure
             services.AddScoped<IImageStorageService, CloudinaryImageStorageService>();
             services.AddHttpClient<IOAuthTokenValidator, OAuthTokenValidator>();
 
+            services.Configure<BrevoOptions>(configuration.GetSection(BrevoOptions.SectionName));
+            services.AddScoped<IEmailService, EmailService>();
             return services;
         }
     }
