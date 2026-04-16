@@ -1,5 +1,6 @@
 using Elara.Application.Models.Auth;
 using Elara.Application.Models.Users;
+using Elara.Application.Models.OAuth;
 
 namespace Elara.Application.Contracts.Identity
 {
@@ -12,6 +13,9 @@ namespace Elara.Application.Contracts.Identity
         Task<bool> RevokeRefreshTokenAsync(string refreshToken);
         Task<UserImageData> GetUserImageDataAsync(Guid userId);
         Task UpdateUserImageAsync(Guid userId, string? imageUrl, string? imagePublicId);
+
+        Task<AuthUserData?> FindExistingOAuthUserAsync(OAuthUserData data);
+        Task<AuthUserData> CompleteOAuthRegistrationAsync(CompleteOAuthData data);
         Task<Guid> GetUserIdByEmailAsync(string email);
         Task ResetPasswordWithOtpAsync(Guid userId, string newPassword);
         Task ChangePasswordAsync(Guid userId, string currentPassword, string newPassword);

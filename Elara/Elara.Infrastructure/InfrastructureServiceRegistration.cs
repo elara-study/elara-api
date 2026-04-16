@@ -25,8 +25,10 @@ namespace Elara.Infrastructure
                 .AddDefaultTokenProviders();
 
             services.AddScoped<ITokenService, JwtTokenService>();
+            services.AddScoped<IPendingTokenService, PendingTokenService>();
             services.AddScoped<IIdentityService, IdentityService>();
             services.AddScoped<IImageStorageService, CloudinaryImageStorageService>();
+            services.AddHttpClient<IOAuthTokenValidator, OAuthTokenValidator>();
 
             services.Configure<BrevoOptions>(configuration.GetSection(BrevoOptions.SectionName));
             services.AddScoped<IEmailService, EmailService>();
