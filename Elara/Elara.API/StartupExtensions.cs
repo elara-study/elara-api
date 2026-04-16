@@ -6,9 +6,12 @@ using Elara.API.Middlewares;
 using Elara.API.Services;
 using Elara.Persistence;
 using Elara.Infrastructure;
+using Microsoft.AspNetCore.Authentication.Facebook;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.AspNetCore.Identity;
 
 namespace Elara.API
 {
@@ -30,6 +33,7 @@ namespace Elara.API
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             })
+            .AddCookie(IdentityConstants.ExternalScheme)
             .AddJwtBearer(options =>
             {
                 options.TokenValidationParameters = new TokenValidationParameters
@@ -55,9 +59,46 @@ namespace Elara.API
                         return Task.CompletedTask;
                     }
                 };
+            })
+            .AddGoogle(options =>
+            {
+                options.ClientId     = builder.Configuration["OAuth:Google:ClientId"]!;
+                options.ClientSecret = builder.Configuration["OAuth:Google:ClientSecret"]!;
+                options.SignInScheme  = IdentityConstants.ExternalScheme;
+                options.CorrelationCookie.SameSite     = SameSiteMode.None;
+                options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.Always;
+                options.CorrelationCookie.IsEssential  = true;
+                options.CorrelationCookie.MaxAge       = TimeSpan.FromMinutes(5);
+                options.Events.OnRemoteFailure = context =>
+                {
+                    context.Response.StatusCode  = 400;
+                    context.Response.ContentType = "application/json";
+                    context.HandleResponse();
+                    return context.Response.WriteAsync(
+                        $"{{\"status\":\"Error\",\"message\":\"{context.Failure?.Message}\"}}");
+                };
+            })
+            .AddFacebook(options =>
+            {
+                options.AppId     = builder.Configuration["OAuth:Facebook:AppId"]!;
+                options.AppSecret = builder.Configuration["OAuth:Facebook:AppSecret"]!;
+                options.SignInScheme  = IdentityConstants.ExternalScheme;
+                options.CorrelationCookie.SameSite    = SameSiteMode.None;
+                options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.Always;
+                options.CorrelationCookie.IsEssential  = true;
+                options.CorrelationCookie.MaxAge       = TimeSpan.FromMinutes(5);
+                options.Events.OnRemoteFailure = context =>
+                {
+                    context.Response.StatusCode = 400;
+                    context.Response.ContentType = "application/json";
+                    context.HandleResponse();
+                    return context.Response.WriteAsync(
+                        $"{{\"status\":\"Error\",\"message\":\"{context.Failure?.Message}\"}}");
+                };
             });
 
             builder.Services.AddControllers();
+            builder.Services.AddScoped<Elara.API.Filters.ExtractPendingTokenClaimsFilter>();
             builder.Services.AddApiVersioning(options =>
             {
                 options.DefaultApiVersion = new ApiVersion(1, 0);

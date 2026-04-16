@@ -1,5 +1,6 @@
 using Elara.Application.Contracts.Identity;
 using Elara.Application.Models.Auth;
+using Elara.Application.Models.OAuth;
 using Elara.Domain.Constants;
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
@@ -318,6 +319,96 @@ namespace Elara.Infrastructure.Identity
                     .Where(t => t.UserId == token.UserId && t.LoginProvider == token.LoginProvider && t.Name == token.Name)
                     .ExecuteDeleteAsync();
             }
+        }
+
+        public async Task<AuthUserData?> FindExistingOAuthUserAsync(OAuthUserData data)
+        {
+            var user = await _userManager.FindByLoginAsync(data.Provider, data.ProviderUserId);
+
+            if (user == null)
+            {
+                user = await _userManager.FindByEmailAsync(data.Email);
+                if (user == null)
+                    return null;
+
+                var loginInfo = new UserLoginInfo(data.Provider, data.ProviderUserId, data.Provider);
+                await _userManager.AddLoginAsync(user, loginInfo);
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var authUser = _mapper.Map<AuthUserData>(user);
+            authUser.Role = roles.FirstOrDefault() ?? string.Empty;
+            return authUser;
+        }
+
+        public async Task<AuthUserData> CompleteOAuthRegistrationAsync(CompleteOAuthData data)
+        {
+            var roleInput = data.Role.Trim().ToLower();
+            string requestedRole = roleInput switch
+            {
+                "teacher" => Roles.Teacher,
+                "student" => Roles.Student,
+                _ => throw new InvalidOperationException($"Role '{roleInput}' is not valid for OAuth registration.")
+            };
+
+            if (requestedRole == Roles.Teacher)
+            {
+                if (!data.SubjectId.HasValue || data.SubjectId.Value <= 0)
+                    throw new InvalidOperationException("SubjectId is required for teachers.");
+
+                var subjectExists = await _context.Subjects.AnyAsync(s => s.Id == data.SubjectId.Value);
+                if (!subjectExists)
+                    throw new InvalidOperationException($"Subject with id {data.SubjectId.Value} does not exist.");
+            }
+
+            var user = new ApplicationUser
+            {
+                UserName       = data.Email,
+                Email          = data.Email,
+                Name           = data.Name,
+                DateOfBirth    = DateTime.SpecifyKind(data.DateOfBirth, DateTimeKind.Utc),
+                EmailConfirmed = true
+            };
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                var createResult = await _userManager.CreateAsync(user);
+                if (!createResult.Succeeded)
+                {
+                    var errors = string.Join("; ", createResult.Errors.Select(e => e.Description));
+                    throw new InvalidOperationException($"OAuth user creation failed: {errors}");
+                }
+
+                var roleResult = await _userManager.AddToRoleAsync(user, requestedRole);
+                if (!roleResult.Succeeded)
+                {
+                    var errors = string.Join("; ", roleResult.Errors.Select(e => e.Description));
+                    throw new InvalidOperationException($"Role assignment failed: {errors}");
+                }
+
+                if (requestedRole == Roles.Teacher)
+                    _context.Teachers.Add(new Teacher { Id = user.Id, SubjectId = data.SubjectId!.Value, IsDeleted = false });
+                else
+                    _context.Students.Add(new Student { Id = user.Id, IsDeleted = false });
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+
+            var loginInfo = new UserLoginInfo(data.Provider, data.ProviderUserId, data.Provider);
+            await _userManager.AddLoginAsync(user, loginInfo);
+
+            _logger.LogInformation("OAuth user {Email} registered via {Provider} with role {Role}", data.Email, data.Provider, requestedRole);
+
+            var authUser = _mapper.Map<AuthUserData>(user);
+            authUser.Role = requestedRole;
+            return authUser;
         }
     }
 }
