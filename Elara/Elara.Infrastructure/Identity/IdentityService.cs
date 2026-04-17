@@ -41,11 +41,14 @@ namespace Elara.Infrastructure.Identity
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
+                var username = await GenerateUniqueUsernameAsync(registerData.Name);
+                
                 var user = new ApplicationUser
                 {
                     UserName = registerData.Email,
                     Email = registerData.Email,
                     Name = registerData.Name,
+                    Username = username,
                     DateOfBirth = DateTime.SpecifyKind(registerData.DateOfBirth, DateTimeKind.Utc),
                     EmailConfirmed = false
                 };
@@ -361,11 +364,14 @@ namespace Elara.Infrastructure.Identity
                     throw new InvalidOperationException($"Subject with id {data.SubjectId.Value} does not exist.");
             }
 
+            var username = await GenerateUniqueUsernameAsync(data.Name);
+
             var user = new ApplicationUser
             {
                 UserName       = data.Email,
                 Email          = data.Email,
                 Name           = data.Name,
+                Username       = username,
                 DateOfBirth    = DateTime.SpecifyKind(data.DateOfBirth, DateTimeKind.Utc),
                 EmailConfirmed = true
             };
@@ -497,6 +503,24 @@ namespace Elara.Infrastructure.Identity
             if (user == null) return false;
 
             return await _userManager.VerifyTwoFactorTokenAsync(user, "Email", otp);
+        }
+
+        private async Task<string> GenerateUniqueUsernameAsync(string name)
+        {
+            var baseUsername = new string(name.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(baseUsername))
+                baseUsername = "user";
+
+            var uniqueUsername = baseUsername;
+            int counter = 1;
+
+            while (await _context.Users.AnyAsync(u => u.Username == uniqueUsername))
+            {
+                uniqueUsername = $"{baseUsername}{counter}";
+                counter++;
+            }
+
+            return uniqueUsername;
         }
     }
 }

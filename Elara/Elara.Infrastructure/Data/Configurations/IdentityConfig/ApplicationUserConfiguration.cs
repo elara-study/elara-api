@@ -16,6 +16,10 @@ namespace Elara.Infrastructure.Data.Configurations.IdentityConfig
                 .IsRequired()
                 .HasMaxLength(100);
 
+            builder.Property(u => u.Username)
+                .IsRequired()
+                .HasMaxLength(50);
+
             builder.Property(u => u.ImageUrl)
                 .HasMaxLength(500);
 
@@ -26,6 +30,10 @@ namespace Elara.Infrastructure.Data.Configurations.IdentityConfig
             builder.HasIndex(u => u.Email)
                 .IsUnique()
                 .HasDatabaseName("IX_Users_Email");
+
+            builder.HasIndex(u => u.Username)
+                .IsUnique()
+                .HasDatabaseName("IX_Users_CustomUsername");
 
             builder.HasIndex(u => u.UserName)
                 .IsUnique()
