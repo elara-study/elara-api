@@ -38,7 +38,7 @@ namespace Elara.API.Controllers
             var result = await _mediator.Send(command);
             return StatusCode(StatusCodes.Status201Created, new BaseResponse<AuthUserData>
             {
-                Message = "User registered and logged in successfully.",
+                Message = "User registered successfully. Please verify your email.",
                 Data = result
             });
         }

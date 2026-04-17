@@ -128,6 +128,11 @@ namespace Elara.Infrastructure.Identity
                 return null;
             }
 
+            if (!user.EmailConfirmed)
+            {
+                throw new UnauthorizedAccessException("Please verify your email address to log in.");
+            }
+
             var isValidPassword = await _userManager.CheckPasswordAsync(user, password);
             if (!isValidPassword)
             {
@@ -409,6 +414,8 @@ namespace Elara.Infrastructure.Identity
             var authUser = _mapper.Map<AuthUserData>(user);
             authUser.Role = requestedRole;
             return authUser;
+        }
+
         public async Task<Guid> GetUserIdByEmailAsync(string email)
         {
             var user = await _userManager.FindByEmailAsync(email);

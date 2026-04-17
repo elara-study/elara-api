@@ -37,9 +37,6 @@ namespace Elara.Application.Features.Auth.Commands.RegisterUser
                 SubjectId = request.SubjectId
             });
 
-            registeredUser.Token = _tokenService.CreateToken(registeredUser);
-            // generate refresh token
-            registeredUser.RefreshToken = await _identityService.GenerateRefreshTokenAsync(registeredUser.UserId);
 
             // Generate OTP for email verification
             var otp = GenerateOtp();
