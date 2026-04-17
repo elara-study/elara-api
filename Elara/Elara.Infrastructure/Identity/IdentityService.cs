@@ -123,9 +123,11 @@ namespace Elara.Infrastructure.Identity
         public async Task<AuthUserData?> ValidateUserCredentialsAsync(string email, string password)
         {
             var user = await _userManager.FindByEmailAsync(email);
-            if (user == null)
+            if (user == null) return null;
+
+            if (await _userManager.IsLockedOutAsync(user))
             {
-                return null;
+                throw new UnauthorizedAccessException("Account is locked due to multiple failed attempts. Please try again later.");
             }
 
             if (!user.EmailConfirmed)
@@ -136,15 +138,15 @@ namespace Elara.Infrastructure.Identity
             var isValidPassword = await _userManager.CheckPasswordAsync(user, password);
             if (!isValidPassword)
             {
+                await _userManager.AccessFailedAsync(user);
                 return null;
             }
 
+            await _userManager.ResetAccessFailedCountAsync(user);
+
             var roles = await _userManager.GetRolesAsync(user);
             var role = roles.FirstOrDefault();
-            if (string.IsNullOrWhiteSpace(role))
-            {
-                return null;
-            }
+            if (string.IsNullOrWhiteSpace(role)) return null;
 
             var authUser = _mapper.Map<AuthUserData>(user);
             authUser.Role = role;
@@ -390,6 +392,14 @@ namespace Elara.Infrastructure.Identity
                 else
                     _context.Students.Add(new Student { Id = user.Id, IsDeleted = false });
 
+                var loginInfo = new UserLoginInfo(data.Provider, data.ProviderUserId, data.Provider);
+                var loginResult = await _userManager.AddLoginAsync(user, loginInfo);
+                if (!loginResult.Succeeded)
+                {
+                    var errors = string.Join("; ", loginResult.Errors.Select(e => e.Description));
+                    throw new InvalidOperationException($"Failed to link OAuth provider: {errors}");
+                }
+
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
             }
@@ -398,9 +408,6 @@ namespace Elara.Infrastructure.Identity
                 await transaction.RollbackAsync();
                 throw;
             }
-
-            var loginInfo = new UserLoginInfo(data.Provider, data.ProviderUserId, data.Provider);
-            await _userManager.AddLoginAsync(user, loginInfo);
 
             _logger.LogInformation("OAuth user {Email} registered via {Provider} with role {Role}", data.Email, data.Provider, requestedRole);
 
@@ -451,13 +458,45 @@ namespace Elara.Infrastructure.Identity
             if (user == null)
                 throw new KeyNotFoundException($"User with ID {userId} was not found.");
 
-            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var result = await _userManager.ConfirmEmailAsync(user, token);
+            user.EmailConfirmed = true;
+            var result = await _userManager.UpdateAsync(user);
             if (!result.Succeeded)
             {
                 var errors = string.Join("; ", result.Errors.Select(e => e.Description));
                 throw new InvalidOperationException($"Email confirmation failed: {errors}");
             }
+        }
+
+        public async Task<string> GenerateEmailVerificationOtpAsync(Guid userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null) throw new KeyNotFoundException("User not found.");
+
+            return await _userManager.GenerateTwoFactorTokenAsync(user, "Email");
+        }
+
+        public async Task<bool> VerifyEmailOtpAsync(Guid userId, string otp)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null) return false;
+
+            return await _userManager.VerifyTwoFactorTokenAsync(user, "Email", otp);
+        }
+
+        public async Task<string> GeneratePasswordResetOtpAsync(Guid userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null) throw new KeyNotFoundException("User not found.");
+
+            return await _userManager.GenerateTwoFactorTokenAsync(user, "Email");
+        }
+
+        public async Task<bool> VerifyPasswordResetOtpAsync(Guid userId, string otp)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null) return false;
+
+            return await _userManager.VerifyTwoFactorTokenAsync(user, "Email", otp);
         }
     }
 }
