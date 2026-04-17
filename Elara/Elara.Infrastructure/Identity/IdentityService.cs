@@ -167,30 +167,23 @@ namespace Elara.Infrastructure.Identity
             var tokenName = BuildRefreshTokenName(token);
             var value = expiry.Ticks.ToString();
 
-            var localTracked = _context.Set<IdentityUserToken<Guid>>().Local
-                .FirstOrDefault(t => t.UserId == user.Id && t.LoginProvider == RefreshTokenProvider && t.Name == tokenName);
-            if (localTracked != null)
+            var activeTokens = await _context.Set<IdentityUserToken<Guid>>()
+                .Where(t => t.UserId == user.Id && t.LoginProvider == RefreshTokenProvider && t.Name.StartsWith(RefreshTokenNamePrefix))
+                .ToListAsync();
+
+            if (activeTokens.Count >= 5)
             {
-                _context.Entry(localTracked).State = EntityState.Detached;
+                var oldestTokens = activeTokens.OrderBy(t => t.Value).Take(activeTokens.Count - 4);
+                _context.Set<IdentityUserToken<Guid>>().RemoveRange(oldestTokens);
             }
 
-            var existing = await _context.Set<IdentityUserToken<Guid>>()
-                .FirstOrDefaultAsync(t => t.UserId == user.Id && t.LoginProvider == RefreshTokenProvider && t.Name == tokenName);
-
-            if (existing == null)
+            _context.Set<IdentityUserToken<Guid>>().Add(new IdentityUserToken<Guid>
             {
-                _context.Set<IdentityUserToken<Guid>>().Add(new IdentityUserToken<Guid>
-                {
-                    UserId = user.Id,
-                    LoginProvider = RefreshTokenProvider,
-                    Name = tokenName,
-                    Value = value
-                });
-            }
-            else
-            {
-                existing.Value = value;
-            }
+                UserId = user.Id,
+                LoginProvider = RefreshTokenProvider,
+                Name = tokenName,
+                Value = value
+            });
 
             await _context.SaveChangesAsync();
             return token;
