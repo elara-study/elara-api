@@ -43,6 +43,10 @@ ScaffoldingReadMe.txt
 ~$*
 *~
 CodeCoverage/
+*.csproj.user
+*.pubxml
+*.pubxml.user
+**/Properties/PublishProfiles/
 
 # MSBuild Binary and Structured Log
 *.binlog

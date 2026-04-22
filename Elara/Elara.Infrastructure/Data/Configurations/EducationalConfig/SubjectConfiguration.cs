@@ -1,4 +1,5 @@
 ﻿using Elara.Domain.Entities.Educational;
+using GradeLevel = Elara.Domain.Enums.GradeLevel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -34,6 +35,16 @@ namespace Elara.Infrastructure.Data.Configurations.EducationalConfig
 
             builder.HasIndex(s => s.GradeLevel)
                 .HasDatabaseName("IX_Subjects_GradeLevel");
+
+            builder.HasData(
+                new Subject { Id = 1, Name = "Chemistry", Description = "Chemistry", GradeLevel = GradeLevel.Grade12, CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), IsDeleted = false },
+                new Subject { Id = 2, Name = "Physics", Description = "Physics", GradeLevel = GradeLevel.Grade12, CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), IsDeleted = false },
+                new Subject { Id = 3, Name = "Biology", Description = "Biology", GradeLevel = GradeLevel.Grade12, CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), IsDeleted = false },
+                new Subject { Id = 4, Name = "PureMathematics", Description = "PureMathematics", GradeLevel = GradeLevel.Grade12, CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), IsDeleted = false },
+                new Subject { Id = 5, Name = "AppliedMathematics", Description = "AppliedMathematics", GradeLevel = GradeLevel.Grade12, CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), IsDeleted = false },
+                new Subject { Id = 6, Name = "Arabic", Description = "Arabic", GradeLevel = GradeLevel.Grade12, CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), IsDeleted = false },
+                new Subject { Id = 7, Name = "English", Description = "English", GradeLevel = GradeLevel.Grade12, CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), IsDeleted = false }
+            );
         }
     }
 }
