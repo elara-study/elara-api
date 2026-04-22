@@ -6,6 +6,9 @@ using Elara.Application.Features.Users.Teachers.Commands.DeleteAnnouncement;
 using Elara.Application.Features.Users.Teachers.Queries.GetAnnouncements;
 using Elara.Application.Features.Users.Teachers.Queries.GetClassInfo;
 using Elara.Application.Features.Users.Teachers.Queries.GetTeacherClasses;
+using Elara.Application.Features.Users.Teachers.Queries.GetGroupStudents;
+using Elara.Application.Features.Users.Teachers.Commands.AddStudentByUsername;
+using Elara.API.Controllers.Requests;
 using Elara.Domain.Constants;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -137,6 +140,39 @@ namespace Elara.API.Controllers
             var command = new DeleteAnnouncementCommand(id, announcementId);
             await _mediator.Send(command);
             return NoContent();
+        }
+
+        [HttpGet("groups/{id:guid}/students")]
+        [ProducesResponseType(typeof(BaseResponse<List<GetGroupStudentsResponse>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetGroupStudents(Guid id)
+        {
+            var query = new GetGroupStudentsQuery { ClassId = id };
+            var result = await _mediator.Send(query);
+            return Ok(new BaseResponse<List<GetGroupStudentsResponse>>
+            {
+                Message = "Students retrieved successfully.",
+                Data = result
+            });
+        }
+
+        [HttpPost("groups/{id:guid}/students")]
+        [ProducesResponseType(typeof(BaseResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> AddStudent(Guid id, [FromBody] AddStudentRequest request)
+        {
+            var command = new AddStudentByUsernameCommand(id, request.Username);
+            var result = await _mediator.Send(command);
+            return Ok(new BaseResponse<bool>
+            {
+                Message = "Student added successfully.",
+                Data = result
+            });
         }
     }
 }
