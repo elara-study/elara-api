@@ -3,6 +3,7 @@ using Elara.Application.Features.Users.Students.Queries.GetStudentGroups;
 using Elara.Domain.Entities.Administrative;
 using Elara.Domain.Entities.JunctionTables;
 using Elara.Infrastructure.Data;
+using Elara.Application.Features.Users.Teachers.Queries.GetGroupStudents;
 using Microsoft.EntityFrameworkCore;
 namespace Elara.Persistence.Repositories.Administrative
 {
@@ -185,6 +186,23 @@ namespace Elara.Persistence.Repositories.Administrative
                 .FirstOrDefaultAsync(cancellationToken);
             
             return result;
+        }
+        public async Task<List<GetGroupStudentsResponse>> GetStudentsInClassAsync(Guid classPublicId, Guid teacherId, CancellationToken cancellationToken = default)
+        {
+            var query = from sc in _context.StudentClasses
+                        join c in _context.Classes on sc.ClassId equals c.Id
+                        join u in _context.Users on sc.StudentId equals u.Id
+                        where c.PublicId == classPublicId && c.TeacherId == teacherId && !c.IsDeleted && sc.IsActive
+                        select new GetGroupStudentsResponse
+                        {
+                            Id = sc.StudentId,
+                            Name = u.Name,
+                            Username = u.Username,
+                            ImageUrl = u.ImageUrl,
+                            EnrolledDate = sc.EnrolledDate
+                        };
+
+            return await query.ToListAsync(cancellationToken);
         }
     }
 }
