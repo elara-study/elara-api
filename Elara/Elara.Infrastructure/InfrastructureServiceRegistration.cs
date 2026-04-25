@@ -9,6 +9,8 @@ using System.Reflection;
 using Elara.Application.Common.Interfaces;
 using Elara.Infrastructure.Media;
 using Elara.Infrastructure.Email;
+using Elara.Infrastructure.Chat;
+using Elara.Application.Features.Chat;
 
 namespace Elara.Infrastructure
 {
@@ -32,6 +34,13 @@ namespace Elara.Infrastructure
 
             services.Configure<BrevoOptions>(configuration.GetSection(BrevoOptions.SectionName));
             services.AddScoped<IEmailService, EmailService>();
+
+            services.Configure<GeminiSettings>(configuration.GetSection(GeminiSettings.SectionName));
+            services.Configure<RagApiSettings>(configuration.GetSection(RagApiSettings.SectionName));
+            services.Configure<ChatSettings>(configuration.GetSection(ChatSettings.SectionName));
+            services.AddHttpClient<IGeminiService, GeminiService>();
+            services.AddHttpClient<IRagService, RagService>();
+
             return services;
         }
     }

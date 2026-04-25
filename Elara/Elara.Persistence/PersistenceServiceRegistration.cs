@@ -1,9 +1,11 @@
 using Elara.Application.Contracts.Persistence;
 using Elara.Application.Contracts.Persistence.Administrative;
+using Elara.Application.Contracts.Persistence.Chat;
 using Elara.Application.Contracts.Persistence.Educational;
 using Elara.Application.Contracts.Persistence.Users;
 using Elara.Persistence.Repositories;
 using Elara.Persistence.Repositories.Administrative;
+using Elara.Persistence.Repositories.Chat;
 using Elara.Persistence.Repositories.Educational;
 using Elara.Persistence.Repositories.Users;
 using Microsoft.Extensions.Configuration;
@@ -25,6 +27,7 @@ namespace Elara.Persistence
             services.AddScoped<ISubjectRepository, SubjectRepository>();
             services.AddScoped<IAnnouncementRepository, AnnouncementRepository>();
             services.AddScoped<IStudentRepository, StudentRepository>();
+            services.AddScoped<IChatRepository, ChatRepository>();
 
             return services;
         }

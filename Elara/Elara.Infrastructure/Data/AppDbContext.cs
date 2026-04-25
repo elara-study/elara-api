@@ -1,5 +1,6 @@
 using Elara.Domain.Entities;
 using Elara.Domain.Entities.Administrative;
+using Elara.Domain.Entities.Chat;
 using Elara.Domain.Entities.Educational;
 using Elara.Domain.Entities.JunctionTables;
 using Elara.Domain.Entities.Submissions;
@@ -53,6 +54,11 @@ namespace Elara.Infrastructure.Data
         public DbSet<StudentClass> StudentClasses { get; set; }
         public DbSet<StudentAchievement> StudentAchievements { get; set; }
         public DbSet<LessonVideo> LessonVideos { get; set; }
+        #endregion
+
+        #region Chat DbSets
+        public DbSet<Conversation> Conversations { get; set; }
+        public DbSet<ChatMessage> ChatMessages { get; set; }
         #endregion
 
 
