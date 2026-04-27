@@ -1,11 +1,6 @@
 ﻿using Elara.Application.Contracts.Persistence;
 using Elara.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Elara.Persistence.Repositories
 {

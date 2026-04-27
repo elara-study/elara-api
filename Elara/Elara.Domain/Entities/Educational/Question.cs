@@ -1,7 +1,6 @@
 using Elara.Domain.Entities.Submissions;
 using Elara.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Elara.Domain.Entities.Educational
 {

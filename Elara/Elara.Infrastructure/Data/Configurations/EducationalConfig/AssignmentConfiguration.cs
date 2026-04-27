@@ -1,4 +1,4 @@
-﻿using Elara.Domain.Entities.Educational;
+using Elara.Domain.Entities.Educational;
 using Elara.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -41,6 +41,11 @@ namespace Elara.Infrastructure.Data.Configurations.EducationalConfig
 
             builder.Property(a => a.TopicId)
                 .IsRequired();
+
+            builder.Property(a => a.LessonId);
+
+            builder.Property(a => a.IsAIGenerated)
+                .HasDefaultValue(false);
 
             // Indexes
             builder.HasIndex(a => a.DueDate)
