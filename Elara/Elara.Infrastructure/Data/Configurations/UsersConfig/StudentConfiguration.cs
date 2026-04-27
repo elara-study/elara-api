@@ -37,6 +37,14 @@ namespace Elara.Infrastructure.Data.Configurations.UsersConfig
             // Indexes
             builder.HasIndex(s => s.GradeLevel)
                 .HasDatabaseName("IX_Students_GradeLevel");
+
+            builder.HasIndex(s => s.TotalXP)
+                .HasDatabaseName("IX_Students_TotalXP");
+
+            // XP & Gamification defaults
+            builder.Property(s => s.TotalXP).HasDefaultValue(0);
+            builder.Property(s => s.Level).HasDefaultValue(1);
+            builder.Property(s => s.CurrentStreak).HasDefaultValue(0);
         }
     }
 }

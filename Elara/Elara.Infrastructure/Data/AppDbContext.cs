@@ -34,11 +34,14 @@ namespace Elara.Infrastructure.Data
         public DbSet<Question> Questions { get; set; }
         public DbSet<Roadmap> Roadmaps { get; set; }
         public DbSet<EducationalVideo> EducationalVideos { get; set; }
+        public DbSet<QuestionOption> QuestionOptions { get; set; }
         #endregion
 
         #region Submission DbSets
         public DbSet<StudentSubmission> StudentSubmissions { get; set; }
         public DbSet<Hint> Hints { get; set; }
+        public DbSet<QuizSession> QuizSessions { get; set; }
+        public DbSet<QuizAnswer> QuizAnswers { get; set; }
         #endregion
 
         #region Administrative DbSets
