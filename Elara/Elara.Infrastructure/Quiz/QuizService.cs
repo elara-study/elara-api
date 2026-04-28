@@ -50,7 +50,7 @@ namespace Elara.Infrastructure.Quiz
               ""questions"": [
                 {{
                   ""text"": ""Question text"",
-                  ""type"": ""MultipleChoice or TrueFalse or Essay"",
+                  ""type"": ""MCQ or Essay"",
                   ""hint"": ""Optional hint"",
                   ""options"": [
                     {{ ""text"": ""Option 1"", ""isCorrect"": true }},

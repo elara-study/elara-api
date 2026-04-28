@@ -31,7 +31,7 @@ namespace Elara.Application.Features.Quiz.Commands.SubmitAnswer
             int xpAwarded = 0;
             int? correctOptionId = null;
 
-            if (question.QuestionType == QuestionType.MultipleChoice)
+            if (question.QuestionType == QuestionType.MCQ)
             {
                 var correctOption = question.Options.FirstOrDefault(o => o.IsCorrect);
                 correctOptionId = correctOption?.Id;

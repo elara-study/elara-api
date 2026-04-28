@@ -12,7 +12,7 @@ namespace Elara.Application.Profiles
         {
             CreateMap<QuizSession, QuizSessionDto>()
                 .ForMember(dest => dest.SessionId, opt => opt.MapFrom(src => src.Id))
-                .ForMember(dest => dest.ModuleName, opt => opt.MapFrom(src => "MODULE " + (src.Assignment.TopicId).ToString("D2"))) // مثال
+                .ForMember(dest => dest.ModuleName, opt => opt.MapFrom(src => src.Assignment.Topic.ModuleName ?? "General Module"))
                 .ForMember(dest => dest.LessonTitle, opt => opt.MapFrom(src => src.Assignment.Lesson != null ? src.Assignment.Lesson.Title : src.Assignment.Title))
                 .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.Assignment.Topic.Subject.Name))
                 .ForMember(dest => dest.TotalQuestions, opt => opt.MapFrom(src => src.Assignment.Questions.Count));
