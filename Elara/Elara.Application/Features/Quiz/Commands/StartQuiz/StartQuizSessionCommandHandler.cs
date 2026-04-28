@@ -48,10 +48,9 @@ namespace Elara.Application.Features.Quiz.Commands.StartQuiz
             };
 
             session = await _quizRepository.AddAsync(session, cancellationToken);
-
-            session.Assignment = assignment;
+            var fullSession = await _quizRepository.GetSessionWithDetailsAsync(session.Id, cancellationToken);
             
-            return _mapper.Map<QuizSessionDto>(session);
+            return _mapper.Map<QuizSessionDto>(fullSession);
         }
     }
 }

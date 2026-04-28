@@ -32,7 +32,12 @@ namespace Elara.Application.Profiles
                 .ForMember(dest => dest.LessonTitle, opt => opt.MapFrom(src => src.Assignment.Lesson != null ? src.Assignment.Lesson.Title : ""))
                 .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.Assignment.Topic.Subject.Name))
                 .ForMember(dest => dest.Results, opt => opt.MapFrom(src => src))
-                .ForMember(dest => dest.StudentProgress, opt => opt.MapFrom(src => src.Student));
+                .ForMember(dest => dest.StudentProgress, opt => opt.MapFrom(src => src.Student))
+                .ForMember(dest => dest.ElaraInsight, opt => opt.MapFrom(src => new ElaraInsightDto { 
+                    Message = src.ElaraInsight ?? "", 
+                    Recommendation = src.InsightRecommendation ?? "",
+                    WeakTopics = (src.WeakTopics ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries).ToList()
+                }));
 
             CreateMap<QuizSession, QuizStatsDto>()
                 .ForMember(dest => dest.TotalQuestions, opt => opt.MapFrom(src => src.Assignment.Questions.Count))

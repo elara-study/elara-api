@@ -1,5 +1,3 @@
-
-
 namespace Elara.Application.Features.Quiz.DTOs
 {
     public class SubmitAnswerRequest

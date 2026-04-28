@@ -1,8 +1,7 @@
 using AutoMapper;
 using Elara.Application.Common.Interfaces;
-using Elara.Application.Contracts.Persistence;
+using Elara.Application.Contracts.Persistence.Quiz;
 using Elara.Application.Features.Quiz.DTOs;
-using Elara.Domain.Entities.Educational;
 using MediatR;
 
 namespace Elara.Application.Features.Quiz.Commands.GenerateQuiz
@@ -10,16 +9,16 @@ namespace Elara.Application.Features.Quiz.Commands.GenerateQuiz
     public class GenerateQuizCommandHandler : IRequestHandler<GenerateQuizCommand, GeneratedQuizDto>
     {
         private readonly IQuizService _quizService;
-        private readonly IAsyncRepository<Assignment, int> _assignmentRepository;
+        private readonly IQuizRepository _quizRepository;
         private readonly IMapper _mapper;
 
         public GenerateQuizCommandHandler(
             IQuizService quizService, 
-            IAsyncRepository<Assignment, int> assignmentRepository,
+            IQuizRepository quizRepository,
             IMapper mapper)
         {
             _quizService = quizService;
-            _assignmentRepository = assignmentRepository;
+            _quizRepository = quizRepository;
             _mapper = mapper;
         }
 
@@ -28,13 +27,12 @@ namespace Elara.Application.Features.Quiz.Commands.GenerateQuiz
             var assignmentId = await _quizService.GenerateQuizAsync(
                 request.LessonId, 
                 request.QuestionCount, 
-                request.Difficulty, 
+                request.DifficultyLevel, 
                 request.QuestionTypes,
                 cancellationToken);
 
-            var assignment = await _assignmentRepository.GetByIdAsync(assignmentId, cancellationToken);
-            if (assignment == null) throw new Exception("Failed to generate quiz");
-
+            var assignment = await _quizRepository.GetAssignmentWithDetailsAsync(assignmentId, cancellationToken);
+            
             return _mapper.Map<GeneratedQuizDto>(assignment);
         }
     }

@@ -41,6 +41,37 @@ namespace Elara.Persistence.Repositories.Quiz
                 .FirstOrDefaultAsync(a => a.QuizSessionId == sessionId && a.QuestionId == questionId, cancellationToken);
         }
 
+        public async Task<Assignment?> GetAssignmentWithDetailsAsync(int assignmentId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Assignments
+                .Include(a => a.Topic)
+                    .ThenInclude(t => t.Subject)
+                .Include(a => a.Questions)
+                .FirstOrDefaultAsync(a => a.Id == assignmentId, cancellationToken);
+        }
+
+        public async Task<QuizSession?> GetSessionWithDetailsAsync(int sessionId, CancellationToken cancellationToken = default)
+        {
+            return await _context.QuizSessions
+                .Include(s => s.Student)
+                .Include(s => s.Assignment)
+                    .ThenInclude(a => a.Lesson)
+                .Include(s => s.Assignment)
+                    .ThenInclude(a => a.Topic)
+                        .ThenInclude(t => t.Subject)
+                .Include(s => s.Assignment)
+                    .ThenInclude(a => a.Questions)
+                .FirstOrDefaultAsync(s => s.Id == sessionId, cancellationToken);
+        }
+
+        public async Task<Question?> GetQuestionWithDetailsAsync(int questionId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Questions
+                .Include(q => q.Options)
+                .Include(q => q.Hints)
+                .FirstOrDefaultAsync(q => q.Id == questionId, cancellationToken);
+        }
+
         public async Task<(List<QuizSession> sessions, int totalCount)> GetStudentQuizHistoryAsync(
             Guid studentId, int? lessonId, int page, int pageSize, CancellationToken cancellationToken = default)
         {

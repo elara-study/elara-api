@@ -1,8 +1,6 @@
 using Elara.Application.Common.Interfaces;
-using Elara.Application.Contracts.Persistence;
 using Elara.Application.Contracts.Persistence.Quiz;
 using Elara.Application.Features.Quiz.DTOs;
-using Elara.Domain.Entities.Educational;
 using Elara.Domain.Entities.Submissions;
 using Elara.Domain.Enums;
 using MediatR;
@@ -13,40 +11,35 @@ namespace Elara.Application.Features.Quiz.Commands.SubmitAnswer
     public class SubmitQuizAnswerCommandHandler : IRequestHandler<SubmitQuizAnswerCommand, BaseResponse<SubmitAnswerResponse>>
     {
         private readonly IQuizRepository _quizRepository;
-        private readonly IAsyncRepository<Question, int> _questionRepository;
         private readonly IQuizService _quizService;
 
-        public SubmitQuizAnswerCommandHandler(
-            IQuizRepository quizRepository,
-            IAsyncRepository<Question, int> questionRepository,
-            IQuizService quizService)
+        public SubmitQuizAnswerCommandHandler(IQuizRepository quizRepository, IQuizService quizService)
         {
             _quizRepository = quizRepository;
-            _questionRepository = questionRepository;
             _quizService = quizService;
         }
 
         public async Task<BaseResponse<SubmitAnswerResponse>> Handle(SubmitQuizAnswerCommand request, CancellationToken cancellationToken)
         {
-            var question = await _questionRepository.GetByIdAsync(request.Answer.QuestionId, cancellationToken);
+            var question = await _quizRepository.GetQuestionWithDetailsAsync(request.Answer.QuestionId, cancellationToken);
             if (question == null) throw new Exception("Question not found");
 
-            var isCorrect = false;
-            var xpAwarded = 0;
+            var session = await _quizRepository.GetSessionWithAnswersAsync(request.SessionId, cancellationToken);
+            if (session == null) throw new Exception("Session not found");
+
+            bool isCorrect = false;
+            int xpAwarded = 0;
             int? correctOptionId = null;
 
             if (question.QuestionType == QuestionType.MultipleChoice)
             {
-                //automatic correction of MCQ
                 var correctOption = question.Options.FirstOrDefault(o => o.IsCorrect);
                 correctOptionId = correctOption?.Id;
                 isCorrect = request.Answer.SelectedOptionId == correctOptionId;
-                
-                if (isCorrect) xpAwarded = (int)question.Marks;
+                xpAwarded = isCorrect ? (int)question.Marks : 0;
             }
             else if (question.QuestionType == QuestionType.Essay)
             {
-                //correction of essay using the AI service
                 var gradingResult = await _quizService.GradeEssayAnswerAsync(
                     question.Text, 
                     request.Answer.AnswerContent ?? "", 
@@ -56,25 +49,28 @@ namespace Elara.Application.Features.Quiz.Commands.SubmitAnswer
                 xpAwarded = (int)(question.Marks * (gradingResult.Score / 100.0));
             }
 
-            var quizAnswer = new QuizAnswer
+            // Find or create answer
+            var answer = session.Answers.FirstOrDefault(a => a.QuestionId == request.Answer.QuestionId);
+            if (answer == null)
             {
-                QuizSessionId = request.SessionId,
-                QuestionId = request.Answer.QuestionId,
-                QuestionType = question.QuestionType,
-                SelectedOptionId = request.Answer.SelectedOptionId,
-                AnswerContent = request.Answer.AnswerContent,
-                IsCorrect = isCorrect,
-                XpAwarded = xpAwarded,
-                HintUsed = request.Answer.HintUsed
-            };
+                answer = new QuizAnswer
+                {
+                    QuizSessionId = request.SessionId,
+                    QuestionId = request.Answer.QuestionId,
+                    QuestionType = question.QuestionType
+                };
+                session.Answers.Add(answer);
+            }
 
-            var session = await _quizRepository.GetByIdAsync(request.SessionId, cancellationToken);
-            if (session == null) throw new Exception("Session not found");
-            
-            session.Answers.Add(quizAnswer);
+            answer.SelectedOptionId = question.QuestionType == QuestionType.Essay ? null : request.Answer.SelectedOptionId;
+            answer.AnswerContent = request.Answer.AnswerContent;
+            answer.IsCorrect = isCorrect;
+            answer.XpAwarded = xpAwarded;
+            answer.HintUsed = request.Answer.HintUsed;
+
             await _quizRepository.UpdateAsync(session, cancellationToken);
 
-            var data = new SubmitAnswerResponse
+            var response = new SubmitAnswerResponse
             {
                 QuestionId = question.Id,
                 IsCorrect = isCorrect,
@@ -84,8 +80,8 @@ namespace Elara.Application.Features.Quiz.Commands.SubmitAnswer
 
             return new BaseResponse<SubmitAnswerResponse>
             {
-                Message = "Answer submitted successfully.",
-                Data = data
+                Data = response,
+                Message = "Answer submitted successfully."
             };
         }
     }

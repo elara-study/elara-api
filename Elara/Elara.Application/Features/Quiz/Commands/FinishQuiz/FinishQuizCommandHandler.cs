@@ -13,10 +13,7 @@ namespace Elara.Application.Features.Quiz.Commands.FinishQuiz
         private readonly IQuizService _quizService;
         private readonly IMapper _mapper;
 
-        public FinishQuizCommandHandler(
-            IQuizRepository quizRepository,
-            IQuizService quizService,
-            IMapper mapper)
+        public FinishQuizCommandHandler(IQuizRepository quizRepository, IQuizService quizService, IMapper mapper)
         {
             _quizRepository = quizRepository;
             _quizService = quizService;
@@ -25,37 +22,36 @@ namespace Elara.Application.Features.Quiz.Commands.FinishQuiz
 
         public async Task<QuizResultDto> Handle(FinishQuizCommand request, CancellationToken cancellationToken)
         {
+            // Get session with all details
             var session = await _quizRepository.GetSessionWithAnswersAsync(request.SessionId, cancellationToken);
             if (session == null) throw new Exception("Session not found");
 
             if (session.Status == QuizSessionStatus.Completed)
-                return _mapper.Map<QuizResultDto>(session);
+                throw new Exception("Quiz already completed");
 
+            // Finalize session stats
             session.CompletedAt = DateTime.UtcNow;
             session.Status = QuizSessionStatus.Completed;
-
-            // calculate the correct answers, wrong answers, and unanswered count
             session.CorrectAnswers = session.Answers.Count(a => a.IsCorrect == true);
-            session.WrongAnswers = session.Answers.Count(a => a.IsCorrect == false);
+            session.WrongAnswers = session.Answers.Count(a => a.IsCorrect != true);
             session.UnansweredCount = session.Assignment.Questions.Count - session.Answers.Count;
             
-            // calculate the total xp earned
-            session.XpEarned = await _quizService.CalculateTotalXpAsync(session, cancellationToken);
-
-            // generate the AI insight
+            // Generate AI Insights and XP
             var insight = await _quizService.GenerateQuizInsightAsync(session, cancellationToken);
             session.ElaraInsight = insight.Message;
-            session.WeakTopics = string.Join(",", insight.WeakTopics);
             session.InsightRecommendation = insight.Recommendation;
+            session.WeakTopics = string.Join(",", insight.WeakTopics);
+            
+            int xpEarned = await _quizService.CalculateTotalXpAsync(session, cancellationToken);
+            session.XpEarned = xpEarned;
 
             await _quizRepository.UpdateAsync(session, cancellationToken);
 
-            await _quizService.UpdateStudentProgressAsync(session.StudentId, session.XpEarned, cancellationToken);
+            await _quizService.UpdateStudentProgressAsync(session.StudentId, xpEarned, cancellationToken);
 
-            var result = _mapper.Map<QuizResultDto>(session);
-            result.ElaraInsight = insight; 
+            var updatedSession = await _quizRepository.GetSessionWithAnswersAsync(session.Id, cancellationToken);
 
-            return result;
+            return _mapper.Map<QuizResultDto>(updatedSession);
         }
     }
 }

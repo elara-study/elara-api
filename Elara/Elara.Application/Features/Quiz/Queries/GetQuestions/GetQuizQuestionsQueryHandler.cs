@@ -22,6 +22,12 @@ namespace Elara.Application.Features.Quiz.Queries.GetQuestions
 
             var questionsDto = _mapper.Map<List<QuizQuestionDto>>(questions);
 
+            // Add sequential numbering
+            for (int i = 0; i < questionsDto.Count; i++)
+            {
+                questionsDto[i].QuestionNumber = i + 1;
+            }
+
             return new QuizQuestionsListDto
             {
                 AssignmentId = request.AssignmentId,
