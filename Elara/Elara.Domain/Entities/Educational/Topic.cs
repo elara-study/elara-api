@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Elara.Domain.Entities.Educational
@@ -8,6 +8,7 @@ namespace Elara.Domain.Entities.Educational
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
         public string? Content { get; set; }
+        public string? ModuleName { get; set; }
 
         // Foreign Key
         public int SubjectId { get; set; }

@@ -1,7 +1,6 @@
-﻿using Elara.Domain.Entities.Educational;
+using Elara.Domain.Entities.Educational;
 using Elara.Domain.Entities.Users;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Elara.Domain.Entities.Submissions
 {
@@ -20,6 +19,6 @@ namespace Elara.Domain.Entities.Submissions
 
         // Navigation Properties
         public virtual Question Question { get; set; } = null!;
-        public virtual Student Student { get; set; } = null!;
+        public virtual Student Student { get; set; }
     }
 }

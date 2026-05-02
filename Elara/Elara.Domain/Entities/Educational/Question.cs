@@ -1,7 +1,6 @@
-﻿using Elara.Domain.Entities.Submissions;
+using Elara.Domain.Entities.Submissions;
 using Elara.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Elara.Domain.Entities.Educational
 {
@@ -21,6 +20,9 @@ namespace Elara.Domain.Entities.Educational
 
         // Navigation Properties
         public virtual Assignment Assignment { get; set; } = null!;
-        public virtual ICollection<Hint> Hints { get; set; }
+        public virtual ICollection<Hint> Hints { get; set; } = [];
+
+        // Options for MCQ questions only (empty for Essay questions)
+        public virtual ICollection<QuestionOption> Options { get; set; } = [];
     }
 }

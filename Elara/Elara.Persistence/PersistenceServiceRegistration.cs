@@ -8,6 +8,8 @@ using Elara.Persistence.Repositories.Administrative;
 using Elara.Persistence.Repositories.Chat;
 using Elara.Persistence.Repositories.Educational;
 using Elara.Persistence.Repositories.Users;
+using Elara.Application.Contracts.Persistence.Quiz;
+using Elara.Persistence.Repositories.Quiz;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -28,6 +30,7 @@ namespace Elara.Persistence
             services.AddScoped<IAnnouncementRepository, AnnouncementRepository>();
             services.AddScoped<IStudentRepository, StudentRepository>();
             services.AddScoped<IChatRepository, ChatRepository>();
+            services.AddScoped<IQuizRepository, QuizRepository>();
 
             return services;
         }
