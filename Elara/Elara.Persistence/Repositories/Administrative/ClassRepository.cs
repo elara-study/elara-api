@@ -204,5 +204,13 @@ namespace Elara.Persistence.Repositories.Administrative
 
             return await query.ToListAsync(cancellationToken);
         }
+
+        public async Task<List<Guid>> GetStudentIdsByClassIdAsync(int classId, CancellationToken cancellationToken = default)
+        {
+            return await _context.StudentClasses
+                .Where(sc => sc.ClassId == classId && sc.IsActive)
+                .Select(sc => sc.StudentId)
+                .ToListAsync(cancellationToken);
+        }
     }
 }
