@@ -8,7 +8,8 @@ namespace Elara.Application.Profiles
     {
         public AnnouncementProfile()
         {
-            CreateMap<AddAnnouncementCommand, Announcement>();
+            CreateMap<AddAnnouncementCommand, Announcement>()
+                .ForMember(dest => dest.ClassId, opt => opt.Ignore());
 
             CreateMap<Announcement, AddAnnouncementResponse>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.PublicId));
