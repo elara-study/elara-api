@@ -1,4 +1,4 @@
-﻿using Elara.Domain.Entities.JunctionTables;
+using Elara.Domain.Entities.JunctionTables;
 using Elara.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
 
@@ -20,10 +20,12 @@ namespace Elara.Domain.Entities.Administrative
         public int Points { get; set; } = 10;
 
         [MaxLength(500)]
-        public string? IconPath { get; set; }
+        public string? ImageUrl { get; set; }
 
-        [Required]
-        public DateTime EarnedAt { get; set; }
+        [MaxLength(100)]
+        public string? ImagePublicId { get; set; }
+
+        public int TargetValue { get; set; }
 
         // Navigation Properties
         public virtual ICollection<StudentAchievement> StudentAchievements { get; set; } = new List<StudentAchievement>();

@@ -43,6 +43,7 @@ namespace Elara.Infrastructure
             services.AddHttpClient<IGeminiService, GeminiService>();
             services.AddHttpClient<IRagService, RagService>();
             services.AddScoped<IQuizService, QuizService>();
+            services.AddScoped<IAchievementEvaluationService, Elara.Infrastructure.Rewards.AchievementEvaluationService>();
 
             // Firebase / FCM
             FcmInitializer.Initialize(configuration);

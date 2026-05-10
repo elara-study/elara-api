@@ -1,4 +1,4 @@
-﻿using Elara.Application.Contracts.Persistence;
+using Elara.Application.Contracts.Persistence;
 using Elara.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -41,6 +41,11 @@ namespace Elara.Persistence.Repositories
         {
             _context.Set<T>().Remove(entity);
             await _context.SaveChangesAsync(cancellationToken);
+        }
+
+        public IQueryable<T> AsQueryable()
+        {
+            return _context.Set<T>().AsQueryable();
         }
     }
 }
