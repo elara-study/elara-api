@@ -24,6 +24,5 @@ namespace Elara.Application.Contracts.Persistence.Administrative
         Task<bool> ExistsAndOwnedByTeacherAsync(Guid classPublicId, Guid teacherId, CancellationToken cancellationToken = default);
         Task<int?> GetInternalIdByPublicIdAsync(Guid publicId, Guid teacherId, CancellationToken cancellationToken = default);
         Task<List<GetGroupStudentsResponse>> GetStudentsInClassAsync(Guid classPublicId, Guid teacherId, CancellationToken cancellationToken = default);
-        Task<List<Guid>> GetStudentIdsByClassIdAsync(int classId, CancellationToken cancellationToken = default);
     }
 }

@@ -1,6 +1,5 @@
 using Elara.Application.Contracts.Persistence;
 using Elara.Application.Contracts.Persistence.Administrative;
-using Elara.Application.Contracts.persistence.Administrative;
 using Elara.Application.Contracts.Persistence.Chat;
 using Elara.Application.Contracts.Persistence.Educational;
 using Elara.Application.Contracts.Persistence.Users;
@@ -32,11 +31,6 @@ namespace Elara.Persistence
             services.AddScoped<IStudentRepository, StudentRepository>();
             services.AddScoped<IChatRepository, ChatRepository>();
             services.AddScoped<IQuizRepository, QuizRepository>();
-
-            // Notification repositories
-            services.AddScoped<INotificationRepository, NotificationRepository>();
-            services.AddScoped<INotificationPreferenceRepository, NotificationPreferenceRepository>();
-            services.AddScoped<IDeviceTokenRepository, DeviceTokenRepository>();
 
             return services;
         }

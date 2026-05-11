@@ -50,8 +50,6 @@ namespace Elara.Infrastructure.Data
         public DbSet<Report> Reports { get; set; }
         public DbSet<Achievement> Achievements { get; set; }
         public DbSet<Announcement> Announcements { get; set; }
-        public DbSet<NotificationPreference> NotificationPreferences { get; set; }
-        public DbSet<DeviceToken> DeviceTokens { get; set; }
         #endregion
 
         #region Junction Tables DbSets

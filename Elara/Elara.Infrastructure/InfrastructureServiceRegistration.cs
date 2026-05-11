@@ -12,7 +12,6 @@ using Elara.Infrastructure.Email;
 using Elara.Infrastructure.Chat;
 using Elara.Application.Features.Chat;
 using Elara.Infrastructure.Quiz;
-using Elara.Infrastructure.Notifications;
 
 namespace Elara.Infrastructure
 {
@@ -43,10 +42,6 @@ namespace Elara.Infrastructure
             services.AddHttpClient<IGeminiService, GeminiService>();
             services.AddHttpClient<IRagService, RagService>();
             services.AddScoped<IQuizService, QuizService>();
-
-            // Firebase / FCM
-            FcmInitializer.Initialize(configuration);
-            services.AddSingleton<INotificationService, FcmNotificationService>();
 
             return services;
         }
