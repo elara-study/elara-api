@@ -65,5 +65,82 @@ namespace Elara.Persistence.Repositories.Chat
             _context.Conversations.Remove(conversation);
             await _context.SaveChangesAsync(cancellationToken);
         }
+
+        public async Task<IReadOnlyList<Conversation>> GetConversationsNeedingAnalysisAsync(
+            int minMessages, CancellationToken ct = default)
+        {
+            return await _context.Conversations
+                .Where(c => c.Messages.Count >= minMessages)
+                .Where(c => !_context.ChatAnalysisReports.Any(r =>
+                    r.ConversationId == c.Id &&
+                    r.AnalyzedMessageCount >= c.Messages.Count))
+                .ToListAsync(ct);
+        }
+
+        public async Task<IReadOnlyList<ChatMessage>> GetAllMessagesAsync(
+            Guid conversationId, CancellationToken ct = default)
+        {
+            return await _context.ChatMessages
+                .Where(m => m.ConversationId == conversationId)
+                .OrderBy(m => m.CreatedAt)
+                .ToListAsync(ct);
+        }
+
+        public async Task UpsertReportAsync(ChatAnalysisReport report, CancellationToken ct = default)
+        {
+            var existing = await _context.ChatAnalysisReports
+                .FirstOrDefaultAsync(r => r.ConversationId == report.ConversationId, ct);
+
+            if (existing != null)
+            {
+                existing.ReportText = report.ReportText;
+                existing.AnalyzedMessageCount = report.AnalyzedMessageCount;
+                existing.Subject = report.Subject;
+            }
+            else
+            {
+                await _context.ChatAnalysisReports.AddAsync(report, ct);
+            }
+
+            await _context.SaveChangesAsync(ct);
+        }
+
+        public async Task<ChatAnalysisReport?> GetReportByConversationIdAsync(
+            Guid conversationId, CancellationToken ct = default)
+        {
+            return await _context.ChatAnalysisReports
+                .AsNoTracking()
+                .FirstOrDefaultAsync(r => r.ConversationId == conversationId, ct);
+        }
+
+        public async Task<IReadOnlyList<ChatAnalysisReport>> GetReportsByStudentIdsAsync(
+            IEnumerable<Guid> studentIds, CancellationToken ct = default)
+        {
+            return await _context.ChatAnalysisReports
+                .AsNoTracking()
+                .Where(r => studentIds.Contains(r.StudentId))
+                .OrderByDescending(r => r.UpdatedAt ?? r.CreatedAt)
+                .ToListAsync(ct);
+        }
+
+        public async Task<IReadOnlyList<ChatAnalysisReport>> GetReportsByStudentIdAsync(
+            Guid studentId, CancellationToken ct = default)
+        {
+            return await _context.ChatAnalysisReports
+                .AsNoTracking()
+                .Where(r => r.StudentId == studentId)
+                .OrderByDescending(r => r.UpdatedAt ?? r.CreatedAt)
+                .ToListAsync(ct);
+        }
+
+        public async Task<IReadOnlyList<ChatAnalysisReport>> GetReportsByStudentIdAndSubjectAsync(
+            Guid studentId, string subject, CancellationToken ct = default)
+        {
+            return await _context.ChatAnalysisReports
+                .AsNoTracking()
+                .Where(r => r.StudentId == studentId && r.Subject == subject)
+                .OrderByDescending(r => r.UpdatedAt ?? r.CreatedAt)
+                .ToListAsync(ct);
+        }
     }
 }

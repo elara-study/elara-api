@@ -64,6 +64,7 @@ namespace Elara.Infrastructure.Data
         #region Chat DbSets
         public DbSet<Conversation> Conversations { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
+        public DbSet<ChatAnalysisReport> ChatAnalysisReports { get; set; }
         #endregion
 
 

@@ -25,5 +25,20 @@ namespace Elara.Persistence.Repositories.Users
             var result = await query.Cast<Guid?>().FirstOrDefaultAsync(cancellationToken);
             return result;
         }
+
+        public async Task<IReadOnlyList<Student>> GetByParentIdAsync(Guid parentId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Students
+                .Where(s => s.ParentId == parentId && !s.IsDeleted)
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<IReadOnlyList<Guid>> GetTeacherIdsByStudentIdAsync(Guid studentId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Set<Elara.Domain.Entities.JunctionTables.StudentTeacher>()
+                .Where(st => st.StudentId == studentId)
+                .Select(st => st.TeacherId)
+                .ToListAsync(cancellationToken);
+        }
     }
 }

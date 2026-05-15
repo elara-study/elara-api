@@ -48,6 +48,16 @@ namespace Elara.Infrastructure
             FcmInitializer.Initialize(configuration);
             services.AddSingleton<INotificationService, FcmNotificationService>();
 
+            services.Configure<ElaraReportSettings>(
+                configuration.GetSection(ElaraReportSettings.SectionName));
+            services.AddSingleton<IChatAnalysisQueue, ChatAnalysisQueue>();
+            services.AddHttpClient<IElaraReportService, ElaraReportService>(client =>
+            {
+                client.Timeout = TimeSpan.FromMinutes(5);
+            });
+            services.AddHostedService<ChatAnalysisScheduler>();
+            services.AddHostedService<ChatAnalysisWorker>();
+
             return services;
         }
     }
