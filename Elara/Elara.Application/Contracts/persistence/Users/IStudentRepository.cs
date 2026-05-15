@@ -10,5 +10,6 @@ namespace Elara.Application.Contracts.Persistence.Users
         Task<Guid?> GetStudentIdByUsernameAsync(string username, CancellationToken cancellationToken = default);
         Task<IReadOnlyList<Student>> GetByParentIdAsync(Guid parentId, CancellationToken cancellationToken = default);
         Task<IReadOnlyList<Guid>> GetTeacherIdsByStudentIdAsync(Guid studentId, CancellationToken cancellationToken = default);
+        Task<Dictionary<Guid, string>> GetStudentNamesAsync(IEnumerable<Guid> studentIds, CancellationToken cancellationToken = default);
     }
 }

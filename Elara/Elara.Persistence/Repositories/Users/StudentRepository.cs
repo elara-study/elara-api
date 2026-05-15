@@ -40,5 +40,12 @@ namespace Elara.Persistence.Repositories.Users
                 .Select(st => st.TeacherId)
                 .ToListAsync(cancellationToken);
         }
+
+        public async Task<Dictionary<Guid, string>> GetStudentNamesAsync(IEnumerable<Guid> studentIds, CancellationToken cancellationToken = default)
+        {
+            return await _context.Users
+                .Where(u => studentIds.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id, u => string.IsNullOrWhiteSpace(u.Name) ? u.Username : u.Name, cancellationToken);
+        }
     }
 }

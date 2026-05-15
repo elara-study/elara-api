@@ -110,7 +110,7 @@ namespace Elara.Persistence.Repositories.Chat
         {
             return await _context.ChatAnalysisReports
                 .AsNoTracking()
-                .FirstOrDefaultAsync(r => r.ConversationId == conversationId, ct);
+                .FirstOrDefaultAsync(r => r.ConversationId == conversationId && !r.IsDeleted, ct);
         }
 
         public async Task<IReadOnlyList<ChatAnalysisReport>> GetReportsByStudentIdsAsync(

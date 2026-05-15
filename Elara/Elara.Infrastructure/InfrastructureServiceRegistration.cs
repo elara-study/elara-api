@@ -13,6 +13,7 @@ using Elara.Infrastructure.Chat;
 using Elara.Application.Features.Chat;
 using Elara.Infrastructure.Quiz;
 using Elara.Infrastructure.Notifications;
+using Microsoft.Extensions.Options;
 
 namespace Elara.Infrastructure
 {
@@ -50,7 +51,11 @@ namespace Elara.Infrastructure
 
             services.Configure<ElaraReportSettings>(
                 configuration.GetSection(ElaraReportSettings.SectionName));
-            services.AddSingleton<IChatAnalysisQueue, ChatAnalysisQueue>();
+            services.AddSingleton<IChatAnalysisQueue>(sp =>
+            {
+                var settings = sp.GetRequiredService<IOptions<ElaraReportSettings>>().Value;
+                return new ChatAnalysisQueue(settings.QueueCapacity);
+            });
             services.AddHttpClient<IElaraReportService, ElaraReportService>(client =>
             {
                 client.Timeout = TimeSpan.FromMinutes(5);

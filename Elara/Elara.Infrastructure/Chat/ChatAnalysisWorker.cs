@@ -57,6 +57,7 @@ namespace Elara.Infrastructure.Chat
             var notificationRepo = scope.ServiceProvider.GetRequiredService<INotificationRepository>();
             var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
             var deviceTokenRepo = scope.ServiceProvider.GetRequiredService<IDeviceTokenRepository>();
+            var NotificationPreferenceService = scope.ServiceProvider.GetRequiredService<INotificationPreferenceRepository>();
 
             _logger.LogInformation(
                 "Processing conversation {Id} for student {StudentId}",
@@ -77,7 +78,8 @@ namespace Elara.Infrastructure.Chat
             }, ct);
 
             var recipientIds = await CollectRecipientIdsAsync(job.StudentId, studentRepo, ct);
-            await SendNotificationsAsync(job, recipientIds, notificationRepo, notificationService, deviceTokenRepo, ct);
+            var EnabledIds = await NotificationPreferenceService.GetUsersWithPreferenceEnabledAsync(recipientIds,NotificationType.AiProgressReport, ct);
+            await SendNotificationsAsync(job, EnabledIds, notificationRepo, notificationService, deviceTokenRepo, ct);
 
             _logger.LogInformation("Completed analysis for conversation {Id}", job.ConversationId);
         }
@@ -106,7 +108,7 @@ namespace Elara.Infrastructure.Chat
 
             var teacherIds = await studentRepo.GetTeacherIdsByStudentIdAsync(studentId, ct);
             recipients.AddRange(teacherIds);
-
+               
             return recipients;
         }
 
@@ -118,40 +120,44 @@ namespace Elara.Infrastructure.Chat
             IDeviceTokenRepository deviceTokenRepo,
             CancellationToken ct)
         {
-            var notifications = new List<Notification>();
-
-            foreach (var userId in recipientIds)
+            var notifications = recipientIds.Select(userId => new Notification
             {
-                var isStudent = userId == job.StudentId;
-                var message = isStudent
+                UserId = userId,
+                Message = userId == job.StudentId
                     ? $"Your {job.Subject} chat analysis is ready!"
-                    : $"New {job.Subject} progress report available.";
-
-                var tokens = await deviceTokenRepo.GetTokensByUserIdAsync(userId, ct);
-                if (tokens.Count > 0)
-                {
-                    await notificationService.SendToTokenAsync(
-                        tokens,
-                        "New Progress Report",
-                        message,
-                        new Dictionary<string, string>
-                        {
-                            ["type"] = "ai_progress_report",
-                            ["conversationId"] = job.ConversationId.ToString(),
-                            ["studentId"] = job.StudentId.ToString()
-                        },
-                        ct);
-                }
-
-                notifications.Add(new Notification
-                {
-                    UserId = userId,
-                    Message = message,
-                    NotificationType = NotificationType.AiProgressReport,
-                });
-            }
+                    : $"New {job.Subject} progress report available.",
+                NotificationType = NotificationType.AiProgressReport,
+            }).ToList();
 
             await notificationRepo.AddRangeAsync(notifications, ct);
+
+            foreach (var notification in notifications)
+            {
+                try
+                {
+                    var tokens = await deviceTokenRepo.GetTokensByUserIdAsync(notification.UserId, ct);
+                    if (tokens.Count > 0)
+                    {
+                        await notificationService.SendToTokenAsync(
+                            tokens,
+                            "New Progress Report",
+                            notification.Message,
+                            new Dictionary<string, string>
+                            {
+                                ["type"] = "ai_progress_report",
+                                ["conversationId"] = job.ConversationId.ToString(),
+                                ["studentId"] = job.StudentId.ToString()
+                            },
+                            ct);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex,
+                        "FCM push failed for user {UserId}, in-app notification was saved.",
+                        notification.UserId);
+                }
+            }
         }
     }
 }

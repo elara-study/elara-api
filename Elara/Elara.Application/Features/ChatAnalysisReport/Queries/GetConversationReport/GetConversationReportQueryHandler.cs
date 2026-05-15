@@ -29,6 +29,10 @@ namespace Elara.Application.Features.ChatAnalysisReport.Queries.GetConversationR
                 .GetReportByConversationIdAsync(request.ConversationId, cancellationToken)
                 ?? throw new KeyNotFoundException("Report not found for this conversation.");
 
+            if (!string.Equals(Convert.ToString(report.StudentId), userId.ToString(), StringComparison.OrdinalIgnoreCase))
+            {
+                throw new UnauthorizedAccessException();
+            }
             return new ConversationReportDto
             {
                 ReportId = report.PublicId,
