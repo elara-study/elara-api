@@ -14,11 +14,8 @@ namespace Elara.Domain.Entities.Educational
 
         [Range(0, 1000)]
         public int MaxScore { get; set; } = 100;
-
         public bool IsRequired { get; set; } = true;
-
         public bool IsAIGenerated { get; set; } = false;
-
         public DifficultyLevel DifficultyLevel { get; set; } = DifficultyLevel.Easy;
 
 

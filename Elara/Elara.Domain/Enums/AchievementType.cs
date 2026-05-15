@@ -1,11 +1,11 @@
-﻿
+
 namespace Elara.Domain.Enums
 {
     public enum AchievementType
     {
-        Streak = 1,
-        Certificate = 2,
-        Trophy = 3,
-        TopicMaster = 4
+        TotalXP = 1,
+        LessonsCompleted = 2,
+        Streak = 3,
+        SpecificQuizScore = 4
     }
 }

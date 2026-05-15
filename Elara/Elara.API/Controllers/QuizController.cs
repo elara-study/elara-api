@@ -9,13 +9,15 @@ using Elara.Application.Features.Quiz.Queries.GetHistory;
 using Elara.Application.Features.Quiz.Queries.GetQuestions;
 using Elara.Application.Responses;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Elara.API.Controllers
 {
     [ApiController]
-    [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
+    [ApiVersion("1.0")]
+    [Authorize]
     public class QuizController : ControllerBase
     {
         private readonly IMediator _mediator;
