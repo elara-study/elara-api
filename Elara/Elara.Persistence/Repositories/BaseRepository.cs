@@ -1,6 +1,7 @@
 using Elara.Application.Contracts.Persistence;
 using Elara.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace Elara.Persistence.Repositories
 {
@@ -45,7 +46,17 @@ namespace Elara.Persistence.Repositories
 
         public IQueryable<T> AsQueryable()
         {
-            return _context.Set<T>().AsQueryable();
+            return _context.Set<T>()
+                .AsNoTracking().AsQueryable();
+        }
+        public async Task<int> CountAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default)
+        {
+            return await _context.Set<T>().CountAsync(predicate, cancellationToken);
+        }
+
+        public async Task<bool> AnyAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default)
+        {
+            return await _context.Set<T>().AnyAsync(predicate, cancellationToken);
         }
     }
 }

@@ -22,6 +22,9 @@ namespace Elara.Application.Features.Rewards.Queries.GetLeaderboard
         {
             var userId = _currentUserService.UserId ?? throw new Exception("User must be authenticated");
 
+            var page = Math.Max(1, request.Page);
+            var pageSize = Math.Max(1, Math.Min(request.PageSize, 50));
+
             // Calculate top students
             var topStudentsEntities = await _studentRepository.GetTopStudentsAsync(request.Page, request.PageSize, cancellationToken);
             var studentIds = topStudentsEntities.Select(s => s.Id).ToList();
@@ -29,7 +32,7 @@ namespace Elara.Application.Features.Rewards.Queries.GetLeaderboard
             var studentNamesMap = await _studentRepository.GetStudentNamesAsync(studentIds, cancellationToken);
 
             var topStudentsDto = new List<LeaderboardStudentDto>();
-            int currentRank = ((request.Page - 1) * request.PageSize) + 1;
+            int currentRank = ((page - 1) * pageSize) + 1;
 
             foreach (var student in topStudentsEntities)
             {

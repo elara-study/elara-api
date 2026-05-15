@@ -39,11 +39,18 @@ namespace Elara.Application.Features.Rewards.Queries.GetBadges
             // Load StudentAchievements
             var earnedAchievements = student.StudentAchievements?.ToList() ?? new List<Domain.Entities.JunctionTables.StudentAchievement>();
 
-            var allAchievements = await _achievementRepository.ListAllAsync(cancellationToken);
-            
-            var sessions = _quizSessionRepository.AsQueryable()
-                .Where(s => s.StudentId == userId && s.Status == QuizSessionStatus.Completed)
-                .ToList();
+           var allAchievements = await _achievementRepository.ListAllAsync(cancellationToken);
+
+            var completedCount = await _quizSessionRepository.CountAsync(
+                s => s.StudentId == userId && s.Status == QuizSessionStatus.Completed,
+                cancellationToken);
+
+            var hasPerfectScore = await _quizSessionRepository.AnyAsync(
+                 s => s.StudentId == userId &&
+                      s.Status == QuizSessionStatus.Completed &&
+                      s.WrongAnswers == 0 &&
+                      s.CorrectAnswers > 0,
+                 cancellationToken);
 
             var badges = new List<BadgeDto>();
 
@@ -75,10 +82,9 @@ namespace Elara.Application.Features.Rewards.Queries.GetBadges
                             currentValue = student.CurrentStreak;
                             break;
                         case AchievementType.LessonsCompleted:
-                            currentValue = sessions.Count;
+                            currentValue = completedCount;
                             break;
                         case AchievementType.SpecificQuizScore:
-                            var hasPerfectScore = sessions.Any(s => s.WrongAnswers == 0 && s.CorrectAnswers > 0);
                             currentValue = hasPerfectScore ? achievement.TargetValue : 0;
                             break;
                         default:

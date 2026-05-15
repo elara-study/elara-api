@@ -36,7 +36,7 @@ namespace Elara.Persistence
                 new Achievement
                 {
                     Title = "Quick Learner",
-                    Description = "Complete 5 lessons in one day",
+                    Description = "Complete 5 lessons",
                     AchievementType = AchievementType.LessonsCompleted,
                     TargetValue = 5,
                     Points = 20
@@ -76,7 +76,7 @@ namespace Elara.Persistence
                 new Achievement
                 {
                     Title = "Genius",
-                    Description = "Master all subjects",
+                    Description = "Complete 100 lessons",
                     AchievementType = AchievementType.LessonsCompleted,
                     TargetValue = 100,
                     Points = 500

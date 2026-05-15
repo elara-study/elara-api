@@ -32,19 +32,26 @@ namespace Elara.Persistence.Repositories.Users
 
         public async Task<IReadOnlyList<Student>> GetTopStudentsAsync(int page, int pageSize, CancellationToken cancellationToken = default)
         {
+            var validatedPage = Math.Max(1, page);
+            var validatedPageSize = Math.Max(1, pageSize);
+
             return await _context.Students
                 .Where(s => s.IsActive)
                 .OrderByDescending(s => s.TotalXP)
                 .ThenBy(s => s.CreatedAt)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .Skip((validatedPage - 1) * validatedPageSize)
+                .Take(validatedPageSize)
                 .ToListAsync(cancellationToken);
         }
 
         public async Task<int> GetStudentRankAsync(Guid studentId, int studentTotalXp, DateTime studentCreatedAt, CancellationToken cancellationToken = default)
         {
             return await _context.Students
-                .Where(s => s.IsActive && (s.TotalXP > studentTotalXp || (s.TotalXP == studentTotalXp && s.CreatedAt < studentCreatedAt)))
+                .Where(s => s.IsActive
+                     && s.Id != studentId
+                     && (s.TotalXP > studentTotalXp
+                     || (s.TotalXP == studentTotalXp 
+                     && s.CreatedAt < studentCreatedAt)))
                 .CountAsync(cancellationToken) + 1;
         }
 

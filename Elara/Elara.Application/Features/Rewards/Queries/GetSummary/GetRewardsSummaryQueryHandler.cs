@@ -42,8 +42,9 @@ namespace Elara.Application.Features.Rewards.Queries.GetSummary
             int earnedBadges = student.StudentAchievements?.Count ?? 0;
 
             // Get lessons completed 
-            int completedLessons = _quizSessionRepository.AsQueryable()
-                .Count(s => s.StudentId == userId && s.Status == Domain.Enums.QuizSessionStatus.Completed);
+            int completedLessons = await _quizSessionRepository.CountAsync(
+                s => s.StudentId == userId && s.Status == Domain.Enums.QuizSessionStatus.Completed,
+                cancellationToken);
 
             return new RewardSummaryDto
             {

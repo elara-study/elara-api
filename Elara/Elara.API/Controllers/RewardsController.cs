@@ -3,6 +3,7 @@ using Elara.Application.Features.Rewards.DTOs;
 using Elara.Application.Features.Rewards.Queries.GetBadges;
 using Elara.Application.Features.Rewards.Queries.GetLeaderboard;
 using Elara.Application.Features.Rewards.Queries.GetSummary;
+using Elara.Application.Responses;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -26,14 +27,22 @@ namespace Elara.API.Controllers
         public async Task<ActionResult<RewardSummaryDto>> GetSummary(CancellationToken cancellationToken)
         {
             var result = await _mediator.Send(new GetRewardsSummaryQuery(), cancellationToken);
-            return Ok(new { status = "Success", data = result });
+            return Ok(new BaseResponse<RewardSummaryDto>
+            {
+                Message = "Rewards summary retrieved successfully.",
+                Data = result
+            });
         }
 
         [HttpGet("badges")]
         public async Task<ActionResult<List<BadgeDto>>> GetBadges(CancellationToken cancellationToken)
         {
             var result = await _mediator.Send(new GetBadgesQuery(), cancellationToken);
-            return Ok(new { status = "Success", data = result });
+            return Ok(new BaseResponse<List<BadgeDto>>
+            {
+                Message = "Badges retrieved successfully.",
+                Data = result
+            });
         }
 
         [HttpGet("leaderboard")]
@@ -41,12 +50,15 @@ namespace Elara.API.Controllers
         {
             var query = new GetLeaderboardQuery
             {
-                Period = period,
                 Page = page,
                 PageSize = pageSize
             };
             var result = await _mediator.Send(query, cancellationToken);
-            return Ok(new { status = "Success", data = result });
+            return Ok(new BaseResponse<LeaderboardDto>
+            {
+                Message = "Leaderboard retrieved successfully.",
+                Data = result
+            });
         }
     }
 }

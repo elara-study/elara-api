@@ -5,6 +5,7 @@ using Elara.Domain.Entities.Administrative;
 using Elara.Domain.Entities.JunctionTables;
 using Elara.Domain.Entities.Submissions;
 using Elara.Domain.Enums;
+using Microsoft.EntityFrameworkCore;
 
 namespace Elara.Infrastructure.Rewards
 {
@@ -33,12 +34,14 @@ namespace Elara.Infrastructure.Rewards
             var existingAchievements = student.StudentAchievements?.ToList() ?? new System.Collections.Generic.List<StudentAchievement>();
 
             var allAchievements = await _achievementRepository.ListAllAsync(cancellationToken);
-            var completedSessionsCount = _quizSessionRepository.AsQueryable().Count(s => s.StudentId == studentId && s.Status == QuizSessionStatus.Completed);
+            var completedSessionsCount = await _quizSessionRepository.AsQueryable()
+                .CountAsync(s => s.StudentId == studentId && s.Status == QuizSessionStatus.Completed, cancellationToken);
             
-            var hasPerfectScore = _quizSessionRepository.AsQueryable().Any(s => 
-                s.StudentId == studentId && 
-                s.Status == QuizSessionStatus.Completed && 
-                s.WrongAnswers == 0 && s.CorrectAnswers > 0);
+            var hasPerfectScore = await _quizSessionRepository.AsQueryable()
+                .AnyAsync(s => s.StudentId == studentId && 
+                               s.Status == QuizSessionStatus.Completed && 
+                               s.WrongAnswers == 0 && s.CorrectAnswers > 0,
+                cancellationToken);
 
             bool newAchievementEarned = false;
 
