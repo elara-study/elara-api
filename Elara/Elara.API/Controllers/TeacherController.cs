@@ -14,6 +14,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Elara.Application.Responses;
+using Elara.Application.Features.ChatAnalysisReport.Queries.GetStudentInsightsForTeacher;
 using System;
 
 namespace Elara.API.Controllers
@@ -171,6 +172,22 @@ namespace Elara.API.Controllers
             return Ok(new BaseResponse<bool>
             {
                 Message = "Student added successfully.",
+                Data = result
+            });
+        }
+
+        [HttpGet("students/{studentId:guid}/insights")]
+        [ProducesResponseType(typeof(BaseResponse<StudentInsightForTeacherDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetStudentInsights(Guid studentId, CancellationToken cancellationToken)
+        {
+            var result = await _mediator.Send(
+                new GetStudentInsightsForTeacherQuery { StudentId = studentId }, cancellationToken);
+            return Ok(new BaseResponse<StudentInsightForTeacherDto>
+            {
+                Message = "Student insights retrieved successfully.",
                 Data = result
             });
         }

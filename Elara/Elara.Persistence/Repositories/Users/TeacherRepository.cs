@@ -28,5 +28,12 @@ namespace Elara.Persistence.Repositories.Users
             }
             return (teacher, roadmap);
         }
+        public async Task<Teacher?> GetTeacherWithStudentsAsync(Guid teacherId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Teachers
+                .Include(t => t.Subject)
+                .Include(t => t.StudentTeachers)
+                .FirstOrDefaultAsync(t => t.Id == teacherId && !t.IsDeleted, cancellationToken);
+        }
     }
 }

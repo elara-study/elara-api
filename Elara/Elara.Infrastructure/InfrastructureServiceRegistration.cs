@@ -13,6 +13,7 @@ using Elara.Infrastructure.Chat;
 using Elara.Application.Features.Chat;
 using Elara.Infrastructure.Quiz;
 using Elara.Infrastructure.Notifications;
+using Microsoft.Extensions.Options;
 
 namespace Elara.Infrastructure
 {
@@ -48,6 +49,20 @@ namespace Elara.Infrastructure
             // Firebase / FCM
             FcmInitializer.Initialize(configuration);
             services.AddSingleton<INotificationService, FcmNotificationService>();
+
+            services.Configure<ElaraReportSettings>(
+                configuration.GetSection(ElaraReportSettings.SectionName));
+            services.AddSingleton<IChatAnalysisQueue>(sp =>
+            {
+                var settings = sp.GetRequiredService<IOptions<ElaraReportSettings>>().Value;
+                return new ChatAnalysisQueue(settings.QueueCapacity);
+            });
+            services.AddHttpClient<IElaraReportService, ElaraReportService>(client =>
+            {
+                client.Timeout = TimeSpan.FromMinutes(5);
+            });
+            services.AddHostedService<ChatAnalysisScheduler>();
+            services.AddHostedService<ChatAnalysisWorker>();
 
             return services;
         }

@@ -2,6 +2,8 @@ using Asp.Versioning;
 using Elara.Application.Features.Users.Students.Commands.JoinGroup;
 using Elara.Application.Features.Users.Students.Queries.GetStudentGroupOverview;
 using Elara.Application.Features.Users.Students.Queries.GetStudentGroups;
+using Elara.Application.Features.ChatAnalysisReport.Queries.GetAllReports;
+using Elara.Application.Features.ChatAnalysisReport.Queries.GetConversationReport;
 using Elara.Application.Responses;
 using Elara.Domain.Constants;
 using MediatR;
@@ -70,6 +72,34 @@ namespace Elara.API.Controllers
             {
                 Message = "Joined group successfully.",
                 Data = new { }
+            });
+        }
+
+        [HttpGet("insights")]
+        [ProducesResponseType(typeof(BaseResponse<List<GetReportsDto>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> GetInsights(CancellationToken cancellationToken)
+        {
+            var result = await _mediator.Send(new GetAllReportsQuery(), cancellationToken);
+            return Ok(new BaseResponse<List<GetReportsDto>>
+            {
+                Message = "Insights retrieved successfully.",
+                Data = result
+            });
+        }
+
+        [HttpGet("insights/{conversationId:guid}")]
+        [ProducesResponseType(typeof(BaseResponse<ConversationReportDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetConversationReport(Guid conversationId, CancellationToken cancellationToken)
+        {
+            var result = await _mediator.Send(
+                new GetConversationReportQuery { ConversationId = conversationId }, cancellationToken);
+            return Ok(new BaseResponse<ConversationReportDto>
+            {
+                Message = "Report retrieved successfully.",
+                Data = result
             });
         }
     }
