@@ -1,4 +1,5 @@
 using Elara.Application.Contracts.Persistence.Users;
+using Elara.Application.Models.Users;
 using Elara.Domain.Entities.Educational;
 using Elara.Domain.Entities.Users;
 using Elara.Infrastructure.Data;
@@ -34,6 +35,89 @@ namespace Elara.Persistence.Repositories.Users
                 .Include(t => t.Subject)
                 .Include(t => t.StudentTeachers)
                 .FirstOrDefaultAsync(t => t.Id == teacherId && !t.IsDeleted, cancellationToken);
+        }
+
+        public async Task<TeacherProfileReadModel?> GetTeacherProfileAsync(Guid teacherId, CancellationToken cancellationToken = default)
+        {
+            var userProfile = await (
+                from teacher in _context.Teachers
+                join user in _context.Users on teacher.Id equals user.Id
+                where teacher.Id == teacherId && !teacher.IsDeleted
+                select new
+                {
+                    teacher.Id,
+                    user.Username,
+                    FullName = string.IsNullOrWhiteSpace(user.Name) ? user.Username : user.Name,
+                    user.ImageUrl,
+                    user.Email,
+                    user.PhoneNumber
+                }).FirstOrDefaultAsync(cancellationToken);
+
+            if (userProfile == null)
+            {
+                return null;
+            }
+
+            var primarySubject = await _context.Teachers
+                .Where(t => t.Id == teacherId)
+                .Select(t => t.Subject != null ? t.Subject.Name : null)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            var classSubjectNames = await _context.Classes
+                .Where(c => c.TeacherId == teacherId)
+                .Select(c => c.Subject.Name)
+                .ToListAsync(cancellationToken);
+
+            var roadmapSubjectNames = await _context.Roadmaps
+                .Where(r => r.TeacherId == teacherId)
+                .Select(r => r.Subject.Name)
+                .ToListAsync(cancellationToken);
+
+            var subjects = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (!string.IsNullOrWhiteSpace(primarySubject))
+            {
+                subjects.Add(primarySubject);
+            }
+
+            foreach (var name in classSubjectNames.Concat(roadmapSubjectNames))
+            {
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    subjects.Add(name);
+                }
+            }
+
+            var totalStudents = await _context.Set<Elara.Domain.Entities.JunctionTables.StudentClass>()
+                .Where(sc => sc.IsActive && sc.Class.TeacherId == teacherId)
+                .Select(sc => sc.StudentId)
+                .Distinct()
+                .CountAsync(cancellationToken);
+
+            var activeGroups = await _context.Classes
+                .Where(c => c.TeacherId == teacherId && c.StudentClasses.Any(sc => sc.IsActive))
+                .CountAsync(cancellationToken);
+
+            var roadmapsCreated = await _context.Roadmaps
+                .CountAsync(r => r.TeacherId == teacherId, cancellationToken);
+
+            var lessonsPublished = await _context.Lessons
+                .Where(l => l.Topic.Roadmap.TeacherId == teacherId && l.LessonVideos.Any())
+                .CountAsync(cancellationToken);
+
+            return new TeacherProfileReadModel
+            {
+                TeacherId = userProfile.Id,
+                Username = userProfile.Username,
+                FullName = userProfile.FullName,
+                AvatarUrl = userProfile.ImageUrl,
+                Email = userProfile.Email,
+                Phone = userProfile.PhoneNumber,
+                Subjects = subjects.OrderBy(s => s).ToList(),
+                TotalStudents = totalStudents,
+                ActiveGroups = activeGroups,
+                RoadmapsCreated = roadmapsCreated,
+                LessonsPublished = lessonsPublished
+            };
         }
     }
 }

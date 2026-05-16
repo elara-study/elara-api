@@ -44,7 +44,7 @@ namespace Elara.Application.Features.ChatAnalysisReport.Queries.GetStudentInsigh
                 .Any(st => st.StudentId == request.StudentId);
 
             if (!hasRelationship)
-                throw new UnauthorizedAccessException("This student is not assigned to you.");
+                throw new KeyNotFoundException("Student not found.");
 
             var reports = await _chatRepository
                 .GetReportsByStudentIdAndSubjectAsync(request.StudentId, subjectName, cancellationToken);

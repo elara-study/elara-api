@@ -1,4 +1,6 @@
 using Elara.Application.Contracts.Persistence.Users;
+using Elara.Application.Models.Users;
+using Elara.Domain.Entities.JunctionTables;
 using Elara.Domain.Entities.Users;
 using Elara.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -25,9 +27,25 @@ namespace Elara.Persistence.Repositories.Users
 
         public async Task<IReadOnlyList<Student>> GetByParentIdAsync(Guid parentId, CancellationToken cancellationToken = default)
         {
-            return await _context.Students
-                .Where(s => s.ParentId == parentId && !s.IsDeleted)
+            return await _context.StudentParents
+                .Where(sp => sp.ParentId == parentId)
+                .Select(sp => sp.Student)
+                .Where(s => !s.IsDeleted)
                 .ToListAsync(cancellationToken);
+        }
+
+        public async Task<IReadOnlyList<Guid>> GetParentIdsByStudentIdAsync(Guid studentId, CancellationToken cancellationToken = default)
+        {
+            return await _context.StudentParents
+                .Where(sp => sp.StudentId == studentId)
+                .Select(sp => sp.ParentId)
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<bool> IsParentOfStudentAsync(Guid parentId, Guid studentId, CancellationToken cancellationToken = default)
+        {
+            return await _context.StudentParents
+                .AnyAsync(sp => sp.ParentId == parentId && sp.StudentId == studentId, cancellationToken);
         }
 
         public async Task<IReadOnlyList<Guid>> GetTeacherIdsByStudentIdAsync(Guid studentId, CancellationToken cancellationToken = default)
@@ -43,6 +61,55 @@ namespace Elara.Persistence.Repositories.Users
             return await _context.Students
                 .Include(s => s.StudentAchievements)
                 .FirstOrDefaultAsync(s => s.Id == studentId, cancellationToken);
+        }
+
+        public async Task<StudentProfileReadModel?> GetStudentProfileAsync(Guid studentId, CancellationToken cancellationToken = default)
+        {
+            var studentProfile = await (
+                from student in _context.Students
+                join user in _context.Users on student.Id equals user.Id
+                where student.Id == studentId && !student.IsDeleted
+                select new StudentProfileReadModel
+                {
+                    StudentId = student.Id,
+                    Username = user.Username,
+                    FullName = string.IsNullOrWhiteSpace(user.Name) ? user.Username : user.Name,
+                    AvatarUrl = user.ImageUrl,
+                    GradeLevel = student.GradeLevel,
+                    TotalXP = student.TotalXP,
+                    CurrentStreak = student.CurrentStreak
+                }).FirstOrDefaultAsync(cancellationToken);
+
+            if (studentProfile == null)
+            {
+                return null;
+            }
+
+            studentProfile.Parents = await (
+                from link in _context.StudentParents
+                join parentEntity in _context.Parents on link.ParentId equals parentEntity.Id
+                join parentUser in _context.Users on parentEntity.Id equals parentUser.Id
+                where link.StudentId == studentId && !parentEntity.IsDeleted
+                orderby parentUser.Name, parentUser.Username
+                select new ParentProfileReadModel
+                {
+                    Id = parentEntity.Id,
+                    FullName = string.IsNullOrWhiteSpace(parentUser.Name) ? parentUser.Username : parentUser.Name,
+                    AvatarUrl = parentUser.ImageUrl
+                }).ToListAsync(cancellationToken);
+
+            studentProfile.RecentAchievements = await _context.Set<StudentAchievement>()
+                .Where(sa => sa.StudentId == studentId)
+                .OrderByDescending(sa => sa.EarnedAt)
+                .Take(3)
+                .Select(sa => new StudentAchievementReadModel
+                {
+                    Id = sa.AchievementId,
+                    Title = sa.Achievement.Title
+                })
+                .ToListAsync(cancellationToken);
+
+            return studentProfile;
         }
 
         public async Task<IReadOnlyList<Student>> GetTopStudentsAsync(int page, int pageSize, CancellationToken cancellationToken = default)

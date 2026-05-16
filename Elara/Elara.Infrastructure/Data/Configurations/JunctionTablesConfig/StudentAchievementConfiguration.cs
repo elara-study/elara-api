@@ -31,6 +31,10 @@ namespace Elara.Infrastructure.Data.Configurations.JunctionTablesConfig
             builder.HasIndex(sa => sa.EarnedAt)
                 .HasDatabaseName("IX_StudentAchievements_EarnedAt");
 
+            builder.HasIndex(sa => new { sa.StudentId, sa.EarnedAt })
+                .IsDescending(false, true)
+                .HasDatabaseName("IX_StudentAchievements_StudentId_EarnedAt");
+
             // Relationships
             builder.HasOne(sa => sa.Student)
                 .WithMany(s => s.StudentAchievements)

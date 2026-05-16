@@ -102,9 +102,8 @@ namespace Elara.Infrastructure.Chat
         {
             var recipients = new List<Guid> { studentId };
 
-            var student = await studentRepo.GetByIdAsync(studentId, ct);
-            if (student?.ParentId.HasValue == true)
-                recipients.Add(student.ParentId.Value);
+            var parentIds = await studentRepo.GetParentIdsByStudentIdAsync(studentId, ct);
+            recipients.AddRange(parentIds);
 
             var teacherIds = await studentRepo.GetTeacherIdsByStudentIdAsync(studentId, ct);
             recipients.AddRange(teacherIds);

@@ -56,6 +56,7 @@ namespace Elara.Infrastructure.Data
 
         #region Junction Tables DbSets
         public DbSet<StudentTeacher> StudentTeachers { get; set; }
+        public DbSet<StudentParent> StudentParents { get; set; }
         public DbSet<StudentClass> StudentClasses { get; set; }
         public DbSet<StudentAchievement> StudentAchievements { get; set; }
         public DbSet<LessonVideo> LessonVideos { get; set; }

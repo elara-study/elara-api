@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Elara.Application.Features.ChatAnalysisReport.Queries.GetParentChildInsights;
 using Elara.Application.Features.ChatAnalysisReport.Queries.GetSingleChildInsights;
 using Elara.Application.Responses;
+using Elara.Application.Models;
 using Elara.Domain.Constants;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -43,13 +44,25 @@ namespace Elara.API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetSingleChildInsights(Guid childId, CancellationToken cancellationToken)
         {
-            var result = await _mediator.Send(
-                new GetSingleChildInsightsQuery { ChildId = childId }, cancellationToken);
-            return Ok(new BaseResponse<SingleChildInsightDto>
+            try
             {
-                Message = "Child insights retrieved successfully.",
-                Data = result
-            });
+                var result = await _mediator.Send(
+                    new GetSingleChildInsightsQuery { ChildId = childId }, cancellationToken);
+
+                return Ok(new BaseResponse<SingleChildInsightDto>
+                {
+                    Message = "Child insights retrieved successfully.",
+                    Data = result
+                });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(ErrorResponse.Create("Child not found."));
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return NotFound(ErrorResponse.Create("Child not found."));
+            }
         }
     }
 }

@@ -177,7 +177,6 @@ namespace Elara.Infrastructure.Quiz
             if (student != null)
             {
                 student.TotalXP += xpEarned;
-                student.Level = (student.TotalXP / 100) + 1;
                 student.LastActivityDate = DateTime.UtcNow;
                 student.CurrentStreak += 1;
                 await _studentRepository.UpdateAsync(student, cancellationToken);

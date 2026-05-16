@@ -34,11 +34,8 @@ namespace Elara.Application.Features.ChatAnalysisReport.Queries.GetSingleChildIn
             var parentId = _currentUserService.UserId
                 ?? throw new UnauthorizedAccessException();
 
-            var child = await _studentRepository.GetByIdAsync(request.ChildId, cancellationToken)
-                ?? throw new KeyNotFoundException("Child not found.");
-
-            if (child.ParentId != parentId)
-                throw new UnauthorizedAccessException("This child is not yours.");
+            if (!await _studentRepository.IsParentOfStudentAsync(parentId, request.ChildId, cancellationToken))
+                throw new KeyNotFoundException("Child not found.");
 
             var reports = await _chatRepository
                 .GetReportsByStudentIdAsync(request.ChildId, cancellationToken);

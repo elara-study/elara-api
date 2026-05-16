@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Elara.Application.Features.Users.Students.Commands.JoinGroup;
 using Elara.Application.Features.Users.Students.Queries.GetStudentGroupOverview;
 using Elara.Application.Features.Users.Students.Queries.GetStudentGroups;
+using Elara.Application.Features.Users.Students.Queries.GetStudentProfile;
 using Elara.Application.Features.ChatAnalysisReport.Queries.GetAllReports;
 using Elara.Application.Features.ChatAnalysisReport.Queries.GetConversationReport;
 using Elara.Application.Responses;
@@ -27,6 +28,21 @@ namespace Elara.API.Controllers
         public StudentController(IMediator mediator)
         {
             _mediator = mediator;
+        }
+
+        [HttpGet("profile")]
+        [ProducesResponseType(typeof(BaseResponse<StudentProfileDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetProfile(CancellationToken cancellationToken)
+        {
+            var response = await _mediator.Send(new GetStudentProfileQuery(StudentId), cancellationToken);
+            return Ok(new BaseResponse<StudentProfileDto>
+            {
+                Message = "Student profile retrieved successfully.",
+                Data = response
+            });
         }
 
         [HttpGet("groups")]

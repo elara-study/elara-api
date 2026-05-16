@@ -6,6 +6,7 @@ using Elara.Application.Features.Users.Teachers.Commands.DeleteAnnouncement;
 using Elara.Application.Features.Users.Teachers.Queries.GetAnnouncements;
 using Elara.Application.Features.Users.Teachers.Queries.GetClassInfo;
 using Elara.Application.Features.Users.Teachers.Queries.GetTeacherClasses;
+using Elara.Application.Features.Users.Teachers.Queries.GetTeacherProfile;
 using Elara.Application.Features.Users.Teachers.Queries.GetGroupStudents;
 using Elara.Application.Features.Users.Teachers.Commands.AddStudentByUsername;
 using Elara.API.Controllers.Requests;
@@ -16,6 +17,7 @@ using Microsoft.AspNetCore.Mvc;
 using Elara.Application.Responses;
 using Elara.Application.Features.ChatAnalysisReport.Queries.GetStudentInsightsForTeacher;
 using System;
+using System.Security.Claims;
 
 namespace Elara.API.Controllers
 {
@@ -26,10 +28,28 @@ namespace Elara.API.Controllers
     public class TeacherController : ControllerBase
     {
         private readonly IMediator _mediator;
+        private Guid TeacherId => Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var teacherId)
+            ? teacherId
+            : throw new UnauthorizedAccessException("User is not authenticated.");
 
         public TeacherController(IMediator mediator)
         {
             _mediator = mediator;
+        }
+
+        [HttpGet("profile")]
+        [ProducesResponseType(typeof(BaseResponse<TeacherProfileDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetProfile(CancellationToken cancellationToken)
+        {
+            var response = await _mediator.Send(new GetTeacherProfileQuery(TeacherId), cancellationToken);
+            return Ok(new BaseResponse<TeacherProfileDto>
+            {
+                Message = "Teacher profile retrieved successfully.",
+                Data = response
+            });
         }
 
         [HttpGet("classes")]
