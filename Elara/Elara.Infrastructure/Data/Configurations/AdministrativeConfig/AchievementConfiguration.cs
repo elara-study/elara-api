@@ -1,4 +1,4 @@
-﻿using Elara.Domain.Entities.Administrative;
+using Elara.Domain.Entities.Administrative;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -27,11 +27,15 @@ namespace Elara.Infrastructure.Data.Configurations.AdministrativeConfig
                 .IsRequired()
                 .HasDefaultValue(0);
 
-            builder.Property(a => a.IconPath)
+            builder.Property(a => a.ImageUrl)
                 .HasMaxLength(500);
 
-            builder.Property(a => a.EarnedAt)
-                .IsRequired();
+            builder.Property(a => a.ImagePublicId)
+                .HasMaxLength(100);
+
+            builder.Property(a => a.TargetValue)
+                .IsRequired()
+                .HasDefaultValue(0);
 
             // Indexes
             builder.HasIndex(a => a.Title)

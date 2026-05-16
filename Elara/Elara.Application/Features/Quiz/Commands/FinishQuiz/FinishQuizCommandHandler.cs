@@ -12,12 +12,14 @@ namespace Elara.Application.Features.Quiz.Commands.FinishQuiz
         private readonly IQuizRepository _quizRepository;
         private readonly IQuizService _quizService;
         private readonly IMapper _mapper;
+        private readonly IAchievementEvaluationService _achievementService;
 
-        public FinishQuizCommandHandler(IQuizRepository quizRepository, IQuizService quizService, IMapper mapper)
+        public FinishQuizCommandHandler(IQuizRepository quizRepository, IQuizService quizService, IMapper mapper, IAchievementEvaluationService achievementService)
         {
             _quizRepository = quizRepository;
             _quizService = quizService;
             _mapper = mapper;
+            _achievementService = achievementService;
         }
 
         public async Task<QuizResultDto> Handle(FinishQuizCommand request, CancellationToken cancellationToken)
@@ -48,6 +50,9 @@ namespace Elara.Application.Features.Quiz.Commands.FinishQuiz
             await _quizRepository.UpdateAsync(session, cancellationToken);
 
             await _quizService.UpdateStudentProgressAsync(session.StudentId, xpEarned, cancellationToken);
+            
+            // Evaluate and award badges
+            await _achievementService.EvaluateStudentAchievementsAsync(session.StudentId, cancellationToken);
 
             var updatedSession = await _quizRepository.GetSessionWithAnswersAsync(session.Id, cancellationToken);
 

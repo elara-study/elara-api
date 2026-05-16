@@ -3,6 +3,7 @@ using System;
 using Elara.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Elara.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260510082127_UpdateAchievementForBadges")]
+    partial class UpdateAchievementForBadges
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -436,65 +439,6 @@ namespace Elara.Infrastructure.Migrations
                         .HasDatabaseName("IX_Reports_StudentId_GeneratedDate");
 
                     b.ToTable("Reports", (string)null);
-                });
-
-            modelBuilder.Entity("Elara.Domain.Entities.Chat.ChatAnalysisReport", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AnalyzedMessageCount")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("ConversationId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<Guid>("PublicId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
-
-                    b.Property<string>("ReportText")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("StudentId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Subject")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ConversationId")
-                        .IsUnique()
-                        .HasDatabaseName("IX_ChatAnalysisReports_ConversationId");
-
-                    b.HasIndex("PublicId")
-                        .IsUnique()
-                        .HasDatabaseName("IX_ChatAnalysisReports_PublicId");
-
-                    b.HasIndex("StudentId")
-                        .HasDatabaseName("IX_ChatAnalysisReports_StudentId");
-
-                    b.ToTable("ChatAnalysisReports", (string)null);
                 });
 
             modelBuilder.Entity("Elara.Domain.Entities.Chat.ChatMessage", b =>
@@ -1902,25 +1846,6 @@ namespace Elara.Infrastructure.Migrations
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("Elara.Domain.Entities.Chat.ChatAnalysisReport", b =>
-                {
-                    b.HasOne("Elara.Domain.Entities.Chat.Conversation", "Conversation")
-                        .WithOne()
-                        .HasForeignKey("Elara.Domain.Entities.Chat.ChatAnalysisReport", "ConversationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Elara.Domain.Entities.Users.Student", "Student")
-                        .WithMany()
-                        .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Conversation");
-
-                    b.Navigation("Student");
                 });
 
             modelBuilder.Entity("Elara.Domain.Entities.Chat.ChatMessage", b =>
