@@ -62,3 +62,6 @@ nunit-*.xml
 
 
 appsettings.Development.json
+
+# IDE Caches
+*.csproj.lscache

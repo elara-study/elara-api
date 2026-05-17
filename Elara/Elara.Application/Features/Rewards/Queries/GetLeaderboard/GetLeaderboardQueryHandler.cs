@@ -1,3 +1,4 @@
+using Elara.Application.Common.Gamification;
 using Elara.Application.Common.Interfaces;
 using Elara.Application.Contracts.Persistence.Users;
 using Elara.Application.Features.Rewards.DTOs;
@@ -44,7 +45,7 @@ namespace Elara.Application.Features.Rewards.Queries.GetLeaderboard
                     Rank = currentRank++,
                     Name = isCurrentUser ? "You" : realName, 
                     Xp = student.TotalXP,
-                    Level = student.Level,
+                    Level = StudentGamification.CalculateLevel(student.TotalXP),
                     IsCurrentUser = isCurrentUser,
                     PhotoUrl = null
                 });
@@ -63,7 +64,7 @@ namespace Elara.Application.Features.Rewards.Queries.GetLeaderboard
                 Rank = userRank,
                 Name = "You",
                 Xp = currentUserEntity.TotalXP,
-                Level = currentUserEntity.Level,
+                Level = StudentGamification.CalculateLevel(currentUserEntity.TotalXP),
                 IsCurrentUser = true,
                 PhotoUrl = null
             };

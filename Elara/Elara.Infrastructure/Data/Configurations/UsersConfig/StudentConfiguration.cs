@@ -28,12 +28,6 @@ namespace Elara.Infrastructure.Data.Configurations.UsersConfig
                 .HasForeignKey<Student>(s => s.Id)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Relationship with Parent
-            builder.HasOne(s => s.Parent)
-                .WithMany(p => p.Childrens)
-                .HasForeignKey(s => s.ParentId)
-                .OnDelete(DeleteBehavior.Restrict);
-
             // Indexes
             builder.HasIndex(s => s.GradeLevel)
                 .HasDatabaseName("IX_Students_GradeLevel");
@@ -43,7 +37,6 @@ namespace Elara.Infrastructure.Data.Configurations.UsersConfig
 
             // XP & Gamification defaults
             builder.Property(s => s.TotalXP).HasDefaultValue(0);
-            builder.Property(s => s.Level).HasDefaultValue(1);
             builder.Property(s => s.CurrentStreak).HasDefaultValue(0);
         }
     }
