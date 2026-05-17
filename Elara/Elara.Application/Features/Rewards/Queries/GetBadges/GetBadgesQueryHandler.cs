@@ -84,6 +84,17 @@ namespace Elara.Application.Features.Rewards.Queries.GetBadges
                         case AchievementType.LessonsCompleted:
                             currentValue = completedCount;
                             break;
+                        case AchievementType.LessonsCompletedInOneDay:
+                            var todayStart = DateTime.UtcNow.Date;
+                            currentValue = await _quizSessionRepository
+                                .CountAsync(s => s.StudentId == userId && s.Status == QuizSessionStatus.Completed && s.CompletedAt >= todayStart, cancellationToken);
+                            break;
+                        case AchievementType.SubjectsMastered:
+                            currentValue = await _studentRepository.GetMasteredSubjectsCountAsync(userId, cancellationToken);
+                            break;
+                        case AchievementType.PerfectWeek:
+                            currentValue = await _studentRepository.GetPerfectDaysStreakAsync(userId, cancellationToken);
+                            break;
                         case AchievementType.SpecificQuizScore:
                             currentValue = hasPerfectScore ? achievement.TargetValue : 0;
                             break;

@@ -15,5 +15,7 @@ namespace Elara.Application.Contracts.Persistence.Users
         Task<int> GetStudentRankAsync(Guid studentId, int studentTotalXp, DateTime studentCreatedAt, CancellationToken cancellationToken = default);
         Task<Student?> GetStudentWithAchievementsAsync(Guid studentId, CancellationToken cancellationToken = default);
         Task<Dictionary<Guid, string>> GetStudentNamesAsync(IEnumerable<Guid> studentIds, CancellationToken cancellationToken = default);
+        Task<int> GetMasteredSubjectsCountAsync(Guid studentId, CancellationToken cancellationToken = default);
+        Task<int> GetPerfectDaysStreakAsync(Guid studentId, CancellationToken cancellationToken = default);
     }
 }

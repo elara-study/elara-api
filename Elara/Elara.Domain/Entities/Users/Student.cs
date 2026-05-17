@@ -12,6 +12,7 @@ namespace Elara.Domain.Entities.Users
 
         // XP & Gamification (level is derived from TotalXP via StudentGamification)
         public int TotalXP { get; set; } = 0;
+
         public int CurrentStreak { get; set; } = 0;
         public DateTime? LastActivityDate { get; set; }
 

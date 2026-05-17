@@ -2,6 +2,7 @@ using Elara.Application.Contracts.Persistence.Users;
 using Elara.Application.Models.Users;
 using Elara.Domain.Entities.JunctionTables;
 using Elara.Domain.Entities.Users;
+using Elara.Domain.Enums;
 using Elara.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -142,6 +143,65 @@ namespace Elara.Persistence.Repositories.Users
             return await _context.Users
                 .Where(u => studentIds.Contains(u.Id))
                 .ToDictionaryAsync(u => u.Id, u => string.IsNullOrWhiteSpace(u.Name) ? u.Username : u.Name, cancellationToken);
+        }
+
+        public async Task<int> GetMasteredSubjectsCountAsync(Guid studentId, CancellationToken cancellationToken = default)
+        {
+            return await _context.QuizSessions
+                .Where(s => s.StudentId == studentId && s.Status == QuizSessionStatus.Completed)
+                .Select(s => s.Assignment.Topic.SubjectId)
+                .Distinct()
+                .CountAsync(cancellationToken);
+        }
+
+        public async Task<int> GetPerfectDaysStreakAsync(Guid studentId, CancellationToken cancellationToken = default)
+        {
+            var sevenDaysAgo = DateTime.UtcNow.Date.AddDays(-7);
+            
+            var recentSessions = await _context.QuizSessions
+                .Where(s => s.StudentId == studentId && s.Status == QuizSessionStatus.Completed && s.CompletedAt >= sevenDaysAgo)
+                .ToListAsync(cancellationToken);
+
+            var sessionsByDate = recentSessions
+                .Where(s => s.CompletedAt.HasValue)
+                .GroupBy(s => s.CompletedAt.Value.Date)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            int streak = 0;
+            var checkDate = DateTime.UtcNow.Date;
+
+            for (int i = 0; i < 7; i++)
+            {
+                if (sessionsByDate.TryGetValue(checkDate, out var daySessions))
+                {
+                    bool has3Lessons = daySessions.Count >= 3;
+                    
+                    bool has80PercentScore = daySessions.Any(s => 
+                    {
+                        var totalQuestions = s.CorrectAnswers + s.WrongAnswers + s.UnansweredCount;
+                        return totalQuestions > 0 && ((double)s.CorrectAnswers / totalQuestions) >= 0.8;
+                    });
+                    
+                    var totalDurationMinutes = daySessions.Sum(s => (s.CompletedAt!.Value - s.StartedAt).TotalMinutes);
+                    bool has15MinsPractice = totalDurationMinutes >= 15;
+
+                    if (has3Lessons && has80PercentScore && has15MinsPractice)
+                    {
+                        streak++;
+                        checkDate = checkDate.AddDays(-1);
+                    }
+                    else
+                    {
+                        break; // Streak broken
+                    }
+                }
+                else
+                {
+                    break; // Streak broken
+                }
+            }
+
+            return streak;
         }
     }
 }
