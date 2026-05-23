@@ -2,6 +2,7 @@ using Elara.Application.Common.Interfaces;
 using Elara.Application.Contracts.Persistence.Users;
 using Elara.Domain.Enums;
 using MediatR;
+using static Elara.Application.Common.Constants.DailyGoalConstants;
 
 namespace Elara.Application.Features.Users.Students.Queries.GetStudentHome
 {
@@ -66,22 +67,26 @@ namespace Elara.Application.Features.Users.Students.Queries.GetStudentHome
             // Calculate Daily Goals Progress
             var todayStart = DateTime.UtcNow.Date;
 
-            // Define hardcoded goals
+            // Define goals
             var activeGoals = new[]
             {
-                new { Id = 1, Title = "Complete 3 lessons", GoalType = AchievementType.LessonsCompletedInOneDay, TargetValue = 3, XpReward = 50, IconType = "flag" },
-                new { Id = 2, Title = "Score 80% on a quiz", GoalType = AchievementType.SpecificQuizScore, TargetValue = 80, XpReward = 30, IconType = "trophy" },
-                new { Id = 3, Title = "Practice for 15 mins", GoalType = AchievementType.PracticeTime, TargetValue = 15, XpReward = 25, IconType = "clock" }
+                new { Id = 1, Title = $"Complete {LessonsTarget} lessons", GoalType = AchievementType.LessonsCompletedInOneDay, TargetValue = LessonsTarget, XpReward = 50, IconType = "flag" },
+                new { Id = 2, Title = $"Score {ScoreTarget * 100}% on a quiz", GoalType = AchievementType.SpecificQuizScore, TargetValue = 100, XpReward = 30, IconType = "trophy" },
+                new { Id = 3, Title = $"Practice for {PracticeMinutesTarget} mins", GoalType = AchievementType.PracticeTime, TargetValue = PracticeMinutesTarget, XpReward = 25, IconType = "clock" }
             };
 
             var sessionsToday = await _studentRepository.GetTodayQuizSessionsAsync(userId, todayStart, cancellationToken);
 
             var completedLessonsTodayCount = sessionsToday.Count(s => s.Status == QuizSessionStatus.Completed);
             
-            var has80PercentScoreToday = sessionsToday.Any(s => 
-                s.Status == QuizSessionStatus.Completed && 
-                (s.CorrectAnswers + s.WrongAnswers + s.UnansweredCount > 0) && 
-                ((double)s.CorrectAnswers / (s.CorrectAnswers + s.WrongAnswers + s.UnansweredCount) >= 0.8));
+            var bestScoreToday = sessionsToday
+                .Where(s => s.Status == QuizSessionStatus.Completed)
+                .Select(s => {
+                    var total = s.CorrectAnswers + s.WrongAnswers + s.UnansweredCount;
+                    return total > 0 ? (int)((double)s.CorrectAnswers / total * 100) : 0;
+                })
+                .DefaultIfEmpty(0)
+                .Max();
 
             var totalPracticeMinutesToday = (int)sessionsToday
                 .Where(s => s.CompletedAt.HasValue)
@@ -98,7 +103,7 @@ namespace Elara.Application.Features.Users.Students.Queries.GetStudentHome
                         currentValue = completedLessonsTodayCount;
                         break;
                     case AchievementType.SpecificQuizScore:
-                        currentValue = has80PercentScoreToday ? goal.TargetValue : 0;
+                        currentValue = bestScoreToday;
                         break;
                     case AchievementType.PracticeTime:
                         currentValue = totalPracticeMinutesToday; 
@@ -108,7 +113,10 @@ namespace Elara.Application.Features.Users.Students.Queries.GetStudentHome
                         break;
                 }
 
-                bool isCompleted = currentValue >= goal.TargetValue;
+                bool isCompleted = goal.GoalType == AchievementType.SpecificQuizScore
+                    ? currentValue >= (int)(ScoreTarget * 100)
+                    : currentValue >= goal.TargetValue;
+
                 if (isCompleted) completedGoalsCount++;
 
                 response.DailyGoals.Goals.Add(new HomeGoalItemDto

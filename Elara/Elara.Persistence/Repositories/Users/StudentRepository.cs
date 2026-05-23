@@ -5,6 +5,7 @@ using Elara.Domain.Entities.Users;
 using Elara.Domain.Enums;
 using Elara.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using static Elara.Application.Common.Constants.DailyGoalConstants;
 
 
 namespace Elara.Persistence.Repositories.Users
@@ -170,20 +171,44 @@ namespace Elara.Persistence.Repositories.Users
             int streak = 0;
             var checkDate = DateTime.UtcNow.Date;
 
-            for (int i = 0; i < 7; i++)
+            // Check if today is a perfect day
+            bool isTodayPerfect = false;
+            if (sessionsByDate.TryGetValue(checkDate, out var todaySessions))
+            {
+                bool has3Lessons = todaySessions.Count >= Elara.Application.Common.Constants.DailyGoalConstants.LessonsTarget;
+                bool has80PercentScore = todaySessions.Any(s => 
+                {
+                    var totalQuestions = s.CorrectAnswers + s.WrongAnswers + s.UnansweredCount;
+                    return totalQuestions > 0 && ((double)s.CorrectAnswers / totalQuestions) >= Elara.Application.Common.Constants.DailyGoalConstants.ScoreTarget;
+                });
+                var totalDurationMinutes = todaySessions.Sum(s => (s.CompletedAt!.Value - s.StartedAt).TotalMinutes);
+                bool has15MinsPractice = totalDurationMinutes >= Elara.Application.Common.Constants.DailyGoalConstants.PracticeMinutesTarget;
+
+                isTodayPerfect = has3Lessons && has80PercentScore && has15MinsPractice;
+            }
+
+            if (isTodayPerfect)
+            {
+                streak++;
+            }
+
+            // Always check previous days starting from yesterday
+            checkDate = DateTime.UtcNow.Date.AddDays(-1);
+
+            for (int i = 0; i < 7; i++) 
             {
                 if (sessionsByDate.TryGetValue(checkDate, out var daySessions))
                 {
-                    bool has3Lessons = daySessions.Count >= 3;
+                    bool has3Lessons = daySessions.Count >= LessonsTarget;
                     
                     bool has80PercentScore = daySessions.Any(s => 
                     {
                         var totalQuestions = s.CorrectAnswers + s.WrongAnswers + s.UnansweredCount;
-                        return totalQuestions > 0 && ((double)s.CorrectAnswers / totalQuestions) >= 0.8;
+                        return totalQuestions > 0 && ((double)s.CorrectAnswers / totalQuestions) >= ScoreTarget;
                     });
                     
                     var totalDurationMinutes = daySessions.Sum(s => (s.CompletedAt!.Value - s.StartedAt).TotalMinutes);
-                    bool has15MinsPractice = totalDurationMinutes >= 15;
+                    bool has15MinsPractice = totalDurationMinutes >= PracticeMinutesTarget;
 
                     if (has3Lessons && has80PercentScore && has15MinsPractice)
                     {
