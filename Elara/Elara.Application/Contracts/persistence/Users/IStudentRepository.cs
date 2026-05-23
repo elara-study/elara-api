@@ -1,5 +1,7 @@
 using Elara.Application.Models.Users;
 using Elara.Domain.Entities.Users;
+using Elara.Domain.Entities.Submissions;
+using Elara.Domain.Entities.Administrative;
 
 namespace Elara.Application.Contracts.Persistence.Users
 {
@@ -17,5 +19,10 @@ namespace Elara.Application.Contracts.Persistence.Users
         Task<Dictionary<Guid, string>> GetStudentNamesAsync(IEnumerable<Guid> studentIds, CancellationToken cancellationToken = default);
         Task<int> GetMasteredSubjectsCountAsync(Guid studentId, CancellationToken cancellationToken = default);
         Task<int> GetPerfectDaysStreakAsync(Guid studentId, CancellationToken cancellationToken = default);
+        Task<LatestQuizSessionReadModel?> GetLatestQuizSessionWithTopicAsync(Guid studentId, CancellationToken cancellationToken = default);
+        Task<int> GetTotalLessonsInTopicAsync(int topicId, CancellationToken cancellationToken = default);
+        Task<int> GetCompletedLessonsInTopicAsync(Guid studentId, int topicId, CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<TodayQuizSessionReadModel>> GetTodayQuizSessionsAsync(Guid studentId, DateTime todayStart, CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<EnrolledClassReadModel>> GetStudentEnrolledClassesAsync(Guid studentId, CancellationToken cancellationToken = default);
     }
 }

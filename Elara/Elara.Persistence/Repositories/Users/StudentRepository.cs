@@ -203,5 +203,66 @@ namespace Elara.Persistence.Repositories.Users
 
             return streak;
         }
+
+        public async Task<LatestQuizSessionReadModel?> GetLatestQuizSessionWithTopicAsync(Guid studentId, CancellationToken cancellationToken = default)
+        {
+            return await _context.QuizSessions
+                .Where(s => s.StudentId == studentId && !s.IsDeleted)
+                .OrderByDescending(s => s.StartedAt)
+                .Select(s => new LatestQuizSessionReadModel
+                {
+                    TopicId = s.Assignment.TopicId,
+                    TopicTitle = s.Assignment.Topic.Title,
+                    AssignmentTitle = s.Assignment.Title
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        public async Task<int> GetTotalLessonsInTopicAsync(int topicId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Lessons
+                .CountAsync(l => l.TopicId == topicId && !l.IsDeleted, cancellationToken);
+        }
+
+        public async Task<int> GetCompletedLessonsInTopicAsync(Guid studentId, int topicId, CancellationToken cancellationToken = default)
+        {
+            return await _context.QuizSessions
+                .Where(s => s.StudentId == studentId 
+                         && s.Status == QuizSessionStatus.Completed 
+                         && s.Assignment.TopicId == topicId
+                         && s.Assignment.LessonId != null
+                         && !s.IsDeleted)
+                .Select(s => s.Assignment.LessonId)
+                .Distinct()
+                .CountAsync(cancellationToken);
+        }
+
+        public async Task<IReadOnlyList<TodayQuizSessionReadModel>> GetTodayQuizSessionsAsync(Guid studentId, DateTime todayStart, CancellationToken cancellationToken = default)
+        {
+            return await _context.QuizSessions
+                .Where(s => s.StudentId == studentId && s.StartedAt >= todayStart && !s.IsDeleted)
+                .Select(s => new TodayQuizSessionReadModel
+                {
+                    Status = s.Status,
+                    CorrectAnswers = s.CorrectAnswers,
+                    WrongAnswers = s.WrongAnswers,
+                    UnansweredCount = s.UnansweredCount,
+                    StartedAt = s.StartedAt,
+                    CompletedAt = s.CompletedAt
+                })
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<IReadOnlyList<EnrolledClassReadModel>> GetStudentEnrolledClassesAsync(Guid studentId, CancellationToken cancellationToken = default)
+        {
+            return await _context.StudentClasses
+                .Where(sc => sc.StudentId == studentId && sc.IsActive && !sc.IsDeleted && !sc.Class.IsDeleted)
+                .Select(sc => new EnrolledClassReadModel
+                {
+                    PublicId = sc.Class.PublicId,
+                    ClassName = sc.Class.ClassName
+                })
+                .ToListAsync(cancellationToken);
+        }
     }
 }

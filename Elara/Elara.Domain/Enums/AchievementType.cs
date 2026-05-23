@@ -9,6 +9,7 @@ namespace Elara.Domain.Enums
         SpecificQuizScore = 4,
         LessonsCompletedInOneDay = 5,
         SubjectsMastered = 6,
-        PerfectWeek = 7
+        PerfectWeek = 7,
+        PracticeTime = 8
     }
 }
