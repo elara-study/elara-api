@@ -13,7 +13,7 @@ namespace Elara.Infrastructure.Chat
         private readonly HttpClient _httpClient;
         private readonly GeminiSettings _settings;
 
-        private const string PrimaryModel = "gemini-3-flash-preview";
+        private const string PrimaryModel = "gemini-1.5-flash";
         private const string BaseUrl = "https://generativelanguage.googleapis.com/v1beta";
 
         public GeminiService(HttpClient httpClient, IOptions<GeminiSettings> settings)
@@ -27,8 +27,16 @@ namespace Elara.Infrastructure.Chat
             var prompt = BuildPrompt(userMessage, ragContext, conversationHistory);
             var requestBody = new
             {
-                model = PrimaryModel,
-                input = prompt
+                contents = new[]
+                {
+                    new
+                    {
+                        parts = new[]
+                        {
+                            new { text = prompt }
+                        }
+                    }
+                }
             };
 
             var result = await CallGeminiAsync(requestBody, cancellationToken);
@@ -38,7 +46,7 @@ namespace Elara.Infrastructure.Chat
 
         private async Task<string?> CallGeminiAsync(object requestBody, CancellationToken cancellationToken)
         {
-            var url = $"{BaseUrl}/interactions?key={_settings.ApiKey}";
+            var url = $"{BaseUrl}/models/{PrimaryModel}:generateContent?key={_settings.ApiKey}";
             var json = JsonSerializer.Serialize(requestBody);
             using var content = new StringContent(json, Encoding.UTF8, "application/json");
 
@@ -51,8 +59,19 @@ namespace Elara.Infrastructure.Chat
 
             var responseJson = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: cancellationToken);
 
-            var outputs = responseJson.GetProperty("outputs");
-            return outputs[outputs.GetArrayLength() - 1].GetProperty("text").GetString();
+            if (responseJson.TryGetProperty("candidates", out var candidates) && 
+                candidates.GetArrayLength() > 0)
+            {
+                var firstCandidate = candidates[0];
+                if (firstCandidate.TryGetProperty("content", out var contentElement) &&
+                    contentElement.TryGetProperty("parts", out var parts) &&
+                    parts.GetArrayLength() > 0)
+                {
+                    return parts[0].GetProperty("text").GetString();
+                }
+            }
+
+            return null;
         }
 
         private static string BuildPrompt(

@@ -198,6 +198,7 @@ namespace Elara.Persistence.Repositories.Users
             checkDate = DateTime.UtcNow.Date.AddDays(-1);
 
             for (int i = 0; i < remainingDaysToCheck; i++)
+            {
                 if (sessionsByDate.TryGetValue(checkDate, out var daySessions))
                 {
                     bool has3Lessons = daySessions.Count >= LessonsTarget;
