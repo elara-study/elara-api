@@ -37,6 +37,12 @@ namespace Elara.Infrastructure.Rewards
             var completedSessionsCount = await _quizSessionRepository.AsQueryable()
                 .CountAsync(s => s.StudentId == studentId && s.Status == QuizSessionStatus.Completed, cancellationToken);
             
+            var todayStart = DateTime.UtcNow.Date;
+            var lessonsCompletedToday = await _quizSessionRepository.AsQueryable()
+                .CountAsync(s => s.StudentId == studentId && s.Status == QuizSessionStatus.Completed && s.CompletedAt >= todayStart, cancellationToken);
+            
+            var masteredSubjectsCount = await _studentRepository.GetMasteredSubjectsCountAsync(studentId, cancellationToken);
+
             var hasPerfectScore = await _quizSessionRepository.AsQueryable()
                 .AnyAsync(s => s.StudentId == studentId && 
                                s.Status == QuizSessionStatus.Completed && 
@@ -62,6 +68,16 @@ namespace Elara.Infrastructure.Rewards
                         break;
                     case AchievementType.LessonsCompleted:
                         qualifies = completedSessionsCount >= achievement.TargetValue;
+                        break;
+                    case AchievementType.LessonsCompletedInOneDay:
+                        qualifies = lessonsCompletedToday >= achievement.TargetValue;
+                        break;
+                    case AchievementType.SubjectsMastered:
+                        qualifies = masteredSubjectsCount >= achievement.TargetValue;
+                        break;
+                    case AchievementType.PerfectWeek:
+                        var perfectDaysStreak = await _studentRepository.GetPerfectDaysStreakAsync(studentId, cancellationToken);
+                        qualifies = perfectDaysStreak >= achievement.TargetValue;
                         break;
                     case AchievementType.SpecificQuizScore:
                         qualifies = hasPerfectScore;

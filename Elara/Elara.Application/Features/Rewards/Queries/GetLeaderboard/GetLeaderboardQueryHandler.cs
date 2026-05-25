@@ -27,9 +27,8 @@ namespace Elara.Application.Features.Rewards.Queries.GetLeaderboard
             var pageSize = Math.Max(1, Math.Min(request.PageSize, 50));
 
             // Calculate top students
-            var topStudentsEntities = await _studentRepository.GetTopStudentsAsync(request.Page, request.PageSize, cancellationToken);
+            var topStudentsEntities = await _studentRepository.GetTopStudentsAsync(page, pageSize, cancellationToken);
             var studentIds = topStudentsEntities.Select(s => s.Id).ToList();
-            
             var studentNamesMap = await _studentRepository.GetStudentNamesAsync(studentIds, cancellationToken);
 
             var topStudentsDto = new List<LeaderboardStudentDto>();

@@ -37,6 +37,7 @@ namespace Elara.Infrastructure.Data.Configurations.UsersConfig
 
             // XP & Gamification defaults
             builder.Property(s => s.TotalXP).HasDefaultValue(0);
+
             builder.Property(s => s.CurrentStreak).HasDefaultValue(0);
         }
     }

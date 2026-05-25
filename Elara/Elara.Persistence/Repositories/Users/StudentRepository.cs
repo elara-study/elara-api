@@ -2,8 +2,10 @@ using Elara.Application.Contracts.Persistence.Users;
 using Elara.Application.Models.Users;
 using Elara.Domain.Entities.JunctionTables;
 using Elara.Domain.Entities.Users;
+using Elara.Domain.Enums;
 using Elara.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using static Elara.Application.Common.Constants.DailyGoalConstants;
 
 
 namespace Elara.Persistence.Repositories.Users
@@ -142,6 +144,157 @@ namespace Elara.Persistence.Repositories.Users
             return await _context.Users
                 .Where(u => studentIds.Contains(u.Id))
                 .ToDictionaryAsync(u => u.Id, u => string.IsNullOrWhiteSpace(u.Name) ? u.Username : u.Name, cancellationToken);
+        }
+
+        public async Task<int> GetMasteredSubjectsCountAsync(Guid studentId, CancellationToken cancellationToken = default)
+        {
+            return await _context.QuizSessions
+                .Where(s => s.StudentId == studentId && s.Status == QuizSessionStatus.Completed)
+                .Select(s => s.Assignment.Topic.SubjectId)
+                .Distinct()
+                .CountAsync(cancellationToken);
+        }
+
+        public async Task<int> GetPerfectDaysStreakAsync(Guid studentId, CancellationToken cancellationToken = default)
+        {
+            var sevenDaysAgo = DateTime.UtcNow.Date.AddDays(-7);
+            
+            var recentSessions = await _context.QuizSessions
+                .Where(s => s.StudentId == studentId && s.Status == QuizSessionStatus.Completed && s.CompletedAt >= sevenDaysAgo)
+                .ToListAsync(cancellationToken);
+
+            var sessionsByDate = recentSessions
+                .Where(s => s.CompletedAt.HasValue)
+                .GroupBy(s => s.CompletedAt.Value.Date)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            int streak = 0;
+            var checkDate = DateTime.UtcNow.Date;
+
+            // Check if today is a perfect day
+            bool isTodayPerfect = false;
+            if (sessionsByDate.TryGetValue(checkDate, out var todaySessions))
+            {
+                bool has3Lessons = todaySessions.Count >= Elara.Application.Common.Constants.DailyGoalConstants.LessonsTarget;
+                bool has80PercentScore = todaySessions.Any(s => 
+                {
+                    var totalQuestions = s.CorrectAnswers + s.WrongAnswers + s.UnansweredCount;
+                    return totalQuestions > 0 && ((double)s.CorrectAnswers / totalQuestions) >= Elara.Application.Common.Constants.DailyGoalConstants.ScoreTarget;
+                });
+                var totalDurationMinutes = todaySessions.Sum(s => (s.CompletedAt!.Value - s.StartedAt).TotalMinutes);
+                bool has15MinsPractice = totalDurationMinutes >= Elara.Application.Common.Constants.DailyGoalConstants.PracticeMinutesTarget;
+
+                isTodayPerfect = has3Lessons && has80PercentScore && has15MinsPractice;
+            }
+
+            if (isTodayPerfect)
+            {
+                streak++;
+            }
+
+            var remainingDaysToCheck = isTodayPerfect ? 6 : 7;
+
+            // Always check previous days starting from yesterday
+            checkDate = DateTime.UtcNow.Date.AddDays(-1);
+
+            for (int i = 0; i < remainingDaysToCheck; i++)
+                if (sessionsByDate.TryGetValue(checkDate, out var daySessions))
+                {
+                    bool has3Lessons = daySessions.Count >= LessonsTarget;
+                    
+                    bool has80PercentScore = daySessions.Any(s => 
+                    {
+                        var totalQuestions = s.CorrectAnswers + s.WrongAnswers + s.UnansweredCount;
+                        return totalQuestions > 0 && ((double)s.CorrectAnswers / totalQuestions) >= ScoreTarget;
+                    });
+                    
+                    var totalDurationMinutes = daySessions.Sum(s => (s.CompletedAt!.Value - s.StartedAt).TotalMinutes);
+                    bool has15MinsPractice = totalDurationMinutes >= PracticeMinutesTarget;
+
+                    if (has3Lessons && has80PercentScore && has15MinsPractice)
+                    {
+                        streak++;
+                        checkDate = checkDate.AddDays(-1);
+                    }
+                    else
+                    {
+                        break; // Streak broken
+                    }
+                }
+                else
+                {
+                    break; // Streak broken
+                }
+            }
+
+            return streak;
+        }
+
+        public async Task<LatestQuizSessionReadModel?> GetLatestQuizSessionWithTopicAsync(Guid studentId, CancellationToken cancellationToken = default)
+        {
+            return await _context.QuizSessions
+                .Where(s => s.StudentId == studentId && !s.IsDeleted)
+                .OrderByDescending(s => s.StartedAt)
+                .Select(s => new LatestQuizSessionReadModel
+                {
+                    TopicId = s.Assignment.TopicId,
+                    TopicTitle = s.Assignment.Topic.Title,
+                    AssignmentTitle = s.Assignment.Title
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        public async Task<int> GetTotalLessonsInTopicAsync(int topicId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Lessons
+                .CountAsync(l => l.TopicId == topicId && !l.IsDeleted, cancellationToken);
+        }
+
+        public async Task<int> GetCompletedLessonsInTopicAsync(Guid studentId, int topicId, CancellationToken cancellationToken = default)
+        {
+            return await _context.QuizSessions
+                .Where(s => s.StudentId == studentId 
+                         && s.Status == QuizSessionStatus.Completed 
+                         && s.Assignment.TopicId == topicId
+                         && s.Assignment.LessonId != null
+                         && !s.IsDeleted)
+                .Select(s => s.Assignment.LessonId)
+                .Distinct()
+                .CountAsync(cancellationToken);
+        }
+
+        public async Task<IReadOnlyList<TodayQuizSessionReadModel>> GetTodayQuizSessionsAsync(Guid studentId, DateTime todayStart, CancellationToken cancellationToken = default)
+        {
+            var todayEnd = todayStart.Date.AddDays(1);
+
+            return await _context.QuizSessions
+                .Where(s => s.StudentId == studentId
+                         && s.CompletedAt.HasValue
+                         && s.CompletedAt.Value >= todayStart
+                         && s.CompletedAt.Value < todayEnd
+                         && !s.IsDeleted)
+                .Select(s => new TodayQuizSessionReadModel
+                {
+                    Status = s.Status,
+                    CorrectAnswers = s.CorrectAnswers,
+                    WrongAnswers = s.WrongAnswers,
+                    UnansweredCount = s.UnansweredCount,
+                    StartedAt = s.StartedAt,
+                    CompletedAt = s.CompletedAt
+                })
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<IReadOnlyList<EnrolledClassReadModel>> GetStudentEnrolledClassesAsync(Guid studentId, CancellationToken cancellationToken = default)
+        {
+            return await _context.StudentClasses
+                .Where(sc => sc.StudentId == studentId && sc.IsActive && !sc.IsDeleted && !sc.Class.IsDeleted)
+                .Select(sc => new EnrolledClassReadModel
+                {
+                    PublicId = sc.Class.PublicId,
+                    ClassName = sc.Class.ClassName
+                })
+                .ToListAsync(cancellationToken);
         }
     }
 }

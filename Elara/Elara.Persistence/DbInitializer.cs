@@ -21,8 +21,6 @@ namespace Elara.Persistence
 
         private static async Task SeedAchievementsAsync(AppDbContext context)
         {
-            if (await context.Achievements.AnyAsync()) return;
-
             var achievements = new List<Achievement>
             {
                 new Achievement
@@ -36,8 +34,8 @@ namespace Elara.Persistence
                 new Achievement
                 {
                     Title = "Quick Learner",
-                    Description = "Complete 5 lessons",
-                    AchievementType = AchievementType.LessonsCompleted,
+                    Description = "Complete 5 lessons in one day",
+                    AchievementType = AchievementType.LessonsCompletedInOneDay,
                     TargetValue = 5,
                     Points = 20
                 },
@@ -76,15 +74,54 @@ namespace Elara.Persistence
                 new Achievement
                 {
                     Title = "Genius",
-                    Description = "Complete 100 lessons",
-                    AchievementType = AchievementType.LessonsCompleted,
-                    TargetValue = 100,
+                    Description = "Master all subjects",
+                    AchievementType = AchievementType.SubjectsMastered,
+                    TargetValue = 5,
                     Points = 500
+                },
+                new Achievement
+                {
+                    Title = "Perfect Week",
+                    Description = "Complete all daily goals for a week",
+                    AchievementType = AchievementType.PerfectWeek,
+                    TargetValue = 7,
+                    Points = 150
                 }
             };
 
-            await context.Achievements.AddRangeAsync(achievements);
-            await context.SaveChangesAsync();
+            var existingAchievements = await context.Achievements.ToListAsync();
+            var existingByTitle = existingAchievements
+                .ToDictionary(a => a.Title, StringComparer.OrdinalIgnoreCase);
+
+            var hasChanges = false;
+
+            foreach (var achievement in achievements)
+            {
+                if (existingByTitle.TryGetValue(achievement.Title, out var existing))
+                {
+                    if (existing.Description != achievement.Description ||
+                        existing.AchievementType != achievement.AchievementType ||
+                        existing.TargetValue != achievement.TargetValue ||
+                        existing.Points != achievement.Points)
+                    {
+                        existing.Description = achievement.Description;
+                        existing.AchievementType = achievement.AchievementType;
+                        existing.TargetValue = achievement.TargetValue;
+                        existing.Points = achievement.Points;
+                        hasChanges = true;
+                    }
+                }
+                else
+                {
+                    await context.Achievements.AddAsync(achievement);
+                    hasChanges = true;
+                }
+            }
+
+            if (hasChanges)
+            {
+                await context.SaveChangesAsync();
+            }
         }
     }
 }

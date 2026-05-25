@@ -3,6 +3,7 @@ using System;
 using Elara.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Elara.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260517121115_UpdateAchievementTypes")]
+    partial class UpdateAchievementTypes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -124,7 +127,7 @@ namespace Elara.Infrastructure.Migrations
 
                     b.HasIndex("ClassId");
 
-                    b.ToTable("Announcements", (string)null);
+                    b.ToTable("Announcements");
                 });
 
             modelBuilder.Entity("Elara.Domain.Entities.Administrative.Class", b =>
@@ -1161,10 +1164,6 @@ namespace Elara.Infrastructure.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_StudentAchievements_StudentId_AchievementId");
 
-                    b.HasIndex("StudentId", "EarnedAt")
-                        .IsDescending(false, true)
-                        .HasDatabaseName("IX_StudentAchievements_StudentId_EarnedAt");
-
                     b.ToTable("StudentAchievements", (string)null);
                 });
 
@@ -1246,47 +1245,6 @@ namespace Elara.Infrastructure.Migrations
                         .HasDatabaseName("IX_StudentTeachers_StudentId_TeacherId");
 
                     b.ToTable("StudentTeachers", (string)null);
-                });
-
-            modelBuilder.Entity("Elara.Domain.Entities.JunctionTables.StudentParent", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<Guid>("ParentId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("StudentId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ParentId")
-                        .HasDatabaseName("IX_StudentParents_ParentId");
-
-                    b.HasIndex("StudentId")
-                        .HasDatabaseName("IX_StudentParents_StudentId");
-
-                    b.HasIndex("StudentId", "ParentId")
-                        .IsUnique()
-                        .HasDatabaseName("IX_StudentParents_StudentId_ParentId");
-
-                    b.ToTable("StudentParents", (string)null);
                 });
 
             modelBuilder.Entity("Elara.Domain.Entities.Submissions.Hint", b =>
@@ -1567,7 +1525,7 @@ namespace Elara.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Parents", (string)null);
+                    b.ToTable("Parents");
                 });
 
             modelBuilder.Entity("Elara.Domain.Entities.Users.Student", b =>
@@ -1605,6 +1563,14 @@ namespace Elara.Infrastructure.Migrations
                         .HasColumnType("integer")
                         .HasDefaultValue(1);
 
+                    b.Property<int>("Level")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("TotalXP")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
@@ -1618,10 +1584,12 @@ namespace Elara.Infrastructure.Migrations
                     b.HasIndex("GradeLevel")
                         .HasDatabaseName("IX_Students_GradeLevel");
 
+                    b.HasIndex("ParentId");
+
                     b.HasIndex("TotalXP")
                         .HasDatabaseName("IX_Students_TotalXP");
 
-                    b.ToTable("Students", (string)null);
+                    b.ToTable("Students");
                 });
 
             modelBuilder.Entity("Elara.Domain.Entities.Users.Teacher", b =>
@@ -1649,7 +1617,7 @@ namespace Elara.Infrastructure.Migrations
                     b.HasIndex("SubjectId")
                         .HasDatabaseName("IX_Teachers_SubjectId");
 
-                    b.ToTable("Teachers", (string)null);
+                    b.ToTable("Teachers");
                 });
 
             modelBuilder.Entity("Elara.Infrastructure.Identity.ApplicationRole", b =>
@@ -2152,25 +2120,6 @@ namespace Elara.Infrastructure.Migrations
                     b.Navigation("Teacher");
                 });
 
-            modelBuilder.Entity("Elara.Domain.Entities.JunctionTables.StudentParent", b =>
-                {
-                    b.HasOne("Elara.Domain.Entities.Users.Parent", "Parent")
-                        .WithMany("StudentParents")
-                        .HasForeignKey("ParentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Elara.Domain.Entities.Users.Student", "Student")
-                        .WithMany("StudentParents")
-                        .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Parent");
-
-                    b.Navigation("Student");
-                });
-
             modelBuilder.Entity("Elara.Domain.Entities.Submissions.Hint", b =>
                 {
                     b.HasOne("Elara.Domain.Entities.Educational.Question", "Question")
@@ -2270,6 +2219,13 @@ namespace Elara.Infrastructure.Migrations
                         .HasForeignKey("Elara.Domain.Entities.Users.Student", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("Elara.Domain.Entities.Users.Parent", "Parent")
+                        .WithMany("Childrens")
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Parent");
                 });
 
             modelBuilder.Entity("Elara.Domain.Entities.Users.Teacher", b =>
@@ -2412,7 +2368,7 @@ namespace Elara.Infrastructure.Migrations
 
             modelBuilder.Entity("Elara.Domain.Entities.Users.Parent", b =>
                 {
-                    b.Navigation("StudentParents");
+                    b.Navigation("Childrens");
                 });
 
             modelBuilder.Entity("Elara.Domain.Entities.Users.Student", b =>
@@ -2422,8 +2378,6 @@ namespace Elara.Infrastructure.Migrations
                     b.Navigation("StudentAchievements");
 
                     b.Navigation("StudentClasses");
-
-                    b.Navigation("StudentParents");
 
                     b.Navigation("StudentTeachers");
                 });

@@ -3,6 +3,7 @@ using Elara.Application.Features.Users.Students.Commands.JoinGroup;
 using Elara.Application.Features.Users.Students.Queries.GetStudentGroupOverview;
 using Elara.Application.Features.Users.Students.Queries.GetStudentGroups;
 using Elara.Application.Features.Users.Students.Queries.GetStudentProfile;
+using Elara.Application.Features.Users.Students.Queries.GetStudentHome;
 using Elara.Application.Features.ChatAnalysisReport.Queries.GetAllReports;
 using Elara.Application.Features.ChatAnalysisReport.Queries.GetConversationReport;
 using Elara.Application.Responses;
@@ -41,6 +42,20 @@ namespace Elara.API.Controllers
             return Ok(new BaseResponse<StudentProfileDto>
             {
                 Message = "Student profile retrieved successfully.",
+                Data = response
+            });
+        }
+
+        [HttpGet("home")]
+        [ProducesResponseType(typeof(BaseResponse<StudentHomeDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> GetHome(CancellationToken cancellationToken)
+        {
+            var response = await _mediator.Send(new GetStudentHomeQuery(), cancellationToken);
+            return Ok(new BaseResponse<StudentHomeDto>
+            {
+                Message = "Student home dashboard retrieved successfully.",
                 Data = response
             });
         }
