@@ -1,7 +1,5 @@
 using Elara.Application.Models.Users;
 using Elara.Domain.Entities.Users;
-using Elara.Domain.Entities.Submissions;
-using Elara.Domain.Entities.Administrative;
 
 namespace Elara.Application.Contracts.Persistence.Users
 {
