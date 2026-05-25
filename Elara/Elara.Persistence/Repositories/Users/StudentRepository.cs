@@ -192,11 +192,12 @@ namespace Elara.Persistence.Repositories.Users
                 streak++;
             }
 
+            var remainingDaysToCheck = isTodayPerfect ? 6 : 7;
+
             // Always check previous days starting from yesterday
             checkDate = DateTime.UtcNow.Date.AddDays(-1);
 
-            for (int i = 0; i < 7; i++) 
-            {
+            for (int i = 0; i < remainingDaysToCheck; i++)
                 if (sessionsByDate.TryGetValue(checkDate, out var daySessions))
                 {
                     bool has3Lessons = daySessions.Count >= LessonsTarget;
