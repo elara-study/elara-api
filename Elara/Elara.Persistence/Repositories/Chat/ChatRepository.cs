@@ -44,9 +44,9 @@ namespace Elara.Persistence.Repositories.Chat
             return conversation;
         }
 
-        public async Task AddMessageAsync(ChatMessage message, CancellationToken cancellationToken = default)
+        public async Task AddMessagesAsync(IEnumerable<ChatMessage> messages, CancellationToken cancellationToken = default)
         {
-            await _context.ChatMessages.AddAsync(message, cancellationToken);
+            await _context.ChatMessages.AddRangeAsync(messages, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
         }
 

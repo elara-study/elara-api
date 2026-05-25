@@ -51,18 +51,20 @@ namespace Elara.Application.Features.Chat.Commands.SendMessage
             var aiReply = await _geminiService.GenerateResponseAsync(
                 request.Message, ragContext, historyDtos, cancellationToken);
 
-            await _chatRepository.AddMessageAsync(new ChatMessage
+            await _chatRepository.AddMessagesAsync(new[]
             {
-                ConversationId = request.ConversationId,
-                Role = MessageRole.Student,
-                Content = request.Message
-            }, cancellationToken);
-
-            await _chatRepository.AddMessageAsync(new ChatMessage
-            {
-                ConversationId = request.ConversationId,
-                Role = MessageRole.AI,
-                Content = aiReply
+                new ChatMessage
+                {
+                    ConversationId = request.ConversationId,
+                    Role = MessageRole.Student,
+                    Content = request.Message
+                },
+                new ChatMessage
+                {
+                    ConversationId = request.ConversationId,
+                    Role = MessageRole.AI,
+                    Content = aiReply
+                }
             }, cancellationToken);
 
             return new SendMessageResponse { AiReply = aiReply };

@@ -36,24 +36,23 @@ namespace Elara.Application.Features.Chat.Commands.StartConversation
             {
                 Id = Guid.NewGuid(),
                 StudentId = studentId,
-                Subject = request.Subject
+                Subject = request.Subject,
+                Messages = new List<ChatMessage>
+                {
+                    new ChatMessage
+                    {
+                        Role = MessageRole.Student,
+                        Content = request.Message
+                    },
+                    new ChatMessage
+                    {
+                        Role = MessageRole.AI,
+                        Content = aiReply
+                    }
+                }
             };
 
             await _chatRepository.AddConversationAsync(conversation, cancellationToken);
-
-            await _chatRepository.AddMessageAsync(new ChatMessage
-            {
-                ConversationId = conversation.Id,
-                Role = MessageRole.Student,
-                Content = request.Message
-            }, cancellationToken);
-
-            await _chatRepository.AddMessageAsync(new ChatMessage
-            {
-                ConversationId = conversation.Id,
-                Role = MessageRole.AI,
-                Content = aiReply
-            }, cancellationToken);
 
             return new StartConversationResponse
             {
