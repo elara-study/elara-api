@@ -265,8 +265,14 @@ namespace Elara.Persistence.Repositories.Users
 
         public async Task<IReadOnlyList<TodayQuizSessionReadModel>> GetTodayQuizSessionsAsync(Guid studentId, DateTime todayStart, CancellationToken cancellationToken = default)
         {
+            var todayEnd = todayStart.Date.AddDays(1);
+
             return await _context.QuizSessions
-                .Where(s => s.StudentId == studentId && s.StartedAt >= todayStart && !s.IsDeleted)
+                .Where(s => s.StudentId == studentId
+                         && s.CompletedAt.HasValue
+                         && s.CompletedAt.Value >= todayStart
+                         && s.CompletedAt.Value < todayEnd
+                         && !s.IsDeleted)
                 .Select(s => new TodayQuizSessionReadModel
                 {
                     Status = s.Status,
