@@ -166,6 +166,23 @@ namespace Elara.Persistence.Repositories.Administrative
                 EnrolledDate = DateTime.UtcNow
             }, cancellationToken);
 
+            var classEntity = await _context.Classes.FindAsync(new object[] { classId }, cancellationToken);
+            if (classEntity != null)
+            {
+                var teacherId = classEntity.TeacherId;
+                var relationshipExists = await _context.StudentTeachers
+                    .AnyAsync(st => st.StudentId == studentId && st.TeacherId == teacherId, cancellationToken);
+
+                if (!relationshipExists)
+                {
+                    await _context.StudentTeachers.AddAsync(new StudentTeacher
+                    {
+                        StudentId = studentId,
+                        TeacherId = teacherId
+                    }, cancellationToken);
+                }
+            }
+
             await _context.SaveChangesAsync(cancellationToken);
         }
 
