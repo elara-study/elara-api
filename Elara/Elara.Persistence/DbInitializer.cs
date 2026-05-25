@@ -21,8 +21,6 @@ namespace Elara.Persistence
 
         private static async Task SeedAchievementsAsync(AppDbContext context)
         {
-            if (await context.Achievements.AnyAsync()) return;
-
             var achievements = new List<Achievement>
             {
                 new Achievement
@@ -91,8 +89,39 @@ namespace Elara.Persistence
                 }
             };
 
-            await context.Achievements.AddRangeAsync(achievements);
-            await context.SaveChangesAsync();
+            var existingAchievements = await context.Achievements.ToListAsync();
+            var existingByTitle = existingAchievements
+                .ToDictionary(a => a.Title, StringComparer.OrdinalIgnoreCase);
+
+            var hasChanges = false;
+
+            foreach (var achievement in achievements)
+            {
+                if (existingByTitle.TryGetValue(achievement.Title, out var existing))
+                {
+                    if (existing.Description != achievement.Description ||
+                        existing.AchievementType != achievement.AchievementType ||
+                        existing.TargetValue != achievement.TargetValue ||
+                        existing.Points != achievement.Points)
+                    {
+                        existing.Description = achievement.Description;
+                        existing.AchievementType = achievement.AchievementType;
+                        existing.TargetValue = achievement.TargetValue;
+                        existing.Points = achievement.Points;
+                        hasChanges = true;
+                    }
+                }
+                else
+                {
+                    await context.Achievements.AddAsync(achievement);
+                    hasChanges = true;
+                }
+            }
+
+            if (hasChanges)
+            {
+                await context.SaveChangesAsync();
+            }
         }
     }
 }
