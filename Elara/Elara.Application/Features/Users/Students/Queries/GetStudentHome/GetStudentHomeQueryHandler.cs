@@ -71,7 +71,7 @@ namespace Elara.Application.Features.Users.Students.Queries.GetStudentHome
             var activeGoals = new[]
             {
                 new { Id = 1, Title = $"Complete {LessonsTarget} lessons", GoalType = AchievementType.LessonsCompletedInOneDay, TargetValue = LessonsTarget, XpReward = 50, IconType = "flag" },
-                new { Id = 2, Title = $"Score {ScoreTarget * 100}% on a quiz", GoalType = AchievementType.SpecificQuizScore, TargetValue = 100, XpReward = 30, IconType = "trophy" },
+                new { Id = 2, Title = $"Score {ScoreTarget * 100}% on a quiz", GoalType = AchievementType.SpecificQuizScore, TargetValue = (int)(ScoreTarget * 100), XpReward = 30, IconType = "trophy" },
                 new { Id = 3, Title = $"Practice for {PracticeMinutesTarget} mins", GoalType = AchievementType.PracticeTime, TargetValue = PracticeMinutesTarget, XpReward = 25, IconType = "clock" }
             };
 
