@@ -177,8 +177,28 @@ namespace Elara.Infrastructure.Quiz
             if (student != null)
             {
                 student.TotalXP += xpEarned;
+
+                var today = DateTime.UtcNow.Date;
+                if (student.LastActivityDate.HasValue)
+                {
+                    var lastActiveDate = student.LastActivityDate.Value.Date;
+                    var daysDifference = (today - lastActiveDate).Days;
+
+                    if (daysDifference == 1)
+                    {
+                        student.CurrentStreak += 1;
+                    }
+                    else if (daysDifference > 1)
+                    {
+                        student.CurrentStreak = 1;
+                    }
+                }
+                else
+                {
+                    student.CurrentStreak = 1;
+                }
+
                 student.LastActivityDate = DateTime.UtcNow;
-                student.CurrentStreak += 1;
                 await _studentRepository.UpdateAsync(student, cancellationToken);
             }
         }
