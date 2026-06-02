@@ -5,8 +5,8 @@ using Elara.Domain.Entities.Administrative;
 using Elara.Domain.Entities.Submissions;
 using Elara.Domain.Enums;
 using MediatR;
-
 using Elara.Application.Contracts.Persistence.Users;
+using Elara.Domain.Entities.JunctionTables;
 
 namespace Elara.Application.Features.Rewards.Queries.GetBadges
 {
@@ -37,7 +37,7 @@ namespace Elara.Application.Features.Rewards.Queries.GetBadges
             if (student == null) throw new Exception("Student not found");
 
             // Load StudentAchievements
-            var earnedAchievements = student.StudentAchievements?.ToList() ?? new List<Domain.Entities.JunctionTables.StudentAchievement>();
+            var earnedAchievements = student.StudentAchievements?.ToList() ?? new List<StudentAchievement>();
 
            var allAchievements = await _achievementRepository.ListAllAsync(cancellationToken);
 

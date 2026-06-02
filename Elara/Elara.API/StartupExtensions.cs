@@ -57,7 +57,11 @@ namespace Elara.API
                 };
             });
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+                });
             builder.Services.AddApiVersioning(options =>
             {
                 options.DefaultApiVersion = new ApiVersion(1, 0);
@@ -70,7 +74,18 @@ namespace Elara.API
                 options.SubstituteApiVersionInUrl = true;
             });
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen(c => c.OperationFilter<SwaggerDefaultValues>());
+            builder.Services.AddSwaggerGen(c => 
+            {
+                c.OperationFilter<SwaggerDefaultValues>();
+                c.MapType<Elara.Domain.Enums.ResourceType>(() => new Microsoft.OpenApi.Models.OpenApiSchema
+                {
+                    Type = "string",
+                    Enum = Enum.GetNames(typeof(Elara.Domain.Enums.ResourceType))
+                               .Select(name => new Microsoft.OpenApi.Any.OpenApiString(name.ToLower()))
+                               .Cast<Microsoft.OpenApi.Any.IOpenApiAny>()
+                               .ToList()
+                });
+            });
             builder.Services.ConfigureOptions<ConfigureSwaggerOptions>();
 
             return builder.Build();

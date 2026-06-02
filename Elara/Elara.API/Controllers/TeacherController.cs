@@ -10,7 +10,16 @@ using Elara.Application.Features.Users.Teachers.Queries.GetTeacherProfile;
 using Elara.Application.Features.Users.Teachers.Queries.GetGroupStudents;
 using Elara.Application.Features.Users.Teachers.Commands.AddStudentByUsername;
 using Elara.API.Controllers.Requests;
+using Elara.Application.Features.Users.Teachers.Queries.GetTopicResources;
+using Elara.Application.Features.Users.Teachers.Commands.AddTopicResource;
+using Elara.Application.Features.Users.Teachers.Commands.DeleteTopicResource;
+using Elara.Application.Features.Users.Teachers.Queries.GetHomeworkOverview;
+using Elara.Application.Features.Users.Teachers.Commands.AddHomeworkProblem;
+using Elara.Application.Features.Users.Teachers.Queries.GetHomeworkSubmissions;
+using Elara.Application.Features.Users.Teachers.Queries.GetStudentSubmission;
+using Elara.Application.Features.Users.Teachers.Commands.RateStudentSubmission;
 using Elara.Domain.Constants;
+using Elara.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -211,5 +220,148 @@ namespace Elara.API.Controllers
                 Data = result
             });
         }
+
+        #region Resource Management
+
+        [HttpGet("topics/{topicId:int}/resources")]
+        [ProducesResponseType(typeof(BaseResponse<TopicResourcesDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> GetTopicResources(int topicId, CancellationToken cancellationToken)
+        {
+            var query = new GetTopicResourcesQuery { TopicId = topicId };
+            var result = await _mediator.Send(query, cancellationToken);
+            return Ok(new BaseResponse<TopicResourcesDto>
+            {
+                Message = "Topic resources retrieved successfully.",
+                Data = result
+            });
+        }
+
+        [HttpPost("topics/{topicId:int}/resources")]
+        [Consumes("multipart/form-data")]
+        [ProducesResponseType(typeof(BaseResponse<ResourceItemDto>), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> AddTopicResource(int topicId, [FromForm] string title, [FromForm] ResourceType type, IFormFile file, CancellationToken cancellationToken)
+        {
+            var command = new AddTopicResourceCommand(topicId, title, type, file);
+            var result = await _mediator.Send(command, cancellationToken);
+            return StatusCode(StatusCodes.Status201Created, new BaseResponse<ResourceItemDto>
+            {
+                Message = "Resource added successfully.",
+                Data = result
+            });
+        }
+
+        [HttpDelete("resources/{resourceId:int}")]
+        [ProducesResponseType(typeof(BaseResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> DeleteTopicResource(int resourceId, CancellationToken cancellationToken)
+        {
+            var command = new DeleteTopicResourceCommand { ResourceId = resourceId };
+            await _mediator.Send(command, cancellationToken);
+            return Ok(new BaseResponse<bool>
+            {
+                Message = "Resource deleted successfully.",
+                Data = true
+            });
+        }
+
+        #endregion
+
+        #region Homework Management
+
+        [HttpGet("topics/{topicId:int}/homework")]
+        [ProducesResponseType(typeof(BaseResponse<HomeworkOverviewDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> GetHomeworkOverview(int topicId, CancellationToken cancellationToken)
+        {
+            var query = new GetHomeworkOverviewQuery { TopicId = topicId };
+            var result = await _mediator.Send(query, cancellationToken);
+            return Ok(new BaseResponse<HomeworkOverviewDto>
+            {
+                Message = "Homework overview retrieved successfully.",
+                Data = result
+            });
+        }
+
+        [HttpPost("assignments/{assignmentId:int}/problems")]
+        [ProducesResponseType(typeof(BaseResponse<HomeworkProblemDto>), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> AddHomeworkProblem(int assignmentId, [FromBody] AddHomeworkProblemRequest request, CancellationToken cancellationToken)
+        {
+            var command = new AddHomeworkProblemCommand(assignmentId, request.Description);
+            var result = await _mediator.Send(command, cancellationToken);
+            return StatusCode(StatusCodes.Status201Created, new BaseResponse<HomeworkProblemDto>
+            {
+                Message = "Homework problem added successfully.",
+                Data = result
+            });
+        }
+
+        #endregion
+
+        #region Submissions & Rating
+
+        [HttpGet("assignments/{assignmentId:int}/submissions")]
+        [ProducesResponseType(typeof(BaseResponse<List<HomeworkSubmissionDto>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> GetHomeworkSubmissions(int assignmentId, [FromQuery] string status = "unrated", CancellationToken cancellationToken = default)
+        {
+            var query = new GetHomeworkSubmissionsQuery { AssignmentId = assignmentId, Status = status };
+            var result = await _mediator.Send(query, cancellationToken);
+            return Ok(new BaseResponse<List<HomeworkSubmissionDto>>
+            {
+                Message = "Submissions retrieved successfully.",
+                Data = result
+            });
+        }
+
+        [HttpGet("submissions/{submissionId:int}")]
+        [ProducesResponseType(typeof(BaseResponse<StudentSubmissionDetailDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetStudentSubmission(int submissionId, CancellationToken cancellationToken)
+        {
+            var query = new GetStudentSubmissionQuery { SubmissionId = submissionId };
+            var result = await _mediator.Send(query, cancellationToken);
+            return Ok(new BaseResponse<StudentSubmissionDetailDto>
+            {
+                Message = "Submission details retrieved successfully.",
+                Data = result
+            });
+        }
+
+        [HttpPut("submissions/{submissionId:int}/rate")]
+        [ProducesResponseType(typeof(BaseResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> RateSubmission(int submissionId, [FromBody] RateSubmissionRequest request, CancellationToken cancellationToken)
+        {
+            var command = new RateStudentSubmissionCommand(submissionId, request.AwardedXp);
+            await _mediator.Send(command, cancellationToken);
+            return Ok(new BaseResponse<bool>
+            {
+                Message = "Submission rated successfully.",
+                Data = true
+            });
+        }
+
+        #endregion
     }
 }

@@ -20,5 +20,6 @@ namespace Elara.Domain.Entities.Educational
         public virtual Roadmap Roadmap { get; set; }
         public virtual ICollection<Lesson> Lessons { get; set; }
         public virtual ICollection<Assignment> Assignments { get; set; }
+        public virtual ICollection<TopicResource> Resources { get; set; } = new List<TopicResource>();
     }
 }

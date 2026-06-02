@@ -1,8 +1,7 @@
-﻿using Elara.Domain.Entities.Submissions;
+using Elara.Domain.Entities.Submissions;
 using Elara.Domain.Entities.Users;
 using Elara.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Elara.Domain.Entities.Educational
 {
@@ -17,7 +16,7 @@ namespace Elara.Domain.Entities.Educational
         public bool IsRequired { get; set; } = true;
         public bool IsAIGenerated { get; set; } = false;
         public DifficultyLevel DifficultyLevel { get; set; } = DifficultyLevel.Easy;
-
+        public AssignmentType AssignmentType { get; set; } = AssignmentType.Quiz;
 
         // Foreign Key
         public int TopicId { get; set; }
