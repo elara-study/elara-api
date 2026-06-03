@@ -2,6 +2,8 @@ using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Text;
 
 namespace Elara.Infrastructure.Notifications
 {
@@ -11,18 +13,28 @@ namespace Elara.Infrastructure.Notifications
         {
             if (FirebaseApp.DefaultInstance != null) return;
 
-            var credentialPath = configuration["Firebase:CredentialPath"];
+            var base64Credential = configuration["Firebase:ServiceAccountBase64"];
 
-            if (string.IsNullOrWhiteSpace(credentialPath) || !File.Exists(credentialPath))
+            if (string.IsNullOrWhiteSpace(base64Credential))
             {
-                logger?.LogWarning("Firebase credential file not found at '{Path}'. FCM will not be available.", credentialPath);
+                logger?.LogWarning("Firebase Base64 credential not found in configuration. FCM will not be available.");
                 return;
             }
 
-            FirebaseApp.Create(new AppOptions
+            try
             {
-                Credential = GoogleCredential.FromFile(credentialPath)
-            });
+                var jsonBytes = Convert.FromBase64String(base64Credential.Trim());
+                var jsonString = Encoding.UTF8.GetString(jsonBytes);
+
+                FirebaseApp.Create(new AppOptions
+                {
+                    Credential = CredentialFactory.FromJson<GoogleCredential>(jsonString)
+                });
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "Failed to initialize Firebase from Base64 service account credential.");
+            }
         }
     }
 }
