@@ -30,6 +30,7 @@ namespace Elara.Application.Features.Users.Teachers.Commands.AddHomeworkProblem
             var question = new Question
             {
                 Text = request.Description,
+                QuestionType = QuestionType.Essay,
                 AssignmentId = request.AssignmentId,
                 DifficultyLevel = DifficultyLevel.Medium,
                 Options = new List<QuestionOption>()

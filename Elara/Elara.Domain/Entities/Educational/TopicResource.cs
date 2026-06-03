@@ -12,7 +12,7 @@ namespace Elara.Domain.Entities.Educational
         [Required]
         [Url]
         public string Url { get; set; } = string.Empty;
-
+        public string? PublicId { get; set; }
         public ResourceType ResourceType { get; set; }
 
         public string? ThumbnailUrl { get; set; }

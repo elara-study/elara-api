@@ -26,6 +26,7 @@ namespace Elara.Application.Features.Users.Teachers.Commands.AddTopicResource
         public async Task<ResourceItemDto> Handle(AddTopicResourceCommand request, CancellationToken cancellationToken)
         {
             var topic = await _topicRepository.GetByIdAsync(request.TopicId, cancellationToken);
+
             if (topic == null)
             {
                 throw new KeyNotFoundException($"Topic with id {request.TopicId} not found.");
@@ -37,15 +38,17 @@ namespace Elara.Application.Features.Users.Teachers.Commands.AddTopicResource
             }
 
             string url;
+            string publicId;
             try
             {
                 using var stream = request.File.OpenReadStream();
                 var uploadResult = await _fileStorageService.UploadAsync(stream, request.File.FileName, request.File.ContentType, cancellationToken);
                 url = uploadResult.Url;
+                publicId = uploadResult.PublicId;
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException($"Failed to upload file: {ex.Message}");
+                throw new InvalidOperationException("Failed to upload file.", ex);
             }
 
             // Calculate size for display
@@ -61,6 +64,7 @@ namespace Elara.Application.Features.Users.Teachers.Commands.AddTopicResource
                 Title = request.Title,
                 TopicId = request.TopicId,
                 Url = url,
+                PublicId = publicId,
                 ResourceType = request.ResourceType,
                 SizeOrDurationText = sizeOrDuration
             };

@@ -30,10 +30,10 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetHomeworkOverview
                 throw new KeyNotFoundException($"Topic with id {request.TopicId} not found.");
             }
 
-            var assignment = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(
-                _assignmentRepository.AsQueryable(),
+            var assignment = (await _assignmentRepository.FindAsync(
                 a => a.TopicId == request.TopicId && a.AssignmentType == AssignmentType.Homework,
-                cancellationToken);
+                cancellationToken)).FirstOrDefault(); 
+
             if (assignment == null)
             {
                 assignment = new Assignment
@@ -49,9 +49,8 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetHomeworkOverview
                 assignment = await _assignmentRepository.AddAsync(assignment, cancellationToken);
             }
 
-            var questions = _questionRepository.AsQueryable()
-                .Where(q => q.AssignmentId == assignment.Id)
-                .ToList();
+            var questions = await _questionRepository.FindAsync(
+                q => q.AssignmentId == assignment.Id, cancellationToken);
 
             var dto = new HomeworkOverviewDto
             {

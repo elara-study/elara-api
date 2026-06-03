@@ -13,6 +13,12 @@ namespace Elara.Infrastructure.Media
         public CloudinaryFileStorageService(IOptions<CloudinaryOptions> options)
         {
             var settings = options.Value;
+            if (string.IsNullOrWhiteSpace(settings.CloudName)
+                 || string.IsNullOrWhiteSpace(settings.ApiKey)
+                 || string.IsNullOrWhiteSpace(settings.ApiSecret))
+            {
+                throw new InvalidOperationException("Cloudinary configuration is missing. Configure Cloudinary:CloudName, Cloudinary:ApiKey, and Cloudinary:ApiSecret via environment variables or user secrets.");
+            }
             var account = new Account(settings.CloudName, settings.ApiKey, settings.ApiSecret);
             _cloudinary = new Cloudinary(account);
         }
@@ -56,6 +62,11 @@ namespace Elara.Infrastructure.Media
             var result = await _cloudinary.UploadAsync(uploadParams);
             if (result.Error != null) throw new InvalidOperationException($"Cloudinary upload failed: {result.Error.Message}");
 
+            if (string.IsNullOrWhiteSpace(result.SecureUrl?.ToString()) || string.IsNullOrWhiteSpace(result.PublicId))
+            {
+                throw new InvalidOperationException("Cloudinary upload failed to return URL or public ID.");
+            }
+
             return new ElaraImageUploadResult
             {
                 Url = result.SecureUrl.ToString(),
@@ -74,7 +85,11 @@ namespace Elara.Infrastructure.Media
             };
 
             var deletionParams = new DeletionParams(publicId) { ResourceType = type };
-            await _cloudinary.DestroyAsync(deletionParams);
+            var result = await _cloudinary.DestroyAsync(deletionParams);
+            if (result.Error != null)
+            {
+                throw new InvalidOperationException($"Cloudinary delete failed: {result.Error.Message}");
+            }
         }
 
         private ResourceType GetResourceType(string contentType)

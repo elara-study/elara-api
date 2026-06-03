@@ -12,17 +12,20 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetHomeworkSubmissio
         private readonly IAsyncRepository<StudentSubmission, int> _submissionRepository;
         private readonly IAsyncRepository<Question, int> _questionRepository;
         private readonly IIdentityService _identityService;
+        private readonly IAsyncRepository<StudentSubmissionAnswer, int> _answerRepository;
 
         public GetHomeworkSubmissionsQueryHandler(
             IAsyncRepository<Assignment, int> assignmentRepository,
             IAsyncRepository<StudentSubmission, int> submissionRepository,
             IAsyncRepository<Question, int> questionRepository,
-            IIdentityService identityService)
+            IIdentityService identityService,
+            IAsyncRepository<StudentSubmissionAnswer, int> answerRepository)
         {
             _assignmentRepository = assignmentRepository;
             _submissionRepository = submissionRepository;
             _questionRepository = questionRepository;
             _identityService = identityService;
+            _answerRepository = answerRepository;
         }
 
         public async Task<List<HomeworkSubmissionDto>> Handle(GetHomeworkSubmissionsQuery request, CancellationToken cancellationToken)
@@ -33,11 +36,11 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetHomeworkSubmissio
                 throw new KeyNotFoundException($"Assignment with id {request.AssignmentId} not found.");
             }
 
-            var assignmentSubmissions = _submissionRepository.AsQueryable()
-                .Where(s => s.AssignmentId == request.AssignmentId).ToList();
+            var assignmentSubmissions = await _submissionRepository.FindAsync(
+                s => s.AssignmentId == request.AssignmentId, cancellationToken);
 
-            var totalProblems = _questionRepository.AsQueryable()
-                .Count(q => q.AssignmentId == request.AssignmentId);
+            var totalProblems = await _questionRepository.CountAsync(
+                 q => q.AssignmentId == request.AssignmentId, cancellationToken);
 
             var isRatedRequest = request.Status.Equals("rated", StringComparison.OrdinalIgnoreCase);
 
@@ -66,8 +69,9 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetHomeworkSubmissio
                 else if (!isRatedRequest && !isRated)
                 {
                     // For unrated, count submitted answers
-                    var submittedAnswers = sub.Answers?.Count ?? 0;
-                    
+                    var submittedAnswers = await _answerRepository.CountAsync(
+    a => a              .StudentSubmissionId == sub.Id, cancellationToken);
+
                     result.Add(new HomeworkSubmissionDto
                     {
                         SubmissionId = sub.Id,

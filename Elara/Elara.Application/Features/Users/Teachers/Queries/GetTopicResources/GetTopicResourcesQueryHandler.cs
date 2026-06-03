@@ -26,9 +26,7 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetTopicResources
                 throw new KeyNotFoundException($"Topic with id {request.TopicId} not found.");
             }
 
-            var topicResources = _resourceRepository.AsQueryable()
-                .Where(r => r.TopicId == request.TopicId)
-                .ToList();
+            var topicResources = await _resourceRepository.FindAsync(r => r.TopicId == request.TopicId, cancellationToken);
 
             var dto = new TopicResourcesDto
             {

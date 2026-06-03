@@ -17,7 +17,7 @@ namespace Elara.Infrastructure.Migrations
                 table: "Assignments",
                 type: "integer",
                 nullable: false,
-                defaultValue: 0);
+                defaultValue: 1);
 
             migrationBuilder.CreateTable(
                 name: "StudentSubmissionAnswers",
