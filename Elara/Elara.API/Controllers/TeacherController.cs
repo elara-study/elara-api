@@ -7,6 +7,7 @@ using Elara.Application.Features.Users.Teachers.Queries.GetAnnouncements;
 using Elara.Application.Features.Users.Teachers.Queries.GetClassInfo;
 using Elara.Application.Features.Users.Teachers.Queries.GetTeacherClasses;
 using Elara.Application.Features.Users.Teachers.Queries.GetTeacherProfile;
+using Elara.Application.Features.Users.Teachers.Queries.GetTeacherHome;
 using Elara.Application.Features.Users.Teachers.Queries.GetGroupStudents;
 using Elara.Application.Features.Users.Teachers.Commands.AddStudentByUsername;
 using Elara.API.Controllers.Requests;
@@ -25,7 +26,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Elara.Application.Responses;
 using Elara.Application.Features.ChatAnalysisReport.Queries.GetStudentInsightsForTeacher;
-using System;
 using System.Security.Claims;
 
 namespace Elara.API.Controllers
@@ -44,6 +44,20 @@ namespace Elara.API.Controllers
         public TeacherController(IMediator mediator)
         {
             _mediator = mediator;
+        }
+
+        [HttpGet("home")]
+        [ProducesResponseType(typeof(BaseResponse<TeacherHomeDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> GetHome(CancellationToken cancellationToken)
+        {
+            var response = await _mediator.Send(new GetTeacherHomeQuery(), cancellationToken);
+            return Ok(new BaseResponse<TeacherHomeDto>
+            {
+                Message = "Teacher home data retrieved successfully.",
+                Data = response
+            });
         }
 
         [HttpGet("profile")]

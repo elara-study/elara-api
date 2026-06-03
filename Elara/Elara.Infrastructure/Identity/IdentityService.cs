@@ -527,5 +527,34 @@ namespace Elara.Infrastructure.Identity
             var user = await _userManager.FindByIdAsync(userId.ToString());
             return user?.Name;
         }
+
+        public async Task<Dictionary<Guid, string>> GetUserNamesByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
+        {
+            if (ids == null || !ids.Any()) return new Dictionary<Guid, string>();
+            
+            var idsList = ids.Distinct().ToList();
+            var users = await _context.Users
+                .Where(u => idsList.Contains(u.Id))
+                .Select(u => new { u.Id, u.Name, u.Username })
+                .ToListAsync(cancellationToken);
+                
+            return users.ToDictionary(
+                u => u.Id,
+                u => string.IsNullOrWhiteSpace(u.Name) ? u.Username : u.Name
+            );
+        }
+
+        public async Task<Dictionary<Guid, string>> GetUserImagesByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
+        {
+            if (ids == null || !ids.Any()) return new Dictionary<Guid, string>();
+
+            var idsList = ids.Distinct().ToList();
+            var users = await _context.Users
+                .Where(u => idsList.Contains(u.Id))
+                .Select(u => new { u.Id, u.ImageUrl })
+                .ToListAsync(cancellationToken);
+
+            return users.ToDictionary(u => u.Id, u => u.ImageUrl ?? string.Empty);
+        }
     }
 }
