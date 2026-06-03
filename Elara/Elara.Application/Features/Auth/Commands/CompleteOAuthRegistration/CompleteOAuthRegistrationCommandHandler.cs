@@ -26,7 +26,8 @@ namespace Elara.Application.Features.Auth.Commands.CompleteOAuthRegistration
                 Name           = request.Name,
                 Role           = request.Role,
                 SubjectId      = request.SubjectId,
-                DateOfBirth    = request.DateOfBirth
+                DateOfBirth    = request.DateOfBirth,
+                Grade          = request.Grade
             };
 
             var user    = await _identityService.CompleteOAuthRegistrationAsync(completeData);

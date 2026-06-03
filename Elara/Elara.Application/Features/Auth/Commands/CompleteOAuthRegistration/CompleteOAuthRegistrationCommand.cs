@@ -15,5 +15,6 @@ namespace Elara.Application.Features.Auth.Commands.CompleteOAuthRegistration
         public string Role      { get; set; } = string.Empty;
         public int?   SubjectId { get; set; }
         public DateTime DateOfBirth { get; set; }
+        public int?   Grade     { get; set; }
     }
 }

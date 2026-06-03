@@ -64,7 +64,8 @@ namespace Elara.API.Controllers
                 Name           = claims.FindFirstValue(JwtRegisteredClaimNames.Name)  ?? string.Empty,
                 Role           = request.Role,
                 SubjectId      = request.SubjectId,
-                DateOfBirth    = request.DateOfBirth
+                DateOfBirth    = request.DateOfBirth,
+                Grade          = request.Grade
             };
 
             var result = await _mediator.Send(command);

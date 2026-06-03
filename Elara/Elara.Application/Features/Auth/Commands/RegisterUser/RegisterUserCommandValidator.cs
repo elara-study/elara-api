@@ -1,5 +1,6 @@
 using FluentValidation;
 using System;
+using Elara.Domain.Enums;
 
 namespace Elara.Application.Features.Auth.Commands.RegisterUser
 {
@@ -33,6 +34,12 @@ namespace Elara.Application.Features.Auth.Commands.RegisterUser
                 .NotNull().WithMessage("SubjectId is required for teachers")
                 .GreaterThan(0).WithMessage("SubjectId must be a valid ID")
                 .When(x => string.Equals(x.Role?.Trim(), "teacher", StringComparison.OrdinalIgnoreCase));
+
+            RuleFor(x => x.Grade)
+                .NotNull().WithMessage("Grade is required for students")
+                .Must(grade => Enum.IsDefined(typeof(GradeLevel), grade!.Value))
+                .WithMessage("Invalid grade level. Valid grades are 10, 11, or 12.")
+                .When(x => string.Equals(x.Role?.Trim(), "student", StringComparison.OrdinalIgnoreCase));
         }
     }
 }

@@ -31,7 +31,8 @@ namespace Elara.Application.Features.Auth.Commands.RegisterUser
                 Name = request.Name,
                 DateOfBirth = request.DateOfBirth,
                 Role = request.Role,
-                SubjectId = request.SubjectId
+                SubjectId = request.SubjectId,
+                Grade = request.Grade
             });
 
             var otp = await _identityService.GenerateEmailVerificationOtpAsync(registeredUser.UserId);

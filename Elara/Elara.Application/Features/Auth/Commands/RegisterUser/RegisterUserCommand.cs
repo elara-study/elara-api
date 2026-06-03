@@ -12,6 +12,7 @@ namespace Elara.Application.Features.Auth.Commands.RegisterUser
         public DateTime DateOfBirth { get; set; }
         public string Role { get; set; } = string.Empty;
         public int? SubjectId { get; set; }
+        public int? Grade { get; set; }
     }
 }
 

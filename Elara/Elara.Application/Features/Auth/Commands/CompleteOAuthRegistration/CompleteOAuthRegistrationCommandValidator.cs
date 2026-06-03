@@ -1,4 +1,5 @@
 using FluentValidation;
+using Elara.Domain.Enums;
 
 namespace Elara.Application.Features.Auth.Commands.CompleteOAuthRegistration
 {
@@ -31,6 +32,12 @@ namespace Elara.Application.Features.Auth.Commands.CompleteOAuthRegistration
             RuleFor(x => x.DateOfBirth)
                 .NotEmpty().WithMessage("Date of birth is required.")
                 .LessThan(DateTime.UtcNow).WithMessage("Date of birth must be in the past.");
+
+            RuleFor(x => x.Grade)
+                .NotNull().WithMessage("Grade is required for students.")
+                .Must(grade => Enum.IsDefined(typeof(GradeLevel), grade!.Value))
+                .WithMessage("Invalid grade level. Valid grades are 10, 11, or 12.")
+                .When(x => string.Equals(x.Role?.Trim(), "student", StringComparison.OrdinalIgnoreCase));
         }
     }
 }

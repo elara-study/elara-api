@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
 using Elara.Application.Models.Users;
+using Elara.Domain.Enums;
 
 namespace Elara.Infrastructure.Identity
 {
@@ -99,9 +100,13 @@ namespace Elara.Infrastructure.Identity
                 }
                 else if (requestedRole == Roles.Student)
                 {
+                    if (!registerData.Grade.HasValue || !Enum.IsDefined(typeof(GradeLevel), registerData.Grade.Value))
+                        throw new InvalidOperationException("Valid Grade level is required for students.");
+
                     var newStudent = new Student
                     {
                         Id = user.Id,
+                        GradeLevel = (GradeLevel)registerData.Grade.Value,
                         IsDeleted = false
                     };
                     await _context.Students.AddAsync(newStudent);
@@ -396,7 +401,17 @@ namespace Elara.Infrastructure.Identity
                 if (requestedRole == Roles.Teacher)
                     _context.Teachers.Add(new Teacher { Id = user.Id, SubjectId = data.SubjectId!.Value, IsDeleted = false });
                 else
-                    _context.Students.Add(new Student { Id = user.Id, IsDeleted = false });
+                {
+                    if (!data.Grade.HasValue || !Enum.IsDefined(typeof(GradeLevel), data.Grade.Value))
+                        throw new InvalidOperationException("Valid Grade level is required for students.");
+
+                    _context.Students.Add(new Student 
+                    { 
+                        Id = user.Id, 
+                        GradeLevel = (GradeLevel)data.Grade.Value, 
+                        IsDeleted = false 
+                    });
+                }
 
                 var loginInfo = new UserLoginInfo(data.Provider, data.ProviderUserId, data.Provider);
                 var loginResult = await _userManager.AddLoginAsync(user, loginInfo);

@@ -6,5 +6,6 @@ namespace Elara.Application.Models.Auth
         public string Role         { get; set; } = string.Empty;
         public int?   SubjectId    { get; set; }
         public DateTime DateOfBirth { get; set; }
+        public int?   Grade        { get; set; }
     }
 }
