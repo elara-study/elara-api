@@ -33,6 +33,7 @@ namespace Elara.Infrastructure
             services.AddScoped<IPendingTokenService, PendingTokenService>();
             services.AddScoped<IIdentityService, IdentityService>();
             services.AddScoped<IImageStorageService, CloudinaryImageStorageService>();
+            services.AddScoped<IFileStorageService, CloudinaryFileStorageService>();
             services.AddHttpClient<IOAuthTokenValidator, OAuthTokenValidator>();
 
             services.Configure<BrevoOptions>(configuration.GetSection(BrevoOptions.SectionName));

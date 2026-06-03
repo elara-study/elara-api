@@ -39,6 +39,11 @@ namespace Elara.Infrastructure.Data.Configurations.EducationalConfig
                 .HasConversion<string>()
                 .HasDefaultValue(DifficultyLevel.Easy);
 
+            builder.Property(a => a.AssignmentType)
+                .IsRequired()
+                .HasConversion<string>()
+                .HasDefaultValue(AssignmentType.Quiz);
+
             builder.Property(a => a.TopicId)
                 .IsRequired();
 

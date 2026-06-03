@@ -70,7 +70,18 @@ namespace Elara.API
                 options.SubstituteApiVersionInUrl = true;
             });
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen(c => c.OperationFilter<SwaggerDefaultValues>());
+            builder.Services.AddSwaggerGen(c => 
+            {
+                c.OperationFilter<SwaggerDefaultValues>();
+                c.MapType<Elara.Domain.Enums.ResourceType>(() => new Microsoft.OpenApi.Models.OpenApiSchema
+                {
+                    Type = "string",
+                    Enum = Enum.GetNames(typeof(Elara.Domain.Enums.ResourceType))
+                               .Select(name => new Microsoft.OpenApi.Any.OpenApiString(name.ToLower()))
+                               .Cast<Microsoft.OpenApi.Any.IOpenApiAny>()
+                               .ToList()
+                });
+            });
             builder.Services.ConfigureOptions<ConfigureSwaggerOptions>();
 
             return builder.Build();

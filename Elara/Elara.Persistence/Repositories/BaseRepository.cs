@@ -58,5 +58,10 @@ namespace Elara.Persistence.Repositories
         {
             return await _context.Set<T>().AnyAsync(predicate, cancellationToken);
         }
+
+        public async Task<List<T>> FindAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default)
+        {
+            return await _context.Set<T>().Where(predicate).ToListAsync(cancellationToken);
+        }
     }
 }
