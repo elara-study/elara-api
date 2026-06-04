@@ -1,3 +1,5 @@
+using Elara.Domain.Entities.Administrative;
+using Elara.Domain.Entities.Educational;
 using System;
 using System.Collections.Generic;
 using System.Linq;

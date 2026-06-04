@@ -1,6 +1,8 @@
 using Elara.Application.Contracts.Persistence.Users;
 using Elara.Application.Models.Users;
+using Elara.Domain.Entities.Administrative;
 using Elara.Domain.Entities.Educational;
+using Elara.Domain.Entities.Submissions;
 using Elara.Domain.Entities.Users;
 using Elara.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -118,6 +120,59 @@ namespace Elara.Persistence.Repositories.Users
                 RoadmapsCreated = roadmapsCreated,
                 LessonsPublished = lessonsPublished
             };
+        }
+
+        public async Task<List<Class>> GetClassesByTeacherAsync(Guid teacherId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Classes
+                .Where(c => c.TeacherId == teacherId && !c.IsDeleted)
+                .Include(c => c.StudentClasses)
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<Roadmap>> GetRoadmapsByTeacherAsync(Guid teacherId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Roadmaps
+                .Where(r => r.TeacherId == teacherId && !r.IsDeleted)
+                .Include(r => r.Subject)
+                .Include(r => r.Topics)
+                    .ThenInclude(t => t.Lessons)
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<double> GetAvgCompletionByTeacherAsync(Guid teacherId, CancellationToken cancellationToken = default)
+        {
+            var query = _context.StudentSubmissions
+                .Where(s => s.Assignment.TeacherId == teacherId &&
+                            s.Assignment.MaxScore > 0 &&
+                            !s.IsDeleted);
+
+            if (!await query.AnyAsync(cancellationToken)) return 0;
+
+            return await query
+                .AverageAsync(s => (s.Score / s.Assignment.MaxScore) * 100, cancellationToken);
+        }
+
+        public async Task<List<StudentSubmission>> GetPendingSubmissionsAsync(Guid teacherId, int take, CancellationToken cancellationToken = default)
+        {
+            return await _context.StudentSubmissions
+                .Where(s => s.Assignment.TeacherId == teacherId &&
+                            s.Score == 0 &&
+                            string.IsNullOrEmpty(s.TeacherFeedback) &&
+                            !s.IsDeleted)
+                .Include(s => s.Assignment)
+                .OrderBy(s => s.CreatedAt)
+                .Take(take)
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<StudentSubmission>> GetRecentSubmissionsAsync(Guid teacherId, int take, CancellationToken cancellationToken = default)
+        {
+            return await _context.StudentSubmissions
+                .Where(s => s.Assignment.TeacherId == teacherId && !s.IsDeleted)
+                .OrderByDescending(s => s.CreatedAt)
+                .Take(take)
+                .ToListAsync(cancellationToken);
         }
     }
 }

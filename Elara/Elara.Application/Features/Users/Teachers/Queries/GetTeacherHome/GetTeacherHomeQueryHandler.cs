@@ -1,6 +1,7 @@
 using Elara.Application.Common.Interfaces;
 using Elara.Application.Contracts.Identity;
 using Elara.Application.Contracts.Persistence;
+using Elara.Application.Contracts.Persistence.Users;
 using Elara.Domain.Entities.Administrative;
 using Elara.Domain.Entities.Educational;
 using Elara.Domain.Entities.JunctionTables;
@@ -11,22 +12,16 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetTeacherHome
 {
     public class GetTeacherHomeQueryHandler : IRequestHandler<GetTeacherHomeQuery, TeacherHomeDto>
     {
-        private readonly IAsyncRepository<Class, int> _classRepository;
-        private readonly IAsyncRepository<Roadmap, int> _roadmapRepository;
-        private readonly IAsyncRepository<StudentSubmission, int> _submissionRepository;
+        private readonly ITeacherRepository _teacherRepository;
         private readonly IIdentityService _identityService;
         private readonly ICurrentUserService _currentUserService;
 
         public GetTeacherHomeQueryHandler(
-            IAsyncRepository<Class, int> classRepository,
-            IAsyncRepository<Roadmap, int> roadmapRepository,
-            IAsyncRepository<StudentSubmission, int> submissionRepository,
+            ITeacherRepository teacherRepository,
             IIdentityService identityService,
             ICurrentUserService currentUserService)
         {
-            _classRepository = classRepository;
-            _roadmapRepository = roadmapRepository;
-            _submissionRepository = submissionRepository;
+            _teacherRepository = teacherRepository;
             _identityService = identityService;
             _currentUserService = currentUserService;
         }
@@ -40,12 +35,12 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetTeacherHome
 
             // First Name
             var fullName = await _identityService.GetUserNameByIdAsync(teacherId);
-            response.FirstName = fullName?.Split(' ').FirstOrDefault() ?? "Teacher";
+            response.FirstName = string.IsNullOrWhiteSpace(fullName)
+                 ? "Teacher"
+                 : fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "Teacher";
 
             // Groups
-            var classesData = await _classRepository.FindAsync(
-            c => c.TeacherId == teacherId, cancellationToken);
-
+            var classesData = await _teacherRepository.GetClassesByTeacherAsync(teacherId, cancellationToken);
             response.Groups = classesData.Select(c => new TeacherGroupDto
             {
                 Id = c.PublicId.ToString(),
@@ -54,9 +49,7 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetTeacherHome
             }).ToList();
 
             // Roadmaps
-            var roadmapsData = await _roadmapRepository.FindAsync(
-                r => r.TeacherId == teacherId, cancellationToken);
-
+            var roadmapsData = await _teacherRepository.GetRoadmapsByTeacherAsync(teacherId, cancellationToken);
             response.Roadmaps = roadmapsData.Select(r => new TeacherRoadmapDto
             {
                 Id = r.Id.ToString(),
@@ -67,14 +60,11 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetTeacherHome
             }).ToList();
 
             // Stats - Active Students
-            var allClasses = await _classRepository.FindAsync(
-            c => c.TeacherId == teacherId, cancellationToken);
-
-            var activeStudents = allClasses
-                .SelectMany(c => c.StudentClasses ?? new List<StudentClass>())
-                .Select(sc => sc.StudentId)
-                .Distinct()
-                .Count();
+            var activeStudents = classesData
+            .SelectMany(c => c.StudentClasses ?? new List<StudentClass>())
+            .Select(sc => sc.StudentId)
+            .Distinct()
+            .Count();
 
             response.Stats.ActiveStudents = new ActiveStudentsStatDto
             {
@@ -83,73 +73,50 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetTeacherHome
             };
 
             // Stats - Average Completion
-            var submissions = await _submissionRepository.FindAsync(
-                s => s.Assignment.TeacherId == teacherId && s.Assignment.MaxScore > 0, cancellationToken);
-
-            int avgCompletion = 0;
-            if (submissions.Any())
-            {
-                var avg = submissions.Average(s => (s.Score / s.Assignment.MaxScore) * 100);
-                avgCompletion = (int)Math.Round(avg);
-            }
-
+            var avgCompletion = await _teacherRepository.GetAvgCompletionByTeacherAsync(teacherId, cancellationToken);
             response.Stats.AvgCompletion = new AvgCompletionStatDto
             {
-                Percentage = avgCompletion,
+                Percentage = (int)Math.Round(avgCompletion),
                 Delta = 0
             };
 
             // Pending Tasks
-            var pendingTasksData = await _submissionRepository.FindAsync(
-              s => s.Assignment.TeacherId == teacherId &&
-                   s.Score == 0 &&
-                   string.IsNullOrEmpty(s.TeacherFeedback),
-              cancellationToken);
-
-            var pendingTop5 = pendingTasksData
-            .OrderBy(s => s.CreatedAt)
-            .Take(5)
-            .ToList();
+            var pendingTop5 = await _teacherRepository.GetPendingSubmissionsAsync(teacherId, 5, cancellationToken);
 
             // Recent Activity
-            var recentData = await _submissionRepository.FindAsync(
-            s => s.Assignment.TeacherId == teacherId, cancellationToken);
-
-            var recentTop5 = recentData
-                .OrderByDescending(s => s.CreatedAt)
-                .Take(5)
-                .ToList();
+            var recentTop5 = await _teacherRepository.GetRecentSubmissionsAsync(teacherId, 5, cancellationToken);
 
             var allStudentIds = pendingTop5.Select(p => p.StudentId)
                .Concat(recentTop5.Select(r => r.StudentId))
                .Distinct()
                .ToList();
 
-            var studentNames = await _identityService.GetUserNamesByIdsAsync(allStudentIds, cancellationToken);
+            var studentProfiles = await _identityService.GetUserProfilesByIdsAsync(allStudentIds, cancellationToken);
+            var userImages = await _identityService.GetUserImagesByIdsAsync(allStudentIds, cancellationToken);
+
             foreach (var pending in pendingTop5)
             {
-                var name = studentNames.GetValueOrDefault(pending.StudentId, "Unknown Student");
+                var profile = studentProfiles.GetValueOrDefault(pending.StudentId);
                 response.PendingTasks.Add(new TeacherPendingTaskDto
                 {
                     Id = pending.Id.ToString(),
                     Title = pending.Assignment?.Title ?? "Homework",
-                    Meta = $"Submission from {name}",
+                    Meta = $"Submission from {profile?.Name ?? "Unknown Student"}",
                     Type = "rating"
                 });
             }
 
-            var userImages = await _identityService.GetUserImagesByIdsAsync(allStudentIds, cancellationToken);
             foreach (var recent in recentTop5)
             {
-                var name = studentNames.GetValueOrDefault(recent.StudentId, "Unknown Student");
+                var profile = studentProfiles.GetValueOrDefault(recent.StudentId);
                 var imageUrl = userImages.GetValueOrDefault(recent.StudentId, string.Empty);
 
                 response.RecentActivity.Add(new TeacherRecentActivityDto
                 {
                     Student = new ActivityStudentDto
                     {
-                        Username = name.Replace(" ", "").ToLower(),
-                        Name = name,
+                        Username = profile?.Username ?? "",
+                        Name = profile?.Name ?? "Unknown Student",
                         Avatar = imageUrl
                     },
                     Type = "homework_submitted",
