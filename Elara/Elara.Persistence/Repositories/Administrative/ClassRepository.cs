@@ -229,5 +229,6 @@ namespace Elara.Persistence.Repositories.Administrative
                 .Select(sc => sc.StudentId)
                 .ToListAsync(cancellationToken);
         }
+
     }
 }

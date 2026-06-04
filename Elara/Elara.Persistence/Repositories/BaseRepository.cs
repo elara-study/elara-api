@@ -1,4 +1,6 @@
 using Elara.Application.Contracts.Persistence;
+using Elara.Domain.Entities.Administrative;
+using Elara.Domain.Entities.Educational;
 using Elara.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -63,5 +65,6 @@ namespace Elara.Persistence.Repositories
         {
             return await _context.Set<T>().Where(predicate).ToListAsync(cancellationToken);
         }
+      
     }
 }

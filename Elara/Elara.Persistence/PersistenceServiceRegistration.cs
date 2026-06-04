@@ -32,6 +32,7 @@ namespace Elara.Persistence
             services.AddScoped<IStudentRepository, StudentRepository>();
             services.AddScoped<IChatRepository, ChatRepository>();
             services.AddScoped<IQuizRepository, QuizRepository>();
+            services.AddScoped<ITeacherRepository, TeacherRepository>();
 
             // Notification repositories
             services.AddScoped<INotificationRepository, NotificationRepository>();

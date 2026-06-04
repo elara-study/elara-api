@@ -25,5 +25,8 @@ namespace Elara.Application.Contracts.Identity
         Task<string> GeneratePasswordResetOtpAsync(Guid userId);
         Task<bool> VerifyPasswordResetOtpAsync(Guid userId, string otp);
         Task<string?> GetUserNameByIdAsync(Guid userId);
+        Task<Dictionary<Guid, string>> GetUserNamesByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default);
+        Task<Dictionary<Guid, string>> GetUserImagesByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default);
+        Task<Dictionary<Guid, UserProfileDto>> GetUserProfilesByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default);
     }
 }

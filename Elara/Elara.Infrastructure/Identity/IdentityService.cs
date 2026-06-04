@@ -542,5 +542,56 @@ namespace Elara.Infrastructure.Identity
             var user = await _userManager.FindByIdAsync(userId.ToString());
             return user?.Name;
         }
+
+        public async Task<Dictionary<Guid, string>> GetUserNamesByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
+        {
+            var idsList = ids?.Distinct().ToList() ?? new List<Guid>();
+            if (idsList.Count == 0) return new Dictionary<Guid, string>();
+
+            var users = await _context.Users
+                .AsNoTracking()
+                .Where(u => idsList.Contains(u.Id))
+                .Select(u => new { u.Id, u.Name, u.Username })
+                .ToListAsync(cancellationToken);
+                
+            return users.ToDictionary(
+                u => u.Id,
+                u => string.IsNullOrWhiteSpace(u.Name) ? u.Username : u.Name
+            );
+        }
+
+        public async Task<Dictionary<Guid, string>> GetUserImagesByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
+        {
+            var idsList = ids?.Distinct().ToList() ?? new List<Guid>();
+            if (idsList.Count == 0) return new Dictionary<Guid, string>();
+
+            var users = await _context.Users
+                .AsNoTracking()
+                .Where(u => idsList.Contains(u.Id))
+                .Select(u => new { u.Id, u.ImageUrl })
+                .ToListAsync(cancellationToken);
+
+            return users.ToDictionary(u => u.Id, u => u.ImageUrl ?? string.Empty);
+        }
+
+        public async Task<Dictionary<Guid, UserProfileDto>> GetUserProfilesByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
+        {
+            var idsList = ids?.Distinct().ToList() ?? new List<Guid>();
+            if (idsList.Count == 0) return new Dictionary<Guid, UserProfileDto>();
+
+            var users = await _context.Users
+                .AsNoTracking()
+                .Where(u => idsList.Contains(u.Id))
+                .Select(u => new { u.Id, u.Name, u.Username })
+                .ToListAsync(cancellationToken);
+
+            return users.ToDictionary(
+                u => u.Id,
+                u => new UserProfileDto
+                {
+                    Name = string.IsNullOrWhiteSpace(u.Name) ? u.Username : u.Name,
+                    Username = u.Username
+                });
+        }
     }
 }
