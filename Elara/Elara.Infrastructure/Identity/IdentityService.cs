@@ -437,6 +437,18 @@ namespace Elara.Infrastructure.Identity
             return authUser;
         }
 
+        public async Task<AuthUserData> GetUserByIdAsync(Guid userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null)
+                throw new KeyNotFoundException("User not found.");
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var authUser = _mapper.Map<AuthUserData>(user);
+            authUser.Role = roles.FirstOrDefault() ?? string.Empty;
+            return authUser;
+        }
+
         public async Task<Guid> GetUserIdByEmailAsync(string email)
         {
             var user = await _userManager.FindByEmailAsync(email);

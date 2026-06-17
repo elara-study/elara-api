@@ -31,15 +31,15 @@ namespace Elara.API.Controllers
         }
 
         [HttpPost("register")]
-        [ProducesResponseType(typeof(BaseResponse<AuthUserData>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(BaseResponse<string>), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Register([FromBody] RegisterUserCommand command)
         {
-            var result = await _mediator.Send(command);
-            return StatusCode(StatusCodes.Status201Created, new BaseResponse<AuthUserData>
+            await _mediator.Send(command);
+            return StatusCode(StatusCodes.Status201Created, new BaseResponse<string>
             {
                 Message = "User registered successfully. Please verify your email.",
-                Data = result
+                Data = null
             });
         }
 
@@ -122,16 +122,16 @@ namespace Elara.API.Controllers
         }
 
         [HttpPost("verify-email")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse<LoginResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailCommand command)
         {
-            await _mediator.Send(command);
-            return Ok(new BaseResponse<string>
+            var result = await _mediator.Send(command);
+            return Ok(new BaseResponse<LoginResponse>
             {
                 Message = "Email verified successfully.",
-                Data = null
+                Data = result
             });
         }
 
