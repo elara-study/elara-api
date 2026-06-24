@@ -13,7 +13,7 @@ namespace Elara.Infrastructure.Chat
         private readonly HttpClient _httpClient;
         private readonly GeminiSettings _settings;
 
-        private const string PrimaryModel = "gemini-1.5-flash";
+        private const string PrimaryModel = "gemini-2.5-flash";
         private const string BaseUrl = "https://generativelanguage.googleapis.com/v1beta";
 
         public GeminiService(HttpClient httpClient, IOptions<GeminiSettings> settings)
@@ -46,11 +46,17 @@ namespace Elara.Infrastructure.Chat
 
         private async Task<string?> CallGeminiAsync(object requestBody, CancellationToken cancellationToken)
         {
-            var url = $"{BaseUrl}/models/{PrimaryModel}:generateContent?key={_settings.ApiKey}";
+            var url = $"{BaseUrl}/models/{PrimaryModel}:generateContent";
             var json = JsonSerializer.Serialize(requestBody);
             using var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            var response = await _httpClient.PostAsync(url, content, cancellationToken);
+            using var request = new HttpRequestMessage(HttpMethod.Post, url)
+            {
+                Content = content
+            };
+            request.Headers.Add("x-goog-api-key", _settings.ApiKey);
+
+            var response = await _httpClient.SendAsync(request, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
                 var errorMsg = await response.Content.ReadAsStringAsync(cancellationToken);
