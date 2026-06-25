@@ -75,7 +75,7 @@ namespace Elara.API.Controllers
             });
         }
 
-        [HttpGet("classes")]
+        [HttpGet("groups")]
         [ProducesResponseType(typeof(BaseResponse<List<GetTeacherClassesResponse>>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -90,7 +90,7 @@ namespace Elara.API.Controllers
             });
         }
 
-        [HttpPost("classes")]
+        [HttpPost("groups")]
         [ProducesResponseType(typeof(BaseResponse<CreateClassResponse>), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -123,7 +123,7 @@ namespace Elara.API.Controllers
             });
         }
 
-        [HttpGet("classes/{id:guid}")]
+        [HttpGet("groups/{id:guid}")]
         [ProducesResponseType(typeof(BaseResponse<GetClassInfoResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
