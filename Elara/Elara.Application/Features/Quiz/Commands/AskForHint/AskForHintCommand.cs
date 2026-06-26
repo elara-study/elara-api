@@ -6,6 +6,6 @@ namespace Elara.Application.Features.Quiz.Commands.AskForHint
     public class AskForHintCommand : IRequest<HintDto>
     {
         public int SessionId { get; set; }
-        public int QuestionId { get; set; }
+        public int QuestionNumber { get; set; }
     }
 }

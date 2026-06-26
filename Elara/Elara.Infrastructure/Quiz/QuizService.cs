@@ -1,10 +1,9 @@
 using Elara.Application.Contracts.Persistence;
 using Elara.Domain.Entities.Educational;
-using Elara.Domain.Entities.Submissions;
 using Elara.Domain.Entities.Users;
+using Elara.Domain.Entities.Submissions;
 using Elara.Application.Common.Interfaces;
 using Elara.Application.Features.Quiz.DTOs;
-using Elara.Domain.Enums;
 using System.Text.Json;
 
 namespace Elara.Infrastructure.Quiz
@@ -12,41 +11,37 @@ namespace Elara.Infrastructure.Quiz
     public class QuizService : IQuizService
     {
         private readonly IGeminiService _geminiService;
-        private readonly IAsyncRepository<Lesson, int> _lessonRepository;
-        private readonly IAsyncRepository<Assignment, int> _assignmentRepository;
+        private readonly IAsyncRepository<Module, int> _moduleRepository;
         private readonly IAsyncRepository<Student, Guid> _studentRepository;
         private readonly ICurrentUserService _currentUserService;
 
         public QuizService(
-            IGeminiService geminiService, 
-            IAsyncRepository<Lesson, int> lessonRepository, 
-            IAsyncRepository<Assignment, int> assignmentRepository,
+            IGeminiService geminiService,
+            IAsyncRepository<Module, int> moduleRepository,
             IAsyncRepository<Student, Guid> studentRepository,
             ICurrentUserService currentUserService)
         {
             _geminiService = geminiService;
-            _lessonRepository = lessonRepository;
-            _assignmentRepository = assignmentRepository;
+            _moduleRepository = moduleRepository;
             _studentRepository = studentRepository;
             _currentUserService = currentUserService;
         }
 
-        public async Task<int> GenerateQuizAsync(int lessonId, int questionCount, string difficulty, List<string> questionTypes, CancellationToken cancellationToken)
+        public async Task<GenerateQuizResult> GenerateQuizAsync(int moduleId, int questionCount, string difficulty, List<string> questionTypes, CancellationToken cancellationToken)
         {
-            var lesson = await _lessonRepository.GetByIdAsync(lessonId, cancellationToken);
-            if (lesson == null) throw new Exception("Lesson not found");
+            var module = await _moduleRepository.GetByIdAsync(moduleId, cancellationToken);
+            if (module == null) throw new Exception("Module not found");
 
-            var currentUserId = _currentUserService.UserId ?? throw new Exception("User must be logged in to generate a quiz.");
-
-            string prompt = $@"Generate a quiz for the lesson titled '{lesson.Title}'.
-            Content: {lesson.Content}
+            var content = module.Content ?? module.Description ?? module.Title;
+            string prompt = $@"Generate a quiz for the module titled '{module.Title}'.
+            Content: {content}
             Strict Requirement: Generate EXACTLY {questionCount} questions. No more, no less.
             Difficulty: {difficulty}
             Types: {string.Join(", ", questionTypes)}
-            
+
             Return ONLY a JSON object with this structure:
             {{
-              ""title"": ""{lesson.Title} Quiz"",
+              ""title"": ""{module.Title} Quiz"",
               ""questions"": [
                 {{
                   ""text"": ""Question text"",
@@ -69,37 +64,30 @@ namespace Elara.Infrastructure.Quiz
                 if (aiQuiz == null || aiQuiz.Questions == null) throw new Exception("Failed to parse AI response");
 
                 var finalQuestions = aiQuiz.Questions.Take(questionCount).ToList();
-                int actualCount = finalQuestions.Count;
-                int marksPerQuestion = 10;
+                var quizTitle = aiQuiz.Title ?? $"{module.Title} Quiz";
 
-                var assignment = new Assignment
+                var questionsForStorage = finalQuestions.Select((q, i) => new AIQuestion
                 {
-                    Title = aiQuiz.Title ?? $"{lesson.Title} Quiz",
-                    LessonId = lessonId,
-                    TopicId = lesson.TopicId,
-                    IsAIGenerated = true,
-                    DifficultyLevel = Enum.Parse<DifficultyLevel>(difficulty, ignoreCase: true),
-                    DueDate = DateTime.UtcNow.AddDays(7),
-                    MaxScore = actualCount * marksPerQuestion,
-                    Questions = new List<Question>()
+                    Text = q.Text,
+                    Type = q.Type,
+                    Hint = q.Hint ?? "",
+                    Options = q.Options?.Select(o => new AIOption { Text = o.Text, IsCorrect = o.IsCorrect }).ToList()
+                }).ToList();
+
+                var quizData = new AIQuizResult
+                {
+                    Title = quizTitle,
+                    Questions = questionsForStorage
                 };
 
-                foreach (var q in finalQuestions)
-                {
-                    var question = new Question
-                    {
-                        Text = q.Text,
-                        QuestionType = Enum.Parse<QuestionType>(q.Type, ignoreCase: true),
-                        Marks = marksPerQuestion,
-                        IsAIGenerated = true,
-                        Options = q.Options?.Select(o => new QuestionOption { Text = o.Text, IsCorrect = o.IsCorrect }).ToList() ?? new List<QuestionOption>(),
-                        Hints = new List<Hint> { new Hint { Content = q.Hint ?? "", StudentId = currentUserId } }
-                    };
-                    assignment.Questions.Add(question);
-                }
+                var questionsJson = JsonSerializer.Serialize(quizData, new JsonSerializerOptions { WriteIndented = false });
 
-                var createdAssignment = await _assignmentRepository.AddAsync(assignment, cancellationToken);
-                return createdAssignment.Id;
+                return new GenerateQuizResult
+                {
+                    QuestionsJson = questionsJson,
+                    QuizTitle = quizTitle,
+                    TotalQuestions = finalQuestions.Count
+                };
             }
             catch (Exception ex)
             {
@@ -112,8 +100,8 @@ namespace Elara.Infrastructure.Quiz
             string prompt = $@"You are a teacher grading an essay question.
             Question: {questionText}
             Student Answer: {studentAnswer}
-            
-            Grade the answer based on accuracy (0-100 score). 
+
+            Grade the answer based on accuracy (0-100 score).
             Return ONLY a JSON object:
             {{
               ""isCorrect"": true/false,
@@ -126,7 +114,7 @@ namespace Elara.Infrastructure.Quiz
                 var response = await _geminiService.GenerateResponseAsync(prompt, "", [], cancellationToken);
                 var json = response.Replace("```json", "").Replace("```", "").Trim();
                 var result = JsonSerializer.Deserialize<AIGradingResult>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                
+
                 return (result?.IsCorrect ?? false, result?.Score ?? 0, result?.Feedback ?? "N/A");
             }
             catch
@@ -135,35 +123,16 @@ namespace Elara.Infrastructure.Quiz
             }
         }
 
-        public async Task<ElaraInsightDto> GenerateQuizInsightAsync(QuizSession session, CancellationToken cancellationToken)
+        public async Task<string> GenerateQuizInsightAsync(int correctCount, int totalCount, string quizTitle, CancellationToken cancellationToken)
         {
-            double accuracy = session.Assignment.Questions.Count > 0 
-                ? (double)session.CorrectAnswers / session.Assignment.Questions.Count * 100 : 0;
+            double accuracy = totalCount > 0 ? (double)correctCount / totalCount * 100 : 0;
 
             if (accuracy >= 80)
-            {
-                return new ElaraInsightDto { 
-                    Message = "Excellent work! You have mastered this lesson.",
-                    Recommendation = "You are ready for the next topic.",
-                    WeakTopics = new List<string>()
-                };
-            }
+                return "Excellent work! You have mastered this lesson.";
             else if (accuracy >= 50)
-            {
-                return new ElaraInsightDto { 
-                    Message = "Good job, but there's room for improvement.",
-                    Recommendation = "Try reviewing the parts you got wrong and retake the quiz.",
-                    WeakTopics = new List<string> { "Key concepts of " + session.Assignment.Title }
-                };
-            }
+                return "Good job, but there's room for improvement.";
             else
-            {
-                return new ElaraInsightDto { 
-                    Message = "Don't give up! This topic needs more focus.",
-                    Recommendation = "I recommend re-watching the lesson video and focusing on the examples.",
-                    WeakTopics = new List<string> { session.Assignment.Title }
-                };
-            }
+                return "Don't give up! This topic needs more focus.";
         }
 
         public async Task<int> CalculateTotalXpAsync(QuizSession session, CancellationToken cancellationToken)
@@ -214,7 +183,7 @@ namespace Elara.Infrastructure.Quiz
             public string Text { get; set; } = string.Empty;
             public string Type { get; set; } = string.Empty;
             public string Hint { get; set; } = string.Empty;
-            public List<AIOption> Options { get; set; } = new();
+            public List<AIOption>? Options { get; set; }
         }
 
         private class AIOption

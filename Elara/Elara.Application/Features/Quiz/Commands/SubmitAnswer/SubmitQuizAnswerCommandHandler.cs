@@ -3,8 +3,9 @@ using Elara.Application.Contracts.Persistence.Quiz;
 using Elara.Application.Features.Quiz.DTOs;
 using Elara.Domain.Entities.Submissions;
 using Elara.Domain.Enums;
-using MediatR;
 using Elara.Application.Responses;
+using System.Text.Json;
+using MediatR;
 
 namespace Elara.Application.Features.Quiz.Commands.SubmitAnswer
 {
@@ -21,60 +22,69 @@ namespace Elara.Application.Features.Quiz.Commands.SubmitAnswer
 
         public async Task<BaseResponse<SubmitAnswerResponse>> Handle(SubmitQuizAnswerCommand request, CancellationToken cancellationToken)
         {
-            var question = await _quizRepository.GetQuestionWithDetailsAsync(request.Answer.QuestionId, cancellationToken);
-            if (question == null) throw new Exception("Question not found");
-
             var session = await _quizRepository.GetSessionWithAnswersAsync(request.SessionId, cancellationToken);
             if (session == null) throw new Exception("Session not found");
+            if (session.Status == QuizSessionStatus.Completed) throw new Exception("Quiz already completed");
+
+            if (string.IsNullOrEmpty(session.QuestionsJson))
+                throw new Exception("No questions found for this session");
+
+            var quizData = JsonSerializer.Deserialize<AIQuizResult>(session.QuestionsJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            if (quizData?.Questions == null || request.Answer.QuestionNumber < 1 || request.Answer.QuestionNumber > quizData.Questions.Count)
+                throw new Exception("Invalid question number");
+
+            var question = quizData.Questions[request.Answer.QuestionNumber - 1];
+            var questionType = Enum.Parse<QuestionType>(question.Type, ignoreCase: true);
 
             bool isCorrect = false;
             int xpAwarded = 0;
-            int? correctOptionId = null;
+            string correctAnswer = "";
 
-            if (question.QuestionType == QuestionType.MCQ)
+            if (questionType == QuestionType.MCQ && question.Options != null)
             {
                 var correctOption = question.Options.FirstOrDefault(o => o.IsCorrect);
-                correctOptionId = correctOption?.Id;
-                isCorrect = request.Answer.SelectedOptionId == correctOptionId;
-                xpAwarded = isCorrect ? (int)question.Marks : 0;
+                correctAnswer = correctOption?.Text ?? "";
+                isCorrect = string.Equals(request.Answer.SelectedOptionText?.Trim(), correctAnswer.Trim(), StringComparison.OrdinalIgnoreCase);
+                xpAwarded = isCorrect ? 10 : 0;
             }
-            else if (question.QuestionType == QuestionType.Essay)
+            else if (questionType == QuestionType.Essay)
             {
                 var gradingResult = await _quizService.GradeEssayAnswerAsync(
-                    question.Text, 
-                    request.Answer.AnswerContent ?? "", 
+                    question.Text,
+                    request.Answer.AnswerContent ?? "",
                     cancellationToken);
-                
+
                 isCorrect = gradingResult.IsCorrect;
-                xpAwarded = (int)(question.Marks * (gradingResult.Score / 100.0));
+                xpAwarded = gradingResult.Score;
+                correctAnswer = "See feedback";
             }
 
-            // Find or create answer
-            var answer = session.Answers.FirstOrDefault(a => a.QuestionId == request.Answer.QuestionId);
-            if (answer == null)
+            var answer = new QuizAnswer
             {
-                answer = new QuizAnswer
-                {
-                    QuizSessionId = request.SessionId,
-                    QuestionId = request.Answer.QuestionId,
-                    QuestionType = question.QuestionType
-                };
-                session.Answers.Add(answer);
-            }
+                QuizSessionId = request.SessionId,
+                QuestionText = question.Text,
+                QuestionType = questionType,
+                StudentAnswer = request.Answer.SelectedOptionText ?? request.Answer.AnswerContent ?? "",
+                CorrectAnswer = correctAnswer,
+                IsCorrect = isCorrect,
+                XpAwarded = xpAwarded,
+                HintUsed = request.Answer.HintUsed
+            };
 
-            answer.SelectedOptionId = question.QuestionType == QuestionType.Essay ? null : request.Answer.SelectedOptionId;
-            answer.AnswerContent = request.Answer.AnswerContent;
-            answer.IsCorrect = isCorrect;
-            answer.XpAwarded = xpAwarded;
-            answer.HintUsed = request.Answer.HintUsed;
+            session.Answers.Add(answer);
+
+            // Update running totals
+            session.CorrectAnswers = session.Answers.Count(a => a.IsCorrect == true);
+            session.WrongAnswers = session.Answers.Count(a => a.IsCorrect == false);
+            session.UnansweredCount = quizData.Questions.Count - session.Answers.Count;
 
             await _quizRepository.UpdateAsync(session, cancellationToken);
 
             var response = new SubmitAnswerResponse
             {
-                QuestionId = question.Id,
+                QuestionNumber = request.Answer.QuestionNumber,
                 IsCorrect = isCorrect,
-                CorrectOptionId = correctOptionId,
+                CorrectAnswerText = correctAnswer,
                 XpAwarded = xpAwarded
             };
 
@@ -83,6 +93,26 @@ namespace Elara.Application.Features.Quiz.Commands.SubmitAnswer
                 Data = response,
                 Message = "Answer submitted successfully."
             };
+        }
+
+        private class AIQuizResult
+        {
+            public string Title { get; set; } = string.Empty;
+            public List<AIQuestion> Questions { get; set; } = new();
+        }
+
+        private class AIQuestion
+        {
+            public string Text { get; set; } = string.Empty;
+            public string Type { get; set; } = string.Empty;
+            public string Hint { get; set; } = string.Empty;
+            public List<AIOption>? Options { get; set; }
+        }
+
+        private class AIOption
+        {
+            public string Text { get; set; } = string.Empty;
+            public bool IsCorrect { get; set; }
         }
     }
 }

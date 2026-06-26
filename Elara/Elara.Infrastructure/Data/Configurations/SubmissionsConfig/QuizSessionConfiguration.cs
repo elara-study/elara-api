@@ -34,41 +34,37 @@ namespace Elara.Infrastructure.Data.Configurations.SubmissionsConfig
             builder.Property(s => s.UnansweredCount)
                 .HasDefaultValue(0);
 
+            builder.Property(s => s.QuestionsJson)
+                .HasColumnType("text");
+
             builder.Property(s => s.ElaraInsight)
-                .HasMaxLength(1000);
-
-            builder.Property(s => s.WeakTopics)
-                .HasMaxLength(500);
-
-            builder.Property(s => s.InsightRecommendation)
-                .HasMaxLength(500);
+                .HasColumnType("text");
 
             builder.Property(s => s.StudentId)
                 .IsRequired();
 
-            builder.Property(s => s.AssignmentId)
-                .IsRequired();
-
-            // Indexes
             builder.HasIndex(s => s.StudentId)
                 .HasDatabaseName("IX_QuizSessions_StudentId");
-
-            builder.HasIndex(s => s.AssignmentId)
-                .HasDatabaseName("IX_QuizSessions_AssignmentId");
 
             builder.HasIndex(s => new { s.StudentId, s.Status })
                 .HasDatabaseName("IX_QuizSessions_StudentId_Status");
 
-            // Relationships
             builder.HasOne(s => s.Student)
                 .WithMany(st => st.QuizSessions)
                 .HasForeignKey(s => s.StudentId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasOne(s => s.Assignment)
+            builder.HasOne(s => s.ProblemSet)
                 .WithMany()
-                .HasForeignKey(s => s.AssignmentId)
-                .OnDelete(DeleteBehavior.Restrict); 
+                .HasForeignKey(s => s.ProblemSetId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
+            builder.HasOne(s => s.Module)
+                .WithMany()
+                .HasForeignKey(s => s.ModuleId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
         }
     }
 }

@@ -13,7 +13,7 @@ namespace Elara.Application.Features.Quiz.Queries.GetHistory
         private readonly IMapper _mapper;
 
         public GetQuizHistoryQueryHandler(
-            IQuizRepository quizRepository, 
+            IQuizRepository quizRepository,
             ICurrentUserService currentUserService,
             IMapper mapper)
         {
@@ -28,10 +28,10 @@ namespace Elara.Application.Features.Quiz.Queries.GetHistory
             if (userId == null) throw new Exception("User not authenticated");
 
             var (sessions, totalCount) = await _quizRepository.GetStudentQuizHistoryAsync(
-                userId.Value, 
-                request.LessonId, 
-                request.Page, 
-                request.PageSize, 
+                userId.Value,
+                request.ModuleId,
+                request.Page,
+                request.PageSize,
                 cancellationToken);
 
             var sessionDtos = _mapper.Map<List<QuizHistoryDto>>(sessions);

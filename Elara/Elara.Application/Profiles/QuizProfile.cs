@@ -1,8 +1,9 @@
 using AutoMapper;
+using Elara.Application.Common.Gamification;
 using Elara.Application.Features.Quiz.DTOs;
-using Elara.Domain.Entities.Educational;
 using Elara.Domain.Entities.Submissions;
 using Elara.Domain.Entities.Users;
+using System.Text.Json;
 
 namespace Elara.Application.Profiles
 {
@@ -12,58 +13,70 @@ namespace Elara.Application.Profiles
         {
             CreateMap<QuizSession, QuizSessionDto>()
                 .ForMember(dest => dest.SessionId, opt => opt.MapFrom(src => src.Id))
-                .ForMember(dest => dest.ModuleName, opt => opt.MapFrom(src => src.Assignment.Topic.ModuleName ?? "General Module"))
-                .ForMember(dest => dest.LessonTitle, opt => opt.MapFrom(src => src.Assignment.Lesson != null ? src.Assignment.Lesson.Title : src.Assignment.Title))
-                .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.Assignment.Topic.Subject.Name))
-                .ForMember(dest => dest.TotalQuestions, opt => opt.MapFrom(src => src.Assignment.Questions.Count));
-
-            CreateMap<Question, QuizQuestionDto>()
-                .ForMember(dest => dest.QuestionId, opt => opt.MapFrom(src => src.Id))
-                .ForMember(dest => dest.QuestionType, opt => opt.MapFrom(src => src.QuestionType.ToString()))
-                .ForMember(dest => dest.DifficultyLevel, opt => opt.MapFrom(src => src.DifficultyLevel.ToString()))
-                .ForMember(dest => dest.HasHint, opt => opt.MapFrom(src => src.Hints.Any()));
-
-            CreateMap<QuestionOption, QuestionOptionDto>()
-                .ForMember(dest => dest.OptionId, opt => opt.MapFrom(src => src.Id));
+                .ForMember(dest => dest.ModuleName, opt => opt.MapFrom(src => src.Module != null ? src.Module.Title : ""))
+                .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.Module != null && src.Module.Subject != null ? src.Module.Subject.Name : ""))
+                .ForMember(dest => dest.TotalQuestions, opt => opt.MapFrom(src => GetQuestionCount(src.QuestionsJson)))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
 
             CreateMap<QuizSession, QuizResultDto>()
                 .ForMember(dest => dest.SessionId, opt => opt.MapFrom(src => src.Id))
-                .ForMember(dest => dest.QuizTitle, opt => opt.MapFrom(src => src.Assignment.Title))
-                .ForMember(dest => dest.LessonTitle, opt => opt.MapFrom(src => src.Assignment.Lesson != null ? src.Assignment.Lesson.Title : ""))
-                .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.Assignment.Topic.Subject.Name))
+                .ForMember(dest => dest.QuizTitle, opt => opt.MapFrom(src => GetQuizTitle(src.QuestionsJson)))
                 .ForMember(dest => dest.Results, opt => opt.MapFrom(src => src))
                 .ForMember(dest => dest.StudentProgress, opt => opt.MapFrom(src => src.Student))
-                .ForMember(dest => dest.ElaraInsight, opt => opt.MapFrom(src => new ElaraInsightDto { 
-                    Message = src.ElaraInsight ?? "", 
-                    Recommendation = src.InsightRecommendation ?? "",
-                    WeakTopics = (src.WeakTopics ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries).ToList()
-                }));
+                .ForMember(dest => dest.ElaraInsight, opt => opt.MapFrom(src => src.ElaraInsight));
 
             CreateMap<QuizSession, QuizStatsDto>()
-                .ForMember(dest => dest.TotalQuestions, opt => opt.MapFrom(src => src.Assignment.Questions.Count))
-                .ForMember(dest => dest.AccuracyPercentage, opt => opt.MapFrom(src => src.Assignment.Questions.Count > 0 
-                    ? (double)src.CorrectAnswers / src.Assignment.Questions.Count * 100 : 0))
-                .ForPath(dest => dest.XpBreakdown.BaseXP, opt => opt.MapFrom(src => src.XpEarned)) 
-                .ForPath(dest => dest.XpBreakdown.FinalXP, opt => opt.MapFrom(src => src.XpEarned));
-
-            CreateMap<Student, StudentProgressDto>();
-
-            CreateMap<Assignment, GeneratedQuizDto>()
-                .ForMember(dest => dest.AssignmentId, opt => opt.MapFrom(src => src.Id))
-                .ForMember(dest => dest.TotalQuestions, opt => opt.MapFrom(src => src.Questions.Count))
-                .ForMember(dest => dest.TopicName, opt => opt.MapFrom(src => src.Topic.Title))
-                .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.Topic.Subject.Name))
-                .ForMember(dest => dest.DifficultyLevel, opt => opt.MapFrom(src => src.DifficultyLevel.ToString()));
-
-            CreateMap<Hint, HintDto>()
-                .ForMember(dest => dest.HintId, opt => opt.MapFrom(src => src.Id));
+                .ForMember(dest => dest.TotalQuestions, opt => opt.MapFrom(src => GetQuestionCount(src.QuestionsJson)))
+                .ForMember(dest => dest.AccuracyPercentage, opt => opt.MapFrom(src => CalcAccuracy(src)));
+            CreateMap<Student, StudentProgressDto>()
+                .ForMember(dest => dest.Level, opt => opt.MapFrom(src => Elara.Application.Common.Gamification.StudentGamification.CalculateLevel(src.TotalXP)));
 
             CreateMap<QuizSession, QuizHistoryDto>()
                 .ForMember(dest => dest.SessionId, opt => opt.MapFrom(src => src.Id))
-                .ForMember(dest => dest.QuizTitle, opt => opt.MapFrom(src => src.Assignment.Title))
-                .ForMember(dest => dest.AccuracyPercentage, opt => opt.MapFrom(src => src.Assignment.Questions.Count > 0 
-                    ? (double)src.CorrectAnswers / src.Assignment.Questions.Count * 100 : 0))
-                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
+                .ForMember(dest => dest.QuizTitle, opt => opt.MapFrom(src => GetQuizTitle(src.QuestionsJson)))
+                .ForMember(dest => dest.AccuracyPercentage, opt => opt.MapFrom(src => CalcAccuracy(src)))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+                .ForMember(dest => dest.ModuleName, opt => opt.MapFrom(src => src.Module != null ? src.Module.Title : ""));
+        }
+
+        private static double CalcAccuracy(QuizSession src)
+        {
+            var total = GetQuestionCount(src.QuestionsJson);
+            return total > 0 ? (double)src.CorrectAnswers / total * 100 : 0;
+        }
+
+        private static int GetQuestionCount(string? questionsJson)
+        {
+            if (string.IsNullOrEmpty(questionsJson)) return 0;
+            try
+            {
+                var data = JsonSerializer.Deserialize<AIQuizResult>(questionsJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                return data?.Questions?.Count ?? 0;
+            }
+            catch { return 0; }
+        }
+
+        private static string GetQuizTitle(string? questionsJson)
+        {
+            if (string.IsNullOrEmpty(questionsJson)) return "Quiz";
+            try
+            {
+                var data = JsonSerializer.Deserialize<AIQuizResult>(questionsJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                return data?.Title ?? "Quiz";
+            }
+            catch { return "Quiz"; }
+        }
+
+        private class AIQuizResult
+        {
+            public string Title { get; set; } = string.Empty;
+            public List<AIQuestion> Questions { get; set; } = new();
+        }
+
+        private class AIQuestion
+        {
+            public string Text { get; set; } = string.Empty;
+            public string Type { get; set; } = string.Empty;
         }
     }
 }

@@ -16,72 +16,52 @@ namespace Elara.Persistence.Repositories.Quiz
         {
             return await _context.QuizSessions
                 .Include(s => s.Student)
-                .Include(s => s.Assignment)
-                    .ThenInclude(a => a.Topic)
-                        .ThenInclude(t => t.Subject)
-                .Include(s => s.Assignment)
-                    .ThenInclude(a => a.Questions)
+                .Include(s => s.Module)
+                    .ThenInclude(m => m.Subject)
                 .Include(s => s.Answers)
                 .FirstOrDefaultAsync(s => s.Id == sessionId, cancellationToken);
         }
 
-        public async Task<List<Question>> GetQuestionsWithOptionsAsync(int assignmentId, CancellationToken cancellationToken = default)
+        public async Task<QuizAnswer?> GetAnswerAsync(int sessionId, int questionIndex, CancellationToken cancellationToken = default)
         {
-            return await _context.Questions
-                .Include(q => q.Options)
-                .Include(q => q.Hints)
-                .Where(q => q.AssignmentId == assignmentId)
-                .OrderBy(q => q.Id)
-                .ToListAsync(cancellationToken);
+            var session = await _context.QuizSessions
+                .Include(s => s.Answers)
+                .FirstOrDefaultAsync(s => s.Id == sessionId, cancellationToken);
+
+            if (session?.Answers == null || questionIndex >= session.Answers.Count)
+                return null;
+
+            return session.Answers.ElementAt(questionIndex);
         }
 
-        public async Task<QuizAnswer?> GetAnswerAsync(int sessionId, int questionId, CancellationToken cancellationToken = default)
+        public async Task<ProblemSet?> GetProblemSetWithDetailsAsync(int problemSetId, CancellationToken cancellationToken = default)
         {
-            return await _context.QuizAnswers
-                .FirstOrDefaultAsync(a => a.QuizSessionId == sessionId && a.QuestionId == questionId, cancellationToken);
-        }
-
-        public async Task<Assignment?> GetAssignmentWithDetailsAsync(int assignmentId, CancellationToken cancellationToken = default)
-        {
-            return await _context.Assignments
-                .Include(a => a.Topic)
+            return await _context.ProblemSets
+                .Include(a => a.Module)
                     .ThenInclude(t => t.Subject)
                 .Include(a => a.Questions)
-                .FirstOrDefaultAsync(a => a.Id == assignmentId, cancellationToken);
+                .FirstOrDefaultAsync(a => a.Id == problemSetId, cancellationToken);
         }
 
         public async Task<QuizSession?> GetSessionWithDetailsAsync(int sessionId, CancellationToken cancellationToken = default)
         {
             return await _context.QuizSessions
                 .Include(s => s.Student)
-                .Include(s => s.Assignment)
-                    .ThenInclude(a => a.Lesson)
-                .Include(s => s.Assignment)
-                    .ThenInclude(a => a.Topic)
-                        .ThenInclude(t => t.Subject)
-                .Include(s => s.Assignment)
-                    .ThenInclude(a => a.Questions)
+                .Include(s => s.Module)
+                .Include(s => s.Answers)
                 .FirstOrDefaultAsync(s => s.Id == sessionId, cancellationToken);
         }
 
-        public async Task<Question?> GetQuestionWithDetailsAsync(int questionId, CancellationToken cancellationToken = default)
-        {
-            return await _context.Questions
-                .Include(q => q.Options)
-                .Include(q => q.Hints)
-                .FirstOrDefaultAsync(q => q.Id == questionId, cancellationToken);
-        }
-
         public async Task<(List<QuizSession> sessions, int totalCount)> GetStudentQuizHistoryAsync(
-            Guid studentId, int? lessonId, int page, int pageSize, CancellationToken cancellationToken = default)
+            Guid studentId, int? moduleId, int page, int pageSize, CancellationToken cancellationToken = default)
         {
             var query = _context.QuizSessions
-                .Include(s => s.Assignment)
+                .Include(s => s.Module)
                 .Where(s => s.StudentId == studentId);
 
-            if (lessonId.HasValue)
+            if (moduleId.HasValue)
             {
-                query = query.Where(s => s.Assignment.LessonId == lessonId.Value);
+                query = query.Where(s => s.ModuleId == moduleId.Value);
             }
 
             var totalCount = await query.CountAsync(cancellationToken);

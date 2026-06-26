@@ -1,9 +1,8 @@
-using AutoMapper;
 using Elara.Application.Common.Interfaces;
-using Elara.Application.Contracts.Persistence;
 using Elara.Application.Contracts.Persistence.Quiz;
 using Elara.Application.Features.Quiz.DTOs;
 using Elara.Domain.Entities.Submissions;
+using System.Text.Json;
 using MediatR;
 
 namespace Elara.Application.Features.Quiz.Commands.AskForHint
@@ -11,85 +10,79 @@ namespace Elara.Application.Features.Quiz.Commands.AskForHint
     public class AskForHintCommandHandler : IRequestHandler<AskForHintCommand, HintDto>
     {
         private readonly IQuizRepository _quizRepository;
-        private readonly IAsyncRepository<Hint, int> _hintRepository;
         private readonly IGeminiService _geminiService;
-        private readonly ICurrentUserService _currentUserService;
-        private readonly IMapper _mapper;
 
         public AskForHintCommandHandler(
-            IQuizRepository quizRepository, 
-            IAsyncRepository<Hint, int> hintRepository,
-            IGeminiService geminiService,
-            ICurrentUserService currentUserService,
-            IMapper mapper)
+            IQuizRepository quizRepository,
+            IGeminiService geminiService)
         {
             _quizRepository = quizRepository;
-            _hintRepository = hintRepository;
             _geminiService = geminiService;
-            _currentUserService = currentUserService;
-            _mapper = mapper;
         }
 
         public async Task<HintDto> Handle(AskForHintCommand request, CancellationToken cancellationToken)
         {
-            var userId = _currentUserService.UserId
-                ?? throw new Exception("User must be authenticated");
-            
-            var question = await _quizRepository.GetQuestionWithDetailsAsync(request.QuestionId, cancellationToken);
-            if (question == null) throw new Exception("Question not found");
+            var session = await _quizRepository.GetSessionWithDetailsAsync(request.SessionId, cancellationToken);
+            if (session == null || string.IsNullOrEmpty(session.QuestionsJson))
+                throw new Exception("Session or questions not found");
 
-            var hint = question.Hints
-                .OrderByDescending(h => h.StudentId == userId) 
-                .ThenBy(h => h.StudentId == null)             
-                .FirstOrDefault();
-      
-            if (hint == null)
+            var quizData = JsonSerializer.Deserialize<AIQuizResult>(session.QuestionsJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            if (quizData?.Questions == null || request.QuestionNumber < 1 || request.QuestionNumber > quizData.Questions.Count)
+                throw new Exception("Invalid question number");
+
+            var question = quizData.Questions[request.QuestionNumber - 1];
+
+            string hintContent;
+
+            if (!string.IsNullOrEmpty(question.Hint))
             {
-                // Generate AI Hint using question details
-                var optionsText = string.Join(", ", question.Options.Select(o => o.Text));
-                var prompt = $@"Provide a subtle educational hint for the following question. 
-                             Do NOT give the answer. 
+                hintContent = question.Hint;
+            }
+            else
+            {
+                var optionsText = string.Join(", ", question.Options?.Select(o => o.Text) ?? new List<string>());
+                var prompt = $@"Provide a subtle educational hint for the following question.
+                             Do NOT give the answer.
                              Question: {question.Text}
                              Options: {optionsText}
                              Requirement: The hint should be helpful but not direct. Keep it short.";
 
-                var aiHintContent = await _geminiService.GenerateResponseAsync(prompt, "", [], cancellationToken);
-                
-                hint = new Hint
-                {
-                    Content = aiHintContent.Trim(),
-                    QuestionId = question.Id,
-                    StudentId = userId, 
-                    IsAIGenerated = true,
-                    HintLevel = 1 
-                };
-
-                await _hintRepository.AddAsync(hint, cancellationToken);
+                hintContent = await _geminiService.GenerateResponseAsync(prompt, "", [], cancellationToken);
+                hintContent = hintContent.Trim();
             }
 
-            var session = await _quizRepository.GetSessionWithAnswersAsync(request.SessionId, cancellationToken);
-            if (session == null) throw new Exception("Session not found");
-
-            var answer = session.Answers.FirstOrDefault(a => a.QuestionId == request.QuestionId);
-            if (answer == null)
+            // Mark hint as used
+            var existingAnswer = session.Answers.FirstOrDefault(a => a.QuestionText == question.Text);
+            if (existingAnswer != null)
             {
-                session.Answers.Add(new QuizAnswer
-                {
-                    QuizSessionId = request.SessionId,
-                    QuestionId = request.QuestionId,
-                    QuestionType = question.QuestionType,
-                    HintUsed = true,
-                    IsCorrect = null
-                });
+                existingAnswer.HintUsed = true;
+                await _quizRepository.UpdateAsync(session, cancellationToken);
             }
-            else
+
+            return new HintDto
             {
-                answer.HintUsed = true;
-            }
+                Content = hintContent,
+                HintLevel = 1
+            };
+        }
 
-            await _quizRepository.UpdateAsync(session, cancellationToken);
+        private class AIQuizResult
+        {
+            public string Title { get; set; } = string.Empty;
+            public List<AIQuestion> Questions { get; set; } = new();
+        }
 
-            return _mapper.Map<HintDto>(hint);
+        private class AIQuestion
+        {
+            public string Text { get; set; } = string.Empty;
+            public string Type { get; set; } = string.Empty;
+            public string Hint { get; set; } = string.Empty;
+            public List<AIOption>? Options { get; set; }
+        }
+
+        private class AIOption
+        {
+            public string Text { get; set; } = string.Empty;
         }
     }
 }

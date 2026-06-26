@@ -2,11 +2,9 @@ using Asp.Versioning;
 using Elara.Application.Features.Quiz.Commands.AskForHint;
 using Elara.Application.Features.Quiz.Commands.FinishQuiz;
 using Elara.Application.Features.Quiz.Commands.GenerateQuiz;
-using Elara.Application.Features.Quiz.Commands.StartQuiz;
 using Elara.Application.Features.Quiz.Commands.SubmitAnswer;
 using Elara.Application.Features.Quiz.DTOs;
 using Elara.Application.Features.Quiz.Queries.GetHistory;
-using Elara.Application.Features.Quiz.Queries.GetQuestions;
 using Elara.Application.Responses;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -39,35 +37,11 @@ namespace Elara.API.Controllers
             });
         }
 
-        [HttpPost("{assignmentId}/start")]
-        [ProducesResponseType(typeof(BaseResponse<QuizSessionDto>), StatusCodes.Status201Created)]
-        public async Task<IActionResult> StartQuiz(int assignmentId)
-        {
-            var result = await _mediator.Send(new StartQuizSessionCommand { AssignmentId = assignmentId });
-            return StatusCode(StatusCodes.Status201Created, new BaseResponse<QuizSessionDto>
-            {
-                Message = "Quiz session started successfully.",
-                Data = result
-            });
-        }
-
-        [HttpGet("{assignmentId}/questions")]
-        [ProducesResponseType(typeof(BaseResponse<QuizQuestionsListDto>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetQuestions(int assignmentId)
-        {
-            var result = await _mediator.Send(new GetQuizQuestionsQuery { AssignmentId = assignmentId });
-            return Ok(new BaseResponse<QuizQuestionsListDto>
-            {
-                Message = "Questions retrieved successfully.",
-                Data = result
-            });
-        }
-
-        [HttpPost("sessions/{sessionId}/questions/{questionId}/hint")]
+        [HttpPost("sessions/{sessionId}/questions/{questionNumber}/hint")]
         [ProducesResponseType(typeof(BaseResponse<HintDto>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetHint(int sessionId, int questionId)
+        public async Task<IActionResult> GetHint(int sessionId, int questionNumber)
         {
-            var result = await _mediator.Send(new AskForHintCommand { SessionId = sessionId, QuestionId = questionId });
+            var result = await _mediator.Send(new AskForHintCommand { SessionId = sessionId, QuestionNumber = questionNumber });
             return Ok(new BaseResponse<HintDto>
             {
                 Message = "Hint retrieved successfully.",
@@ -80,7 +54,7 @@ namespace Elara.API.Controllers
         public async Task<IActionResult> SubmitAnswer(int sessionId, [FromBody] SubmitAnswerRequest request)
         {
             var result = await _mediator.Send(new SubmitQuizAnswerCommand { SessionId = sessionId, Answer = request });
-            return Ok(result); 
+            return Ok(result);
         }
 
         [HttpPost("sessions/{sessionId}/complete")]

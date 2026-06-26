@@ -1,4 +1,3 @@
-
 namespace Elara.Application.Features.Quiz.DTOs
 {
     public class QuizHistoryListDto
@@ -15,5 +14,6 @@ namespace Elara.Application.Features.Quiz.DTOs
         public int XpEarned { get; set; }
         public double AccuracyPercentage { get; set; }
         public string Status { get; set; } = string.Empty;
+        public string ModuleName { get; set; } = string.Empty;
     }
 }

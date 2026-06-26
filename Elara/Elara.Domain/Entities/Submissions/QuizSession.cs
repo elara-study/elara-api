@@ -16,18 +16,22 @@ namespace Elara.Domain.Entities.Submissions
         public int WrongAnswers { get; set; } = 0;
         public int UnansweredCount { get; set; } = 0;
 
-        // AI insight
+        // AI ephemeral quiz — serialized JSON of questions
+        public string? QuestionsJson { get; set; }
+
         public string? ElaraInsight { get; set; }
-        public string? WeakTopics { get; set; }       
-        public string? InsightRecommendation { get; set; }
 
-        // Foreign Keys
         public Guid StudentId { get; set; }
-        public int AssignmentId { get; set; }
 
-        // Navigation Properties
+        // For teacher-created problem sets
+        public int? ProblemSetId { get; set; }
+
+        // For AI-generated quizzes scoped to a module
+        public int? ModuleId { get; set; }
+
         public virtual Student Student { get; set; } = null!;
-        public virtual Assignment Assignment { get; set; } = null!;
+        public virtual ProblemSet? ProblemSet { get; set; }
+        public virtual Module? Module { get; set; }
         public virtual ICollection<QuizAnswer> Answers { get; set; } = [];
     }
 }
