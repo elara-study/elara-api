@@ -1,6 +1,7 @@
 using Elara.Application.Features.Users.Teachers.Queries.GetTeacherClasses;
 using Elara.Application.Features.Users.Students.Queries.GetStudentGroups;
 using Elara.Application.Features.Users.Teachers.Queries.GetGroupStudents;
+using Elara.Application.Features.Users.Students.Queries.GetStudentGroupModules;
 using Elara.Domain.Entities.Administrative;
 using System;
 using System.Collections.Generic;
@@ -25,5 +26,6 @@ namespace Elara.Application.Contracts.Persistence.Administrative
         Task<int?> GetInternalIdByPublicIdAsync(Guid publicId, Guid teacherId, CancellationToken cancellationToken = default);
         Task<List<GetGroupStudentsResponse>> GetStudentsInClassAsync(Guid classPublicId, Guid teacherId, CancellationToken cancellationToken = default);
         Task<List<Guid>> GetStudentIdsByClassIdAsync(int classId, CancellationToken cancellationToken = default);
+        Task<GetStudentGroupModulesResponse?> GetStudentGroupModulesAsync(Guid studentId, Guid groupPublicId, CancellationToken cancellationToken = default);
     }
 }

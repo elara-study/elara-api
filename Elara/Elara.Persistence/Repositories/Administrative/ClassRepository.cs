@@ -1,5 +1,6 @@
 using Elara.Application.Contracts.Persistence.Administrative;
 using Elara.Application.Features.Users.Students.Queries.GetStudentGroups;
+using Elara.Application.Features.Users.Students.Queries.GetStudentGroupModules;
 using Elara.Domain.Entities.Administrative;
 using Elara.Domain.Entities.JunctionTables;
 using Elara.Infrastructure.Data;
@@ -70,11 +71,11 @@ namespace Elara.Persistence.Repositories.Administrative
                         {
                             Total = c.Roadmap == null
                                 ? 0
-                                : c.Roadmap.Topics.SelectMany(t => t.Lessons).Count(),
+                                : c.Roadmap.Modules.SelectMany(t => t.Homeworks).Count(),
                             Completed = c.Roadmap == null
                                 ? 0
                                 : (int)Math.Round(
-                                    c.Roadmap.Topics.SelectMany(t => t.Lessons).Count()
+                                    c.Roadmap.Modules.SelectMany(t => t.Homeworks).Count()
                                     * (completionRate / 100.0))
                         }
                     }
@@ -104,7 +105,7 @@ namespace Elara.Persistence.Repositories.Administrative
                     StudentsCount = c.StudentClasses.Count(sc => sc.IsActive),
                     TotalLessons = c.Roadmap == null
                         ? 0
-                        : c.Roadmap.Topics.SelectMany(t => t.Lessons).Count()
+                        : c.Roadmap.Modules.SelectMany(t => t.Homeworks).Count()
                 })
                 .FirstOrDefaultAsync(
                     cancellationToken);
@@ -204,6 +205,29 @@ namespace Elara.Persistence.Repositories.Administrative
             
             return result;
         }
+
+        public async Task<GetStudentGroupModulesResponse?> GetStudentGroupModulesAsync(Guid studentId, Guid groupPublicId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Classes
+                .AsNoTracking()
+                .Where(c => c.PublicId == groupPublicId && !c.IsDeleted)
+                .Where(c => c.StudentClasses.Any(sc => sc.StudentId == studentId && sc.IsActive))
+                .Select(c => new GetStudentGroupModulesResponse
+                {
+                    GroupId = c.PublicId,
+                    GroupName = c.ClassName,
+                    Modules = c.Roadmap == null
+                        ? new List<ModuleDto>()
+                        : c.Roadmap.Modules.Select(m => new ModuleDto
+                        {
+                            Id = m.Id,
+                            Title = m.Title,
+                            Description = m.Description
+                        }).ToList()
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
         public async Task<List<GetGroupStudentsResponse>> GetStudentsInClassAsync(Guid classPublicId, Guid teacherId, CancellationToken cancellationToken = default)
         {
             var query = from sc in _context.StudentClasses
