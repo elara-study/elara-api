@@ -4,9 +4,8 @@ namespace Elara.Application.Models.Users
 {
     public class LatestQuizSessionReadModel
     {
-        public int TopicId { get; set; }
-        public string? TopicTitle { get; set; }
-        public string? AssignmentTitle { get; set; }
+        public int? ModuleId { get; set; }
+        public string? ModuleTitle { get; set; }
     }
 
     public class TodayQuizSessionReadModel

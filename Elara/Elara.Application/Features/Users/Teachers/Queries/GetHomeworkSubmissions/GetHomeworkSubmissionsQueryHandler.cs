@@ -8,20 +8,20 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetHomeworkSubmissio
 {
     public class GetHomeworkSubmissionsQueryHandler : IRequestHandler<GetHomeworkSubmissionsQuery, List<HomeworkSubmissionDto>>
     {
-        private readonly IAsyncRepository<Assignment, int> _assignmentRepository;
+        private readonly IAsyncRepository<ProblemSet, int> _problemSetRepository;
         private readonly IAsyncRepository<StudentSubmission, int> _submissionRepository;
         private readonly IAsyncRepository<Question, int> _questionRepository;
         private readonly IIdentityService _identityService;
         private readonly IAsyncRepository<StudentSubmissionAnswer, int> _answerRepository;
 
         public GetHomeworkSubmissionsQueryHandler(
-            IAsyncRepository<Assignment, int> assignmentRepository,
+            IAsyncRepository<ProblemSet, int> problemSetRepository,
             IAsyncRepository<StudentSubmission, int> submissionRepository,
             IAsyncRepository<Question, int> questionRepository,
             IIdentityService identityService,
             IAsyncRepository<StudentSubmissionAnswer, int> answerRepository)
         {
-            _assignmentRepository = assignmentRepository;
+            _problemSetRepository = problemSetRepository;
             _submissionRepository = submissionRepository;
             _questionRepository = questionRepository;
             _identityService = identityService;
@@ -30,17 +30,17 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetHomeworkSubmissio
 
         public async Task<List<HomeworkSubmissionDto>> Handle(GetHomeworkSubmissionsQuery request, CancellationToken cancellationToken)
         {
-            var assignment = await _assignmentRepository.GetByIdAsync(request.AssignmentId, cancellationToken);
-            if (assignment == null)
+            var problemSet = await _problemSetRepository.GetByIdAsync(request.ProblemSetId, cancellationToken);
+            if (problemSet == null)
             {
-                throw new KeyNotFoundException($"Assignment with id {request.AssignmentId} not found.");
+                throw new KeyNotFoundException($"ProblemSet with id {request.ProblemSetId} not found.");
             }
 
             var assignmentSubmissions = await _submissionRepository.FindAsync(
-                s => s.AssignmentId == request.AssignmentId, cancellationToken);
+                s => s.ProblemSetId == request.ProblemSetId, cancellationToken);
 
             var totalProblems = await _questionRepository.CountAsync(
-                 q => q.AssignmentId == request.AssignmentId, cancellationToken);
+                 q => q.ProblemSetId == request.ProblemSetId, cancellationToken);
 
             var isRatedRequest = request.Status.Equals("rated", StringComparison.OrdinalIgnoreCase);
 
@@ -63,7 +63,7 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetHomeworkSubmissio
                         StudentName = studentName,
                         AvatarUrl = avatarUrl,
                         Score = sub.Score,
-                        MaxScore = assignment.MaxScore
+                        MaxScore = problemSet.MaxScore
                     });
                 }
                 else if (!isRatedRequest && !isRated)

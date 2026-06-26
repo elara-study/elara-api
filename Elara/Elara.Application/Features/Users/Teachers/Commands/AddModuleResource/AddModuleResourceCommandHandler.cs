@@ -1,35 +1,35 @@
 using Elara.Application.Common.Interfaces;
 using Elara.Application.Contracts.Persistence;
-using Elara.Application.Features.Users.Teachers.Queries.GetTopicResources;
+using Elara.Application.Features.Users.Teachers.Queries.GetModuleResources;
 using Elara.Domain.Entities.Educational;
 using Elara.Domain.Enums;
 using MediatR;
 
-namespace Elara.Application.Features.Users.Teachers.Commands.AddTopicResource
+namespace Elara.Application.Features.Users.Teachers.Commands.AddModuleResource
 {
-    public class AddTopicResourceCommandHandler : IRequestHandler<AddTopicResourceCommand, ResourceItemDto>
+    public class AddModuleResourceCommandHandler : IRequestHandler<AddModuleResourceCommand, ResourceItemDto>
     {
-        private readonly IAsyncRepository<TopicResource, int> _resourceRepository;
-        private readonly IAsyncRepository<Topic, int> _topicRepository;
+        private readonly IAsyncRepository<ModuleResource, int> _resourceRepository;
+        private readonly IAsyncRepository<Module, int> _moduleRepository;
         private readonly IFileStorageService _fileStorageService;
 
-        public AddTopicResourceCommandHandler(
-            IAsyncRepository<TopicResource, int> resourceRepository,
-            IAsyncRepository<Topic, int> topicRepository,
+        public AddModuleResourceCommandHandler(
+            IAsyncRepository<ModuleResource, int> resourceRepository,
+            IAsyncRepository<Module, int> moduleRepository,
             IFileStorageService fileStorageService)
         {
             _resourceRepository = resourceRepository;
-            _topicRepository = topicRepository;
+            _moduleRepository = moduleRepository;
             _fileStorageService = fileStorageService;
         }
 
-        public async Task<ResourceItemDto> Handle(AddTopicResourceCommand request, CancellationToken cancellationToken)
+        public async Task<ResourceItemDto> Handle(AddModuleResourceCommand request, CancellationToken cancellationToken)
         {
-            var topic = await _topicRepository.GetByIdAsync(request.TopicId, cancellationToken);
+            var module = await _moduleRepository.GetByIdAsync(request.ModuleId, cancellationToken);
 
-            if (topic == null)
+            if (module == null)
             {
-                throw new KeyNotFoundException($"Topic with id {request.TopicId} not found.");
+                throw new KeyNotFoundException($"Module with id {request.ModuleId} not found.");
             }
 
             if (request.File == null || request.File.Length == 0)
@@ -51,7 +51,6 @@ namespace Elara.Application.Features.Users.Teachers.Commands.AddTopicResource
                 throw new InvalidOperationException("Failed to upload file.", ex);
             }
 
-            // Calculate size for display
             string sizeOrDuration = "";
             if (request.ResourceType == ResourceType.Pdf || request.ResourceType == ResourceType.Image)
             {
@@ -59,10 +58,10 @@ namespace Elara.Application.Features.Users.Teachers.Commands.AddTopicResource
                 sizeOrDuration = $"{sizeInMb:F1} MB";
             }
 
-            var resource = new TopicResource
+            var resource = new ModuleResource
             {
                 Title = request.Title,
-                TopicId = request.TopicId,
+                ModuleId = request.ModuleId,
                 Url = url,
                 PublicId = publicId,
                 ResourceType = request.ResourceType,

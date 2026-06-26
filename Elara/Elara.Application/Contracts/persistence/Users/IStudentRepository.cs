@@ -17,9 +17,9 @@ namespace Elara.Application.Contracts.Persistence.Users
         Task<Dictionary<Guid, string>> GetStudentNamesAsync(IEnumerable<Guid> studentIds, CancellationToken cancellationToken = default);
         Task<int> GetMasteredSubjectsCountAsync(Guid studentId, CancellationToken cancellationToken = default);
         Task<int> GetPerfectDaysStreakAsync(Guid studentId, CancellationToken cancellationToken = default);
-        Task<LatestQuizSessionReadModel?> GetLatestQuizSessionWithTopicAsync(Guid studentId, CancellationToken cancellationToken = default);
-        Task<int> GetTotalLessonsInTopicAsync(int topicId, CancellationToken cancellationToken = default);
-        Task<int> GetCompletedLessonsInTopicAsync(Guid studentId, int topicId, CancellationToken cancellationToken = default);
+        Task<LatestQuizSessionReadModel?> GetLatestQuizSessionWithModuleAsync(Guid studentId, CancellationToken cancellationToken = default);
+        Task<int> GetTotalHomeworkInModuleAsync(int moduleId, CancellationToken cancellationToken = default);
+        Task<int> GetCompletedHomeworkInModuleAsync(Guid studentId, int moduleId, CancellationToken cancellationToken = default);
         Task<IReadOnlyList<TodayQuizSessionReadModel>> GetTodayQuizSessionsAsync(Guid studentId, DateTime todayStart, CancellationToken cancellationToken = default);
         Task<IReadOnlyList<EnrolledClassReadModel>> GetStudentEnrolledClassesAsync(Guid studentId, CancellationToken cancellationToken = default);
     }

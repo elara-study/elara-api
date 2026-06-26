@@ -8,14 +8,14 @@ namespace Elara.Application.Features.Users.Teachers.Commands.RateStudentSubmissi
     public class RateStudentSubmissionCommandHandler : IRequestHandler<RateStudentSubmissionCommand, bool>
     {
         private readonly IAsyncRepository<StudentSubmission, int> _submissionRepository;
-        private readonly IAsyncRepository<Assignment, int> _assignmentRepository;
+        private readonly IAsyncRepository<ProblemSet, int> _problemSetRepository;
 
         public RateStudentSubmissionCommandHandler(
             IAsyncRepository<StudentSubmission, int> submissionRepository,
-            IAsyncRepository<Assignment, int> assignmentRepository)
+            IAsyncRepository<ProblemSet, int> problemSetRepository)
         {
             _submissionRepository = submissionRepository;
-            _assignmentRepository = assignmentRepository;
+            _problemSetRepository = problemSetRepository;
         }
 
         public async Task<bool> Handle(RateStudentSubmissionCommand request, CancellationToken cancellationToken)
@@ -26,15 +26,15 @@ namespace Elara.Application.Features.Users.Teachers.Commands.RateStudentSubmissi
                 throw new KeyNotFoundException($"Submission with id {request.SubmissionId} not found.");
             }
 
-            var assignment = await _assignmentRepository.GetByIdAsync(submission.AssignmentId, cancellationToken);
-            if (assignment == null)
+            var problemSet = await _problemSetRepository.GetByIdAsync(submission.ProblemSetId, cancellationToken);
+            if (problemSet == null)
             {
-                throw new KeyNotFoundException($"Assignment with id {submission.AssignmentId} not found.");
+                throw new KeyNotFoundException($"ProblemSet with id {submission.ProblemSetId} not found.");
             }
 
-            if (request.AwardedXp < 0 || request.AwardedXp > assignment.MaxScore)
+            if (request.AwardedXp < 0 || request.AwardedXp > problemSet.MaxScore)
             {
-                throw new InvalidOperationException($"Awarded XP must be between 0 and {assignment.MaxScore}.");
+                throw new InvalidOperationException($"Awarded XP must be between 0 and {problemSet.MaxScore}.");
             }
 
             submission.Score = request.AwardedXp;

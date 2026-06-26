@@ -40,7 +40,7 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetTeacherProfile
                     TotalStudents = profile.TotalStudents,
                     ActiveGroups = profile.ActiveGroups,
                     RoadmapsCreated = profile.RoadmapsCreated,
-                    LessonsPublished = profile.LessonsPublished
+                    LessonsPublished = profile.HomeworkPublished
                 }
             };
         }

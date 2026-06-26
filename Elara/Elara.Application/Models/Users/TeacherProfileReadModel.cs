@@ -12,6 +12,6 @@ namespace Elara.Application.Models.Users
         public int TotalStudents { get; set; }
         public int ActiveGroups { get; set; }
         public int RoadmapsCreated { get; set; }
-        public int LessonsPublished { get; set; }
+        public int HomeworkPublished { get; set; }
     }
 }

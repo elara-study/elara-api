@@ -55,7 +55,7 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetTeacherHome
                 Id = r.Id.ToString(),
                 Title = r.Name,
                 Subject = r.Subject?.Name ?? "",
-                LessonsCount = r.Topics?.SelectMany(t => t.Lessons).Count() ?? 0,
+                LessonsCount = r.Modules?.SelectMany(t => t.Homeworks).Count() ?? 0,
                 Grade = (int)r.Grade
             }).ToList();
 
@@ -100,7 +100,7 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetTeacherHome
                 response.PendingTasks.Add(new TeacherPendingTaskDto
                 {
                     Id = pending.Id.ToString(),
-                    Title = pending.Assignment?.Title ?? "Homework",
+                    Title = pending.ProblemSet?.Title ?? "Homework",
                     Meta = $"Submission from {profile?.Name ?? "Unknown Student"}",
                     Type = "rating"
                 });

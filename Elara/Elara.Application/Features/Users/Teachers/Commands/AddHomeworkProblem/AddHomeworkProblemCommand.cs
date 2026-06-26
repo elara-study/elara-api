@@ -5,13 +5,13 @@ namespace Elara.Application.Features.Users.Teachers.Commands.AddHomeworkProblem
 {
     public class AddHomeworkProblemCommand : IRequest<HomeworkProblemDto>
     {
-        public AddHomeworkProblemCommand(int assignmentId, string description)
+        public AddHomeworkProblemCommand(int problemSetId, string description)
         {
-            AssignmentId = assignmentId;
+            ProblemSetId = problemSetId;
             Description = description;
         }
 
-        public int AssignmentId { get; }
+        public int ProblemSetId { get; }
         public string Description { get; }
     }
 }

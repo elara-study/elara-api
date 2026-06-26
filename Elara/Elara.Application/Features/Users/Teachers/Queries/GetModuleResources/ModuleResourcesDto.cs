@@ -1,9 +1,9 @@
-namespace Elara.Application.Features.Users.Teachers.Queries.GetTopicResources
+namespace Elara.Application.Features.Users.Teachers.Queries.GetModuleResources
 {
-    public class TopicResourcesDto
+    public class ModuleResourcesDto
     {
-        public int TopicId { get; set; }
-        public string TopicName { get; set; } = string.Empty;
+        public int ModuleId { get; set; }
+        public string ModuleName { get; set; } = string.Empty;
         public List<ResourceItemDto> Videos { get; set; } = new();
         public List<ResourceItemDto> Pdfs { get; set; } = new();
         public List<ResourceItemDto> Images { get; set; } = new();

@@ -10,20 +10,20 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetStudentSubmission
     {
         private readonly IAsyncRepository<StudentSubmission, int> _submissionRepository;
         private readonly IAsyncRepository<StudentSubmissionAnswer, int> _answerRepository;
-        private readonly IAsyncRepository<Assignment, int> _assignmentRepository;
+        private readonly IAsyncRepository<ProblemSet, int> _problemSetRepository;
         private readonly IAsyncRepository<Question, int> _questionRepository;
         private readonly IIdentityService _identityService;
 
         public GetStudentSubmissionQueryHandler(
             IAsyncRepository<StudentSubmission, int> submissionRepository,
             IAsyncRepository<StudentSubmissionAnswer, int> answerRepository,
-            IAsyncRepository<Assignment, int> assignmentRepository,
+            IAsyncRepository<ProblemSet, int> problemSetRepository,
             IAsyncRepository<Question, int> questionRepository,
             IIdentityService identityService)
         {
             _submissionRepository = submissionRepository;
             _answerRepository = answerRepository;
-            _assignmentRepository = assignmentRepository;
+            _problemSetRepository = problemSetRepository;
             _questionRepository = questionRepository;
             _identityService = identityService;
         }
@@ -36,18 +36,18 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetStudentSubmission
                 throw new KeyNotFoundException($"Submission with id {request.SubmissionId} not found.");
             }
 
-            var assignment = await _assignmentRepository.GetByIdAsync(submission.AssignmentId, cancellationToken);
+            var assignment = await _problemSetRepository.GetByIdAsync(submission.ProblemSetId, cancellationToken);
             if (assignment == null)
             {
-                throw new KeyNotFoundException($"Assignment with id {submission.AssignmentId} not found.");
+                throw new KeyNotFoundException($"ProblemSet with id {submission.ProblemSetId} not found.");
             }
 
             var submissionAnswers = await _answerRepository.FindAsync(
                 a => a.StudentSubmissionId == request.SubmissionId, cancellationToken);
           
-            var assignmentId = submission.AssignmentId;
+            var assignmentId = submission.ProblemSetId;
             var allQuestions = await _questionRepository.FindAsync(
-                q => q.AssignmentId == submission.AssignmentId, cancellationToken);
+                q => q.ProblemSetId == submission.ProblemSetId, cancellationToken);
 
             var studentName = await _identityService.GetUserNameByIdAsync(submission.StudentId) ?? $"Student {submission.StudentId.ToString()[..8]}";
 

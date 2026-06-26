@@ -2,8 +2,8 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetHomeworkOverview
 {
     public class HomeworkOverviewDto
     {
-        public int AssignmentId { get; set; }
-        public string Topic { get; set; } = string.Empty;
+        public int ProblemSetId { get; set; }
+        public string ModuleName { get; set; } = string.Empty;
         public HomeworkOverviewStats Overview { get; set; } = new();
         public List<HomeworkProblemDto> Problems { get; set; } = new();
     }

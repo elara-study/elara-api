@@ -3,60 +3,59 @@ using Elara.Domain.Entities.Educational;
 using Elara.Domain.Enums;
 using MediatR;
 
-
 namespace Elara.Application.Features.Users.Teachers.Queries.GetHomeworkOverview
 {
     public class GetHomeworkOverviewQueryHandler : IRequestHandler<GetHomeworkOverviewQuery, HomeworkOverviewDto>
     {
-        private readonly IAsyncRepository<Topic, int> _topicRepository;
-        private readonly IAsyncRepository<Assignment, int> _assignmentRepository;
+        private readonly IAsyncRepository<Module, int> _moduleRepository;
+        private readonly IAsyncRepository<ProblemSet, int> _problemSetRepository;
         private readonly IAsyncRepository<Question, int> _questionRepository;
 
         public GetHomeworkOverviewQueryHandler(
-            IAsyncRepository<Topic, int> topicRepository,
-            IAsyncRepository<Assignment, int> assignmentRepository,
+            IAsyncRepository<Module, int> moduleRepository,
+            IAsyncRepository<ProblemSet, int> problemSetRepository,
             IAsyncRepository<Question, int> questionRepository)
         {
-            _topicRepository = topicRepository;
-            _assignmentRepository = assignmentRepository;
+            _moduleRepository = moduleRepository;
+            _problemSetRepository = problemSetRepository;
             _questionRepository = questionRepository;
         }
 
         public async Task<HomeworkOverviewDto> Handle(GetHomeworkOverviewQuery request, CancellationToken cancellationToken)
         {
-            var topic = await _topicRepository.GetByIdAsync(request.TopicId, cancellationToken);
-            if (topic == null)
+            var module = await _moduleRepository.GetByIdAsync(request.ModuleId, cancellationToken);
+            if (module == null)
             {
-                throw new KeyNotFoundException($"Topic with id {request.TopicId} not found.");
+                throw new KeyNotFoundException($"Module with id {request.ModuleId} not found.");
             }
 
-            var assignment = (await _assignmentRepository.FindAsync(
-                a => a.TopicId == request.TopicId && a.AssignmentType == AssignmentType.Homework,
-                cancellationToken)).FirstOrDefault(); 
+            var problemSet = (await _problemSetRepository.FindAsync(
+                a => a.ModuleId == request.ModuleId && a.ProblemSetType == ProblemSetType.ProblemSet,
+                cancellationToken)).FirstOrDefault();
 
-            if (assignment == null)
+            if (problemSet == null)
             {
-                assignment = new Assignment
+                problemSet = new ProblemSet
                 {
-                    Title = $"{topic.Title} Homework",
-                    TopicId = request.TopicId,
-                    AssignmentType = AssignmentType.Homework,
+                    Title = $"{module.Title} Homework",
+                    ModuleId = request.ModuleId,
+                    ProblemSetType = ProblemSetType.ProblemSet,
                     MaxScore = 100,
                     DifficultyLevel = DifficultyLevel.Medium,
                     DueDate = DateTime.UtcNow.AddDays(7),
                     Questions = new List<Question>()
                 };
-                assignment = await _assignmentRepository.AddAsync(assignment, cancellationToken);
+                problemSet = await _problemSetRepository.AddAsync(problemSet, cancellationToken);
             }
 
             var questions = await _questionRepository.FindAsync(
-                q => q.AssignmentId == assignment.Id, cancellationToken);
+                q => q.ProblemSetId == problemSet.Id, cancellationToken);
 
             var dto = new HomeworkOverviewDto
             {
-                AssignmentId = assignment.Id,
-                Topic = topic.Title,
-                Overview = new HomeworkOverviewStats { TotalScore = assignment.MaxScore }
+                ProblemSetId = problemSet.Id,
+                ModuleName = module.Title,
+                Overview = new HomeworkOverviewStats { TotalScore = problemSet.MaxScore }
             };
 
             foreach (var q in questions)

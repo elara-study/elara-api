@@ -39,28 +39,27 @@ namespace Elara.Application.Features.Users.Students.Queries.GetStudentHome
                 }
             };
 
-            // Get Recent Activity
-            var recentSession = await _studentRepository.GetLatestQuizSessionWithTopicAsync(userId, cancellationToken);
+            var recentSession = await _studentRepository.GetLatestQuizSessionWithModuleAsync(userId, cancellationToken);
 
-            if (recentSession != null)
+            if (recentSession != null && recentSession.ModuleId.HasValue)
             {
-                int topicId = recentSession.TopicId;
+                int moduleId = recentSession.ModuleId.Value;
                 
-                int totalLessons = await _studentRepository.GetTotalLessonsInTopicAsync(topicId, cancellationToken);
-                int completedLessons = await _studentRepository.GetCompletedLessonsInTopicAsync(userId, topicId, cancellationToken);
+                int totalHomework = await _studentRepository.GetTotalHomeworkInModuleAsync(moduleId, cancellationToken);
+                int completedHomework = await _studentRepository.GetCompletedHomeworkInModuleAsync(userId, moduleId, cancellationToken);
 
-                int progressPercentage = totalLessons > 0 ? (int)Math.Round((double)completedLessons / totalLessons * 100) : 0;
+                int progressPercentage = totalHomework > 0 ? (int)Math.Round((double)completedHomework / totalHomework * 100) : 0;
                 
-                string courseName = recentSession.TopicTitle ?? recentSession.AssignmentTitle ?? "Recent Activity";
+                string courseName = recentSession.ModuleTitle ?? "Recent Activity";
 
                 response.RecentActivity = new HomeRecentActivityDto
                 {
-                    CourseId = topicId,
+                    CourseId = moduleId,
                     CourseName = courseName,
-                    CurrentLessonNumber = completedLessons + 1 > totalLessons ? totalLessons : completedLessons + 1,
-                    TotalLessons = totalLessons,
+                    CurrentLessonNumber = completedHomework + 1 > totalHomework ? totalHomework : completedHomework + 1,
+                    TotalLessons = totalHomework,
                     ProgressPercentage = progressPercentage,
-                    ActionUrl = $"/topics/{topicId}"
+                    ActionUrl = $"/modules/{moduleId}"
                 };
             }
 

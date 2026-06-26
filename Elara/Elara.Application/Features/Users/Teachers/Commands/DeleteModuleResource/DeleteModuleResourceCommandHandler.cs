@@ -2,18 +2,18 @@ using Elara.Application.Contracts.Persistence;
 using Elara.Domain.Entities.Educational;
 using MediatR;
 
-namespace Elara.Application.Features.Users.Teachers.Commands.DeleteTopicResource
+namespace Elara.Application.Features.Users.Teachers.Commands.DeleteModuleResource
 {
-    public class DeleteTopicResourceCommandHandler : IRequestHandler<DeleteTopicResourceCommand, bool>
+    public class DeleteModuleResourceCommandHandler : IRequestHandler<DeleteModuleResourceCommand, bool>
     {
-        private readonly IAsyncRepository<TopicResource, int> _resourceRepository;
+        private readonly IAsyncRepository<ModuleResource, int> _resourceRepository;
 
-        public DeleteTopicResourceCommandHandler(IAsyncRepository<TopicResource, int> resourceRepository)
+        public DeleteModuleResourceCommandHandler(IAsyncRepository<ModuleResource, int> resourceRepository)
         {
             _resourceRepository = resourceRepository;
         }
 
-        public async Task<bool> Handle(DeleteTopicResourceCommand request, CancellationToken cancellationToken)
+        public async Task<bool> Handle(DeleteModuleResourceCommand request, CancellationToken cancellationToken)
         {
             var resource = await _resourceRepository.GetByIdAsync(request.ResourceId, cancellationToken);
             if (resource == null)
@@ -22,7 +22,6 @@ namespace Elara.Application.Features.Users.Teachers.Commands.DeleteTopicResource
             }
 
             await _resourceRepository.DeleteAsync(resource, cancellationToken);
-
             return true;
         }
     }

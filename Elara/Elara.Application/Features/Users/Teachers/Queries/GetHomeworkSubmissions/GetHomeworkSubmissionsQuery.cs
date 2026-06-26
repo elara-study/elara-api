@@ -4,7 +4,7 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetHomeworkSubmissio
 {
     public class GetHomeworkSubmissionsQuery : IRequest<List<HomeworkSubmissionDto>>
     {
-        public int AssignmentId { get; set; }
+        public int ProblemSetId { get; set; }
         public string Status { get; set; } = "unrated"; // "unrated" or "rated"
     }
 }

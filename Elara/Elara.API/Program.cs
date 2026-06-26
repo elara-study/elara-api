@@ -22,15 +22,15 @@ using (var scope = app.Services.CreateScope())
     var context = services.GetRequiredService<AppDbContext>();
     
     Console.WriteLine("🔍 Checking database content...");
-    await Elara.Persistence.DbInitializer.SeedAsync(context);
+    await Elara.Persistence.DbInitializer.RunMigrationsAsync(context);
     
-    var lessonCount = await context.Lessons.CountAsync();
-    Console.WriteLine($"📚 Database Ready! Total Lessons found: {lessonCount}");
+    var moduleCount = await context.Modules.CountAsync();
+    Console.WriteLine($"📚 Database Ready! Total Modules found: {moduleCount}");
     
-    if (lessonCount > 0)
+    if (moduleCount > 0)
     {
-        var firstLesson = await context.Lessons.OrderBy(l => l.Id).FirstOrDefaultAsync();
-        Console.WriteLine($"💡 Hint: Use Lesson ID '{firstLesson.Id}' for your first quiz test.");
+        var firstModule = await context.Modules.OrderBy(m => m.Id).FirstOrDefaultAsync();
+        Console.WriteLine($"💡 Hint: Use Module ID '{firstModule.Id}' for your first quiz test.");
     }
 }
 

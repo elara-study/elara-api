@@ -7,7 +7,6 @@ using Elara.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using static Elara.Application.Common.Constants.DailyGoalConstants;
 
-
 namespace Elara.Persistence.Repositories.Users
 {
     public class StudentRepository : BaseRepository<Student, Guid>, IStudentRepository
@@ -52,12 +51,12 @@ namespace Elara.Persistence.Repositories.Users
 
         public async Task<IReadOnlyList<Guid>> GetTeacherIdsByStudentIdAsync(Guid studentId, CancellationToken cancellationToken = default)
         {
-            return await _context.Set<Elara.Domain.Entities.JunctionTables.StudentTeacher>()
+            return await _context.Set<StudentTeacher>()
                 .Where(st => st.StudentId == studentId)
                 .Select(st => st.TeacherId)
                 .ToListAsync(cancellationToken);
         }
-            
+
         public async Task<Student?> GetStudentWithAchievementsAsync(Guid studentId, CancellationToken cancellationToken)
         {
             return await _context.Students
@@ -134,7 +133,7 @@ namespace Elara.Persistence.Repositories.Users
                 .Where(s => s.IsActive
                      && s.Id != studentId
                      && (s.TotalXP > studentTotalXp
-                     || (s.TotalXP == studentTotalXp 
+                     || (s.TotalXP == studentTotalXp
                      && s.CreatedAt < studentCreatedAt)))
                 .CountAsync(cancellationToken) + 1;
         }
@@ -150,7 +149,7 @@ namespace Elara.Persistence.Repositories.Users
         {
             return await _context.QuizSessions
                 .Where(s => s.StudentId == studentId && s.Status == QuizSessionStatus.Completed)
-                .Select(s => s.Assignment.Topic.SubjectId)
+                .Select(s => s.Module.SubjectId)
                 .Distinct()
                 .CountAsync(cancellationToken);
         }
@@ -158,7 +157,7 @@ namespace Elara.Persistence.Repositories.Users
         public async Task<int> GetPerfectDaysStreakAsync(Guid studentId, CancellationToken cancellationToken = default)
         {
             var sevenDaysAgo = DateTime.UtcNow.Date.AddDays(-7);
-            
+
             var recentSessions = await _context.QuizSessions
                 .Where(s => s.StudentId == studentId && s.Status == QuizSessionStatus.Completed && s.CompletedAt >= sevenDaysAgo)
                 .ToListAsync(cancellationToken);
@@ -171,18 +170,17 @@ namespace Elara.Persistence.Repositories.Users
             int streak = 0;
             var checkDate = DateTime.UtcNow.Date;
 
-            // Check if today is a perfect day
             bool isTodayPerfect = false;
             if (sessionsByDate.TryGetValue(checkDate, out var todaySessions))
             {
-                bool has3Lessons = todaySessions.Count >= Elara.Application.Common.Constants.DailyGoalConstants.LessonsTarget;
-                bool has80PercentScore = todaySessions.Any(s => 
+                bool has3Lessons = todaySessions.Count >= LessonsTarget;
+                bool has80PercentScore = todaySessions.Any(s =>
                 {
                     var totalQuestions = s.CorrectAnswers + s.WrongAnswers + s.UnansweredCount;
-                    return totalQuestions > 0 && ((double)s.CorrectAnswers / totalQuestions) >= Elara.Application.Common.Constants.DailyGoalConstants.ScoreTarget;
+                    return totalQuestions > 0 && ((double)s.CorrectAnswers / totalQuestions) >= ScoreTarget;
                 });
                 var totalDurationMinutes = todaySessions.Sum(s => (s.CompletedAt!.Value - s.StartedAt).TotalMinutes);
-                bool has15MinsPractice = totalDurationMinutes >= Elara.Application.Common.Constants.DailyGoalConstants.PracticeMinutesTarget;
+                bool has15MinsPractice = totalDurationMinutes >= PracticeMinutesTarget;
 
                 isTodayPerfect = has3Lessons && has80PercentScore && has15MinsPractice;
             }
@@ -194,7 +192,6 @@ namespace Elara.Persistence.Repositories.Users
 
             var remainingDaysToCheck = isTodayPerfect ? 6 : 7;
 
-            // Always check previous days starting from yesterday
             checkDate = DateTime.UtcNow.Date.AddDays(-1);
 
             for (int i = 0; i < remainingDaysToCheck; i++)
@@ -202,13 +199,13 @@ namespace Elara.Persistence.Repositories.Users
                 if (sessionsByDate.TryGetValue(checkDate, out var daySessions))
                 {
                     bool has3Lessons = daySessions.Count >= LessonsTarget;
-                    
-                    bool has80PercentScore = daySessions.Any(s => 
+
+                    bool has80PercentScore = daySessions.Any(s =>
                     {
                         var totalQuestions = s.CorrectAnswers + s.WrongAnswers + s.UnansweredCount;
                         return totalQuestions > 0 && ((double)s.CorrectAnswers / totalQuestions) >= ScoreTarget;
                     });
-                    
+
                     var totalDurationMinutes = daySessions.Sum(s => (s.CompletedAt!.Value - s.StartedAt).TotalMinutes);
                     bool has15MinsPractice = totalDurationMinutes >= PracticeMinutesTarget;
 
@@ -219,47 +216,45 @@ namespace Elara.Persistence.Repositories.Users
                     }
                     else
                     {
-                        break; // Streak broken
+                        break;
                     }
                 }
                 else
                 {
-                    break; // Streak broken
+                    break;
                 }
             }
 
             return streak;
         }
 
-        public async Task<LatestQuizSessionReadModel?> GetLatestQuizSessionWithTopicAsync(Guid studentId, CancellationToken cancellationToken = default)
+        public async Task<LatestQuizSessionReadModel?> GetLatestQuizSessionWithModuleAsync(Guid studentId, CancellationToken cancellationToken = default)
         {
             return await _context.QuizSessions
-                .Where(s => s.StudentId == studentId && !s.IsDeleted)
+                .Where(s => s.StudentId == studentId && s.ModuleId != null && !s.IsDeleted)
                 .OrderByDescending(s => s.StartedAt)
                 .Select(s => new LatestQuizSessionReadModel
                 {
-                    TopicId = s.Assignment.TopicId,
-                    TopicTitle = s.Assignment.Topic.Title,
-                    AssignmentTitle = s.Assignment.Title
+                    ModuleId = s.ModuleId,
+                    ModuleTitle = s.Module.Title
                 })
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
-        public async Task<int> GetTotalLessonsInTopicAsync(int topicId, CancellationToken cancellationToken = default)
+        public async Task<int> GetTotalHomeworkInModuleAsync(int moduleId, CancellationToken cancellationToken = default)
         {
-            return await _context.Lessons
-                .CountAsync(l => l.TopicId == topicId && !l.IsDeleted, cancellationToken);
+            return await _context.Homework
+                .CountAsync(l => l.ModuleId == moduleId && !l.IsDeleted, cancellationToken);
         }
 
-        public async Task<int> GetCompletedLessonsInTopicAsync(Guid studentId, int topicId, CancellationToken cancellationToken = default)
+        public async Task<int> GetCompletedHomeworkInModuleAsync(Guid studentId, int moduleId, CancellationToken cancellationToken = default)
         {
             return await _context.QuizSessions
-                .Where(s => s.StudentId == studentId 
-                         && s.Status == QuizSessionStatus.Completed 
-                         && s.Assignment.TopicId == topicId
-                         && s.Assignment.LessonId != null
+                .Where(s => s.StudentId == studentId
+                         && s.Status == QuizSessionStatus.Completed
+                         && s.ModuleId == moduleId
                          && !s.IsDeleted)
-                .Select(s => s.Assignment.LessonId)
+                .Select(s => s.ModuleId)
                 .Distinct()
                 .CountAsync(cancellationToken);
         }

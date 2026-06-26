@@ -8,30 +8,30 @@ namespace Elara.Application.Features.Users.Teachers.Commands.AddHomeworkProblem
 {
     public class AddHomeworkProblemCommandHandler : IRequestHandler<AddHomeworkProblemCommand, HomeworkProblemDto>
     {
-        private readonly IAsyncRepository<Assignment, int> _assignmentRepository;
+        private readonly IAsyncRepository<ProblemSet, int> _problemSetRepository;
         private readonly IAsyncRepository<Question, int> _questionRepository;
 
         public AddHomeworkProblemCommandHandler(
-            IAsyncRepository<Assignment, int> assignmentRepository,
+            IAsyncRepository<ProblemSet, int> problemSetRepository,
             IAsyncRepository<Question, int> questionRepository)
         {
-            _assignmentRepository = assignmentRepository;
+            _problemSetRepository = problemSetRepository;
             _questionRepository = questionRepository;
         }
 
         public async Task<HomeworkProblemDto> Handle(AddHomeworkProblemCommand request, CancellationToken cancellationToken)
         {
-            var assignment = await _assignmentRepository.GetByIdAsync(request.AssignmentId, cancellationToken);
-            if (assignment == null || assignment.AssignmentType != AssignmentType.Homework)
+            var problemSet = await _problemSetRepository.GetByIdAsync(request.ProblemSetId, cancellationToken);
+            if (problemSet == null || problemSet.ProblemSetType != ProblemSetType.ProblemSet)
             {
-                throw new KeyNotFoundException($"Homework assignment with id {request.AssignmentId} not found.");
+                throw new KeyNotFoundException($"Homework assignment with id {request.ProblemSetId} not found.");
             }
 
             var question = new Question
             {
                 Text = request.Description,
                 QuestionType = QuestionType.Essay,
-                AssignmentId = request.AssignmentId,
+                ProblemSetId = request.ProblemSetId,
                 DifficultyLevel = DifficultyLevel.Medium,
                 Options = new List<QuestionOption>()
             };
