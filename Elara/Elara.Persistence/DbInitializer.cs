@@ -9,7 +9,7 @@ namespace Elara.Persistence
     {
         public static async Task SeedAsync(AppDbContext context)
         {
-            await context.Database.EnsureCreatedAsync();
+            await context.Database.MigrateAsync();
 
             if (!await context.Lessons.AnyAsync())
             {

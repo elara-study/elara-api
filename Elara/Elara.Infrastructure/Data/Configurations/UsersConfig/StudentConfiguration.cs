@@ -21,7 +21,8 @@ namespace Elara.Infrastructure.Data.Configurations.UsersConfig
 
             builder.Property(s => s.LearningLevel)
                 .HasMaxLength(50)
-                .HasDefaultValue(LearningLevel.Beginner);
+                .HasDefaultValue(LearningLevel.Beginner)
+                .HasSentinel(default(LearningLevel));
 
             builder.HasOne<ApplicationUser>()
                 .WithOne()

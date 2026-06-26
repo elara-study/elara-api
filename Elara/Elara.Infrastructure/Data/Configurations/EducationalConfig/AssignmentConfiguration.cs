@@ -37,12 +37,14 @@ namespace Elara.Infrastructure.Data.Configurations.EducationalConfig
             builder.Property(a => a.DifficultyLevel)
                 .IsRequired()
                 .HasConversion<string>()
-                .HasDefaultValue(DifficultyLevel.Easy);
+                .HasDefaultValue(DifficultyLevel.Easy)
+                .HasSentinel(default(DifficultyLevel));
 
             builder.Property(a => a.AssignmentType)
                 .IsRequired()
                 .HasConversion<string>()
-                .HasDefaultValue(AssignmentType.Quiz);
+                .HasDefaultValue(AssignmentType.Quiz)
+                .HasSentinel(default(AssignmentType));
 
             builder.Property(a => a.TopicId)
                 .IsRequired();

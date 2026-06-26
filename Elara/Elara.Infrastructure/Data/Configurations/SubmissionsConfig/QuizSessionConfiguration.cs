@@ -16,7 +16,8 @@ namespace Elara.Infrastructure.Data.Configurations.SubmissionsConfig
             builder.Property(s => s.Status)
                 .IsRequired()
                 .HasConversion<string>()
-                .HasDefaultValue(QuizSessionStatus.InProgress);
+                .HasDefaultValue(QuizSessionStatus.InProgress)
+                .HasSentinel(default(QuizSessionStatus));
 
             builder.Property(s => s.StartedAt)
                 .IsRequired();

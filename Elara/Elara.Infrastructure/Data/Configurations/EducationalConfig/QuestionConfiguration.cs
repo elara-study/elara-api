@@ -25,7 +25,8 @@ namespace Elara.Infrastructure.Data.Configurations.EducationalConfig
             builder.Property(q => q.DifficultyLevel)
                 .IsRequired()
                 .HasConversion<string>()
-                .HasDefaultValue(DifficultyLevel.Easy);
+                .HasDefaultValue(DifficultyLevel.Easy)
+                .HasSentinel(default(DifficultyLevel));
 
             builder.Property(q => q.IsAIGenerated)
                 .HasDefaultValue(false);
