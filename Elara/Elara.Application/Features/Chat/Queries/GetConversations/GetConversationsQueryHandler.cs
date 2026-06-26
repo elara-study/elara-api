@@ -26,11 +26,9 @@ namespace Elara.Application.Features.Chat.Queries.GetConversations
             return conversations.Select(c => new ConversationSummaryDto
             {
                 Id = c.Id,
-                Subject = c.Subject,
+                Title = c.Title,
                 CreatedAt = c.CreatedAt,
-                LastMessage = c.Messages
-                    .OrderByDescending(m => m.CreatedAt)
-                    .FirstOrDefault()?.Content
+                UpdatedAt = c.UpdatedAt ?? c.CreatedAt
             }).ToList();
         }
     }

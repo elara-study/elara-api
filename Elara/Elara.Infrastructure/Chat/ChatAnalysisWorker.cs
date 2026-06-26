@@ -72,7 +72,7 @@ namespace Elara.Infrastructure.Chat
             {
                 ConversationId = job.ConversationId,
                 StudentId = job.StudentId,
-                Subject = job.Subject,
+                Title = job.Subject,
                 ReportText = reportText,
                 AnalyzedMessageCount = messages.Count
             }, ct);

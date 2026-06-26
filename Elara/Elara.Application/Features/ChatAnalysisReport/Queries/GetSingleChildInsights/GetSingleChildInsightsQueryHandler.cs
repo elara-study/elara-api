@@ -50,7 +50,7 @@ namespace Elara.Application.Features.ChatAnalysisReport.Queries.GetSingleChildIn
                 {
                     ReportId = r.PublicId,
                     ConversationId = r.ConversationId,
-                    Subject = r.Subject,
+                    Title = r.Title,
                     ReportText = r.ReportText,
                     AnalyzedMessageCount = r.AnalyzedMessageCount,
                     AnalyzedAt = r.UpdatedAt ?? r.CreatedAt

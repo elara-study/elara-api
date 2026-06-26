@@ -51,6 +51,8 @@ namespace Elara.Application.Features.Chat.Commands.SendMessage
             var aiReply = await _geminiService.GenerateResponseAsync(
                 request.Message, ragContext, historyDtos, cancellationToken);
 
+            conversation.UpdatedAt = DateTime.UtcNow;
+
             await _chatRepository.AddMessagesAsync(new[]
             {
                 new ChatMessage

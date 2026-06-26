@@ -30,6 +30,7 @@ namespace Elara.Application.Features.Chat.Queries.GetConversationHistory
             {
                 Id = conversation.Id,
                 Subject = conversation.Subject,
+                Title = conversation.Title,
                 CreatedAt = conversation.CreatedAt,
                 Messages = conversation.Messages
                     .OrderBy(m => m.CreatedAt)

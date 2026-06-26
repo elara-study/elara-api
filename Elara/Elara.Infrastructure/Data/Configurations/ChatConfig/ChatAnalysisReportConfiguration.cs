@@ -19,7 +19,7 @@ namespace Elara.Infrastructure.Data.Configurations.ChatConfig
                 .IsUnique()
                 .HasDatabaseName("IX_ChatAnalysisReports_PublicId");
 
-            builder.Property(r => r.Subject).HasMaxLength(200).IsRequired();
+            builder.Property(r => r.Title).HasMaxLength(200).IsRequired();
             builder.Property(r => r.ReportText).IsRequired();
 
             builder.HasIndex(r => r.ConversationId)

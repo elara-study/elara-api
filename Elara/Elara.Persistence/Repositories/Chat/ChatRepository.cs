@@ -30,8 +30,7 @@ namespace Elara.Persistence.Repositories.Chat
         {
             return await _context.Conversations
                 .Where(c => c.StudentId == studentId)
-                .Include(c => c.Messages.OrderByDescending(m => m.CreatedAt).Take(1))
-                .OrderByDescending(c => c.CreatedAt)
+                .OrderByDescending(c => c.UpdatedAt ?? c.CreatedAt)
                 .Skip((page - 1) * limit)
                 .Take(limit)
                 .ToListAsync(cancellationToken);
@@ -95,7 +94,7 @@ namespace Elara.Persistence.Repositories.Chat
             {
                 existing.ReportText = report.ReportText;
                 existing.AnalyzedMessageCount = report.AnalyzedMessageCount;
-                existing.Subject = report.Subject;
+                existing.Title = report.Title;
             }
             else
             {
@@ -133,12 +132,12 @@ namespace Elara.Persistence.Repositories.Chat
                 .ToListAsync(ct);
         }
 
-        public async Task<IReadOnlyList<ChatAnalysisReport>> GetReportsByStudentIdAndSubjectAsync(
-            Guid studentId, string subject, CancellationToken ct = default)
+        public async Task<IReadOnlyList<ChatAnalysisReport>> GetReportsByStudentIdAndTitleAsync(
+            Guid studentId, string title, CancellationToken ct = default)
         {
             return await _context.ChatAnalysisReports
                 .AsNoTracking()
-                .Where(r => r.StudentId == studentId && r.Subject == subject)
+                .Where(r => r.StudentId == studentId && r.Title == title)
                 .OrderByDescending(r => r.UpdatedAt ?? r.CreatedAt)
                 .ToListAsync(ct);
         }

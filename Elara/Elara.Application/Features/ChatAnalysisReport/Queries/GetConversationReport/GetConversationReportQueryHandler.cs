@@ -36,7 +36,7 @@ namespace Elara.Application.Features.ChatAnalysisReport.Queries.GetConversationR
             return new ConversationReportDto
             {
                 ReportId = report.PublicId,
-                Subject = report.Subject,
+                Title = report.Title,
                 ReportText = report.ReportText,
                 AnalyzedMessageCount = report.AnalyzedMessageCount,
                 AnalyzedAt = report.UpdatedAt ?? report.CreatedAt

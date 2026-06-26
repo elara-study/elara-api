@@ -47,7 +47,7 @@ namespace Elara.Application.Features.ChatAnalysisReport.Queries.GetStudentInsigh
                 throw new KeyNotFoundException("Student not found.");
 
             var reports = await _chatRepository
-                .GetReportsByStudentIdAndSubjectAsync(request.StudentId, subjectName, cancellationToken);
+                .GetReportsByStudentIdAndTitleAsync(request.StudentId, subjectName, cancellationToken);
 
             var studentName = await _identityService.GetUserNameByIdAsync(request.StudentId);
 

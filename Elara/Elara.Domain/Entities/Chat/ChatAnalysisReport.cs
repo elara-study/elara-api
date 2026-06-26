@@ -9,7 +9,7 @@ namespace Elara.Domain.Entities.Chat
 
         public Guid ConversationId { get; set; }
         public Guid StudentId { get; set; }
-        public string Subject { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
         public string ReportText { get; set; } = string.Empty;
         public int AnalyzedMessageCount { get; set; }
 

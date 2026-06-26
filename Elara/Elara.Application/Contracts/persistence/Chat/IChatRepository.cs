@@ -18,6 +18,6 @@ namespace Elara.Application.Contracts.Persistence.Chat
         Task<ChatAnalysisReport?> GetReportByConversationIdAsync(Guid conversationId, CancellationToken ct = default);
         Task<IReadOnlyList<ChatAnalysisReport>> GetReportsByStudentIdsAsync(IEnumerable<Guid> studentIds, CancellationToken ct = default);
         Task<IReadOnlyList<ChatAnalysisReport>> GetReportsByStudentIdAsync(Guid studentId, CancellationToken ct = default);
-        Task<IReadOnlyList<ChatAnalysisReport>> GetReportsByStudentIdAndSubjectAsync(Guid studentId, string subject, CancellationToken ct = default);
+        Task<IReadOnlyList<ChatAnalysisReport>> GetReportsByStudentIdAndTitleAsync(Guid studentId, string title, CancellationToken ct = default);
     }
 }

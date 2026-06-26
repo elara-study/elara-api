@@ -16,6 +16,10 @@ namespace Elara.Infrastructure.Data.Configurations.ChatConfig
                 .IsRequired()
                 .HasMaxLength(100);
 
+            builder.Property(c => c.Title)
+                .IsRequired()
+                .HasMaxLength(100);
+
             builder.HasMany(c => c.Messages)
                 .WithOne(m => m.Conversation)
                 .HasForeignKey(m => m.ConversationId)

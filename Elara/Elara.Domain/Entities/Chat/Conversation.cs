@@ -6,6 +6,7 @@ namespace Elara.Domain.Entities.Chat
     {
         public Guid StudentId { get; set; }
         public string Subject { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
 
         // Navigation Properties
         public virtual Student? Student { get; set; }

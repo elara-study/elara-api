@@ -26,6 +26,8 @@ namespace Elara.Application.Features.Chat.Commands.StartConversation
             var studentId = _currentUserService.UserId
                 ?? throw new UnauthorizedAccessException("Student must be authenticated.");
 
+            var title = GenerateTitle(request.Message);
+
             var ragContext = await _ragService.GetRelevantChunksAsync(
                 request.Message, request.Subject, cancellationToken);
 
@@ -37,6 +39,8 @@ namespace Elara.Application.Features.Chat.Commands.StartConversation
                 Id = Guid.NewGuid(),
                 StudentId = studentId,
                 Subject = request.Subject,
+                Title = title,
+                UpdatedAt = DateTime.UtcNow,
                 Messages = new List<ChatMessage>
                 {
                     new ChatMessage
@@ -58,8 +62,18 @@ namespace Elara.Application.Features.Chat.Commands.StartConversation
             {
                 ConversationId = conversation.Id,
                 AiReply = aiReply,
-                Subject = conversation.Subject
+                Title = conversation.Title
             };
+        }
+
+        private static string GenerateTitle(string message)
+        {
+            const int maxLength = 50;
+            var trimmed = message.Trim();
+            var title = trimmed.Length > maxLength
+                ? trimmed[..maxLength].TrimEnd() + "..."
+                : trimmed;
+            return title;
         }
     }
 }
