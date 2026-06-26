@@ -38,13 +38,11 @@ namespace Elara.Infrastructure.Data.Configurations.EducationalConfig
                 .HasDefaultValue(10)
                 .HasPrecision(5, 2);
 
-            builder.Property(q => q.AssignmentId)
+            builder.Property(q => q.ProblemSetId)
                 .IsRequired();
 
-
-            // Indexes
-            builder.HasIndex(q => q.AssignmentId)
-                .HasDatabaseName("IX_Questions_AssignmentId");
+            builder.HasIndex(q => q.ProblemSetId)
+                .HasDatabaseName("IX_Questions_ProblemSetId");
 
             builder.HasIndex(q => q.QuestionType)
                 .HasDatabaseName("IX_Questions_QuestionType");
@@ -54,9 +52,9 @@ namespace Elara.Infrastructure.Data.Configurations.EducationalConfig
 
             // Relationships
 
-            builder.HasOne(q => q.Assignment)
+            builder.HasOne(q => q.ProblemSet)
                 .WithMany(a => a.Questions)
-                .HasForeignKey(q => q.AssignmentId)
+                .HasForeignKey(q => q.ProblemSetId)
                 .OnDelete(DeleteBehavior.Cascade);
 
         }

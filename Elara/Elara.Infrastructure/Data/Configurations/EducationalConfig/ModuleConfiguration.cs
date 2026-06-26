@@ -1,19 +1,14 @@
-﻿using Elara.Domain.Entities.Educational;
+using Elara.Domain.Entities.Educational;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Elara.Infrastructure.Data.Configurations.EducationalConfig
 {
-    public class TopicConfiguration : IEntityTypeConfiguration<Topic>
+    public class ModuleConfiguration : IEntityTypeConfiguration<Module>
     {
-        public void Configure(EntityTypeBuilder<Topic> builder)
+        public void Configure(EntityTypeBuilder<Module> builder)
         {
-            builder.ToTable("Topics");
+            builder.ToTable("Modules");
 
             builder.HasKey(t => t.Id);
 
@@ -30,19 +25,16 @@ namespace Elara.Infrastructure.Data.Configurations.EducationalConfig
             builder.Property(t => t.SubjectId)
                 .IsRequired();
 
-            // Indexes
             builder.HasIndex(t => t.Title)
-                .HasDatabaseName("IX_Topics_Title");
+                .HasDatabaseName("IX_Modules_Title");
 
             builder.HasIndex(t => t.SubjectId)
-                .HasDatabaseName("IX_Topics_SubjectId");
+                .HasDatabaseName("IX_Modules_SubjectId");
 
-            // Relationships
             builder.HasOne(t => t.Subject)
-                .WithMany(s => s.Topics)
+                .WithMany(s => s.Modules)
                 .HasForeignKey(t => t.SubjectId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
-
     }
 }

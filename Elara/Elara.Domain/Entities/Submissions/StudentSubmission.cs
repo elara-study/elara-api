@@ -12,19 +12,17 @@ namespace Elara.Domain.Entities.Submissions
         public string? TeacherFeedback { get; set; }
         public string? AIFeedback { get; set; }
 
-        // Foreign Keys
         public Guid StudentId { get; set; }
-        public int AssignmentId { get; set; }
+        public int ProblemSetId { get; set; }
 
-        // Navigation Properties
         public virtual Student Student { get; set; } = null!;
-        public virtual Assignment Assignment { get; set; } = null!;
+        public virtual ProblemSet ProblemSet { get; set; } = null!;
         public virtual ICollection<StudentSubmissionAnswer> Answers { get; set; } = new List<StudentSubmissionAnswer>();
 
         // Validation
         public bool ValidateScore()
         {
-            return Score >= 0 && Score <= Assignment.MaxScore;
+            return Score >= 0 && Score <= ProblemSet.MaxScore;
         }
 
     }

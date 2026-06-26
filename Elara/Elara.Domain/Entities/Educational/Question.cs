@@ -15,11 +15,9 @@ namespace Elara.Domain.Entities.Educational
         [Range(0, 100)]
         public double Marks { get; set; } = 10;
 
-        // Foreign Key
-        public int AssignmentId { get; set; }
+        public int ProblemSetId { get; set; }
 
-        // Navigation Properties
-        public virtual Assignment Assignment { get; set; } = null!;
+        public virtual ProblemSet ProblemSet { get; set; } = null!;
         public virtual ICollection<Hint> Hints { get; set; } = [];
 
         // Options for MCQ questions only (empty for Essay questions)

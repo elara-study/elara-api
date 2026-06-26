@@ -1,8 +1,8 @@
 namespace Elara.Domain.Enums
 {
-    public enum AssignmentType
+    public enum ProblemSetType
     {
         Quiz = 1,
-        Homework = 2
+        ProblemSet = 2
     }
 }

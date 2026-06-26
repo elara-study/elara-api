@@ -32,23 +32,21 @@ namespace Elara.Infrastructure.Data.Configurations.SubmissionsConfig
             builder.Property(s => s.StudentId)
                 .IsRequired();
 
-            builder.Property(s => s.AssignmentId)
+            builder.Property(s => s.ProblemSetId)
                 .IsRequired();
 
-            // Indexes
             builder.HasIndex(s => s.StudentId)
                 .HasDatabaseName("IX_StudentSubmissions_StudentId");
 
-            builder.HasIndex(s => s.AssignmentId)
-                .HasDatabaseName("IX_StudentSubmissions_AssignmentId");
+            builder.HasIndex(s => s.ProblemSetId)
+                .HasDatabaseName("IX_StudentSubmissions_ProblemSetId");
 
-            builder.HasIndex(s => new { s.StudentId, s.AssignmentId })
-                .HasDatabaseName("IX_StudentSubmissions_StudentId_AssignmentId");
+            builder.HasIndex(s => new { s.StudentId, s.ProblemSetId })
+                .HasDatabaseName("IX_StudentSubmissions_StudentId_ProblemSetId");
 
-            // Relationships
-            builder.HasOne(s => s.Assignment)
+            builder.HasOne(s => s.ProblemSet)
                 .WithMany(a => a.Submissions)
-                .HasForeignKey(s => s.AssignmentId)
+                .HasForeignKey(s => s.ProblemSetId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(s=>s.Student)

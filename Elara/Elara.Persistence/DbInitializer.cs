@@ -11,7 +11,7 @@ namespace Elara.Persistence
         {
             await context.Database.MigrateAsync();
 
-            if (!await context.Lessons.AnyAsync())
+            if (!await context.Homework.AnyAsync())
             {
                 await Elara.Scripts.DataPopulator.Run(context);
             }

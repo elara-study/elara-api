@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Elara.Domain.Entities.Educational
 {
-    public class TopicResource : BaseEntity
+    public class ModuleResource : BaseEntity
     {
         [Required]
         [MaxLength(200)]
@@ -18,10 +18,8 @@ namespace Elara.Domain.Entities.Educational
         public string? ThumbnailUrl { get; set; }
         public string? SizeOrDurationText { get; set; }
 
-        // Foreign Key
-        public int TopicId { get; set; }
+        public int ModuleId { get; set; }
 
-        // Navigation Properties
-        public virtual Topic Topic { get; set; } = null!;
+        public virtual Module Module { get; set; } = null!;
     }
 }

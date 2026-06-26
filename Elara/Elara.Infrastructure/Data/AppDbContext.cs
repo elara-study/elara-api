@@ -28,14 +28,14 @@ namespace Elara.Infrastructure.Data
 
         #region Educational DbSets
         public DbSet<Subject> Subjects { get; set; }
-        public DbSet<Topic> Topics { get; set; }
-        public DbSet<Lesson> Lessons { get; set; }
-        public DbSet<Assignment> Assignments { get; set; }
+        public DbSet<Module> Modules { get; set; }
+        public DbSet<Homework> Homework { get; set; }
+        public DbSet<ProblemSet> ProblemSets { get; set; }
         public DbSet<Question> Questions { get; set; }
         public DbSet<Roadmap> Roadmaps { get; set; }
         public DbSet<EducationalVideo> EducationalVideos { get; set; }
         public DbSet<QuestionOption> QuestionOptions { get; set; }
-        public DbSet<TopicResource> TopicResources { get; set; }
+        public DbSet<ModuleResource> ModuleResources { get; set; }
         #endregion
 
         #region Submission DbSets
@@ -61,7 +61,7 @@ namespace Elara.Infrastructure.Data
         public DbSet<StudentParent> StudentParents { get; set; }
         public DbSet<StudentClass> StudentClasses { get; set; }
         public DbSet<StudentAchievement> StudentAchievements { get; set; }
-        public DbSet<LessonVideo> LessonVideos { get; set; }
+        public DbSet<HomeworkVideo> HomeworkVideos { get; set; }
         #endregion
 
         #region Chat DbSets

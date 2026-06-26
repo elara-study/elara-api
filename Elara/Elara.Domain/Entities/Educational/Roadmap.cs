@@ -22,7 +22,7 @@ namespace Elara.Domain.Entities.Educational
 
         public int SubjectId { get; set; }
         public Subject Subject { get; set; }
-        public virtual ICollection<Topic> Topics { get; set; }
+        public virtual ICollection<Module> Modules { get; set; }
         public virtual ICollection<Class> Classes { get; set; }
     }
 }

@@ -2,19 +2,14 @@ using Elara.Domain.Entities.Educational;
 using Elara.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Elara.Infrastructure.Data.Configurations.EducationalConfig
 {
-    public class AssignmentConfiguration : IEntityTypeConfiguration<Assignment>
+    public class ProblemSetConfiguration : IEntityTypeConfiguration<ProblemSet>
     {
-        public void Configure(EntityTypeBuilder<Assignment> builder)
+        public void Configure(EntityTypeBuilder<ProblemSet> builder)
         {
-            builder.ToTable("Assignments");
+            builder.ToTable("ProblemSets");
 
             builder.HasKey(a => a.Id);
 
@@ -40,46 +35,43 @@ namespace Elara.Infrastructure.Data.Configurations.EducationalConfig
                 .HasDefaultValue(DifficultyLevel.Easy)
                 .HasSentinel(default(DifficultyLevel));
 
-            builder.Property(a => a.AssignmentType)
+            builder.Property(a => a.ProblemSetType)
                 .IsRequired()
                 .HasConversion<string>()
-                .HasDefaultValue(AssignmentType.Quiz)
-                .HasSentinel(default(AssignmentType));
+                .HasDefaultValue(ProblemSetType.Quiz)
+                .HasSentinel(default(ProblemSetType));
 
-            builder.Property(a => a.TopicId)
+            builder.Property(a => a.ModuleId)
                 .IsRequired();
 
-            builder.Property(a => a.LessonId);
+            builder.Property(a => a.HomeworkId);
 
             builder.Property(a => a.IsAIGenerated)
                 .HasDefaultValue(false);
 
-            // Indexes
             builder.HasIndex(a => a.DueDate)
-                .HasDatabaseName("IX_Assignments_DueDate");
+                .HasDatabaseName("IX_ProblemSets_DueDate");
 
-            builder.HasIndex(a => a.TopicId)
-                .HasDatabaseName("IX_Assignments_TopicId");
+            builder.HasIndex(a => a.ModuleId)
+                .HasDatabaseName("IX_ProblemSets_ModuleId");
 
             builder.HasIndex(a => a.TeacherId)
-                .HasDatabaseName("IX_Assignments_TeacherId");
+                .HasDatabaseName("IX_ProblemSets_TeacherId");
 
-            // Relationships
-            builder.HasOne(a => a.Topic)
-                .WithMany(t => t.Assignments)
-                .HasForeignKey(a => a.TopicId)
+            builder.HasOne(a => a.Module)
+                .WithMany(t => t.ProblemSets)
+                .HasForeignKey(a => a.ModuleId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasOne(a => a.Lesson)
-                .WithMany(l => l.Assignments)
-                .HasForeignKey(a => a.LessonId)
+            builder.HasOne(a => a.Homework)
+                .WithMany(l => l.ProblemSets)
+                .HasForeignKey(a => a.HomeworkId)
                 .OnDelete(DeleteBehavior.SetNull);
 
             builder.HasOne(a => a.Teacher)
-                .WithMany(t => t.Assignments)
+                .WithMany(t => t.ProblemSets)
                 .HasForeignKey(a => a.TeacherId)
                 .OnDelete(DeleteBehavior.SetNull);
-
         }
     }
 }

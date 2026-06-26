@@ -21,7 +21,6 @@ namespace Elara.Domain.Entities.Educational
         public int DurationInSeconds { get; set; } = 0;
 
 
-        // Navigation Properties
-        public virtual ICollection<LessonVideo> LessonVideos { get; set; } = new List<LessonVideo>();
+        public virtual ICollection<HomeworkVideo> HomeworkVideos { get; set; } = new List<HomeworkVideo>();
     }
 }

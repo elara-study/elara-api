@@ -56,7 +56,7 @@ namespace Elara.Infrastructure.Data.Configurations.EducationalConfig
                 .HasForeignKey(r => r.SubjectId)
                 .OnDelete(DeleteBehavior.Cascade); 
 
-            builder.HasMany(r => r.Topics)
+            builder.HasMany(r => r.Modules)
                 .WithOne(t=>t.Roadmap)  
                 .HasForeignKey(t=>t.RoadmapId) 
                 .OnDelete(DeleteBehavior.Cascade); 
