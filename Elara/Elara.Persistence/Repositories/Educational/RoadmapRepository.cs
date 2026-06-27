@@ -11,5 +11,14 @@ namespace Elara.Persistence.Repositories.Educational
         {
 
         }
+
+        public async Task<Roadmap?> GetRoadmapWithDetailsAsync(int roadmapId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Roadmaps
+                .Where(r => r.Id == roadmapId && !r.IsDeleted)
+                .Include(r => r.Subject)
+                .Include(r => r.Modules)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
     }
 }

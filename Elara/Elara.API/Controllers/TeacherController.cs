@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using Elara.Application.Features.Users.Teachers.Commands.CreateClass;
 using Elara.Application.Features.Users.Teachers.Commands.CreateRoadmap;
+using Elara.Application.Features.Users.Teachers.Queries.GetTeacherRoadmaps;
 using Elara.Application.Features.Users.Teachers.Commands.AddAnnouncement;
 using Elara.Application.Features.Users.Teachers.Commands.DeleteAnnouncement;
 using Elara.Application.Features.Users.Teachers.Queries.GetAnnouncements;
@@ -119,6 +120,35 @@ namespace Elara.API.Controllers
             return CreatedAtAction(nameof(CreateRoadmap), new BaseResponse<CreateRoadmapResponse>
             {
                 Message = "Roadmap created successfully.",
+                Data = result
+            });
+        }
+
+        [HttpGet("roadmaps")]
+        [ProducesResponseType(typeof(BaseResponse<List<TeacherRoadmapListDto>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> GetTeacherRoadmaps(CancellationToken cancellationToken)
+        {
+            var result = await _mediator.Send(new GetTeacherRoadmapsQuery(), cancellationToken);
+            return Ok(new BaseResponse<List<TeacherRoadmapListDto>>
+            {
+                Message = "Roadmaps retrieved successfully.",
+                Data = result
+            });
+        }
+
+        [HttpGet("roadmaps/{roadmapId:int}")]
+        [ProducesResponseType(typeof(BaseResponse<TeacherRoadmapDetailDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetTeacherRoadmapDetail(int roadmapId, CancellationToken cancellationToken)
+        {
+            var result = await _mediator.Send(new GetTeacherRoadmapDetailQuery(roadmapId), cancellationToken);
+            return Ok(new BaseResponse<TeacherRoadmapDetailDto>
+            {
+                Message = "Roadmap detail retrieved successfully.",
                 Data = result
             });
         }
