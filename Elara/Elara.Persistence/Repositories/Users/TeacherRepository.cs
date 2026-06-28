@@ -138,6 +138,7 @@ namespace Elara.Persistence.Repositories.Users
                 .Include(r => r.Subject)
                 .Include(r => r.Modules)
                     .ThenInclude(t => t.Homeworks)
+                .AsSplitQuery()
                 .ToListAsync(cancellationToken);
         }
 

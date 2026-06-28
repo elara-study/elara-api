@@ -4,6 +4,6 @@ namespace Elara.Application.Contracts.Persistence.Educational
 {
     public interface ISubjectRepository : IAsyncRepository<Subject, int>
     {
-        Task<bool> ExistsAsync(int subjectId, CancellationToken cancellationToken = default);
+        Task<Subject?> GetByNameAsync(string name, CancellationToken cancellationToken = default);
     }
 }

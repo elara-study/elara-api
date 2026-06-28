@@ -11,10 +11,10 @@ namespace Elara.Persistence.Repositories.Educational
         {
         }
 
-        public async Task<bool> ExistsAsync(int subjectId, CancellationToken cancellationToken = default)
+        public async Task<Subject?> GetByNameAsync(string name, CancellationToken cancellationToken = default)
         {
             return await _context.Subjects
-                .AnyAsync(s => s.Id == subjectId && !s.IsDeleted, cancellationToken);
+                .FirstOrDefaultAsync(s => s.Name == name && !s.IsDeleted, cancellationToken);
         }
     }
 }

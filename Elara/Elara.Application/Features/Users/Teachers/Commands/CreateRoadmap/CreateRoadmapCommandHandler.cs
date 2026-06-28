@@ -39,16 +39,15 @@ namespace Elara.Application.Features.Users.Teachers.Commands.CreateRoadmap
             if (teacher == null)
                 throw new KeyNotFoundException($"Teacher with ID {teacherId} not found.");
 
-            var subjectId = (int)request.Subject;
-            var subjectExists = await _subjectRepository.ExistsAsync(subjectId, cancellationToken);
-            if (!subjectExists)
-                throw new KeyNotFoundException($"Subject with ID {subjectId} not found.");
+            var subject = await _subjectRepository.GetByNameAsync(request.Subject.ToString(), cancellationToken);
+            if (subject == null)
+                throw new KeyNotFoundException($"Subject '{request.Subject}' not found.");
 
             var roadmap = new Roadmap
             {
                 Name = request.Name,
                 Grade = (GradeLevel)request.Grade,
-                SubjectId = subjectId,
+                SubjectId = subject.Id,
                 TeacherId = teacherId,
             };
 

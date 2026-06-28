@@ -138,14 +138,14 @@ namespace Elara.API.Controllers
             });
         }
 
-        [HttpGet("roadmaps/{roadmapId:int}")]
+        [HttpGet("roadmaps/{id}")]
         [ProducesResponseType(typeof(BaseResponse<TeacherRoadmapDetailDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetTeacherRoadmapDetail(int roadmapId, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetTeacherRoadmapDetail(int id, CancellationToken cancellationToken)
         {
-            var result = await _mediator.Send(new GetTeacherRoadmapDetailQuery(roadmapId), cancellationToken);
+            var result = await _mediator.Send(new GetTeacherRoadmapDetailQuery(id), cancellationToken);
             return Ok(new BaseResponse<TeacherRoadmapDetailDto>
             {
                 Message = "Roadmap detail retrieved successfully.",
