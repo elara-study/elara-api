@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Elara.Application.Features.Users.Teachers.Commands.CreateClass;
 using Elara.Application.Features.Users.Teachers.Commands.CreateRoadmap;
 using Elara.Application.Features.Users.Teachers.Queries.GetTeacherRoadmaps;
+using Elara.Application.Features.Users.Teachers.Queries.GetModuleHomeworks;
 using Elara.Application.Features.Users.Teachers.Commands.AddAnnouncement;
 using Elara.Application.Features.Users.Teachers.Commands.DeleteAnnouncement;
 using Elara.Application.Features.Users.Teachers.Queries.GetAnnouncements;
@@ -332,6 +333,22 @@ namespace Elara.API.Controllers
             return Ok(new BaseResponse<HomeworkOverviewDto>
             {
                 Message = "Homework overview retrieved successfully.",
+                Data = result
+            });
+        }
+
+        [HttpGet("roadmaps/{roadmapId:int}/modules/{moduleId:int}/homeworks")]
+        [ProducesResponseType(typeof(BaseResponse<List<ModuleHomeworkDto>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetModuleHomeworks(int roadmapId, int moduleId, CancellationToken cancellationToken)
+        {
+            var result = await _mediator.Send(new GetModuleHomeworksQuery { RoadmapId = roadmapId, ModuleId = moduleId }, cancellationToken);
+            return Ok(new BaseResponse<List<ModuleHomeworkDto>>
+            {
+                Message = "Module homeworks retrieved successfully.",
                 Data = result
             });
         }
