@@ -254,5 +254,17 @@ namespace Elara.Persistence.Repositories.Administrative
                 .ToListAsync(cancellationToken);
         }
 
+        public async Task RemoveStudentFromClassAsync(Guid studentId, int classId, CancellationToken cancellationToken = default)
+        {
+            var studentClass = await _context.StudentClasses
+                .FirstOrDefaultAsync(sc => sc.StudentId == studentId && sc.ClassId == classId && sc.IsActive, cancellationToken);
+
+            if (studentClass != null)
+            {
+                studentClass.IsActive = false;
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+        }
+
     }
 }

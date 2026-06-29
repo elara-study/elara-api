@@ -12,6 +12,8 @@ using Elara.Application.Features.Users.Teachers.Queries.GetTeacherProfile;
 using Elara.Application.Features.Users.Teachers.Queries.GetTeacherHome;
 using Elara.Application.Features.Users.Teachers.Queries.GetGroupStudents;
 using Elara.Application.Features.Users.Teachers.Commands.AddStudentByUsername;
+using Elara.Application.Features.Users.Teachers.Commands.DeleteGroupStudent;
+using Elara.Application.Features.Users.Teachers.Commands.DeleteClass;
 using Elara.API.Controllers.Requests;
 using Elara.Application.Features.Users.Teachers.Queries.GetModuleResources;
 using Elara.Application.Features.Users.Teachers.Commands.AddModuleResource;
@@ -171,6 +173,19 @@ namespace Elara.API.Controllers
             });
         }
 
+        [HttpDelete("groups/{id:guid}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteClass(Guid id)
+        {
+            var command = new DeleteClassCommand(id);
+            await _mediator.Send(command);
+            return NoContent();
+        }
+
         [HttpPost("groups/{id:guid}/announcements")]
         [ProducesResponseType(typeof(BaseResponse<AddAnnouncementResponse>), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -248,6 +263,19 @@ namespace Elara.API.Controllers
                 Message = "Student added successfully.",
                 Data = result
             });
+        }
+
+        [HttpDelete("groups/{id:guid}/students/{studentId:guid}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteGroupStudent(Guid id, Guid studentId)
+        {
+            var command = new DeleteGroupStudentCommand(id, studentId);
+            await _mediator.Send(command);
+            return NoContent();
         }
 
         [HttpGet("students/{studentId:guid}/insights")]

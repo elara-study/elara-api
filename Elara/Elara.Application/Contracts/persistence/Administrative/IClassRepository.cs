@@ -27,5 +27,6 @@ namespace Elara.Application.Contracts.Persistence.Administrative
         Task<List<GetGroupStudentsResponse>> GetStudentsInClassAsync(Guid classPublicId, Guid teacherId, CancellationToken cancellationToken = default);
         Task<List<Guid>> GetStudentIdsByClassIdAsync(int classId, CancellationToken cancellationToken = default);
         Task<GetStudentGroupModulesResponse?> GetStudentGroupModulesAsync(Guid studentId, Guid groupPublicId, CancellationToken cancellationToken = default);
+        Task RemoveStudentFromClassAsync(Guid studentId, int classId, CancellationToken cancellationToken = default);
     }
 }
