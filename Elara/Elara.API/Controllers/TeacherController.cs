@@ -11,6 +11,7 @@ using Elara.Application.Features.Users.Teachers.Queries.GetTeacherClasses;
 using Elara.Application.Features.Users.Teachers.Queries.GetTeacherProfile;
 using Elara.Application.Features.Users.Teachers.Queries.GetTeacherHome;
 using Elara.Application.Features.Users.Teachers.Queries.GetGroupStudents;
+using Elara.Application.Features.Users.Teachers.Queries.GetGroupRoadmap;
 using Elara.Application.Features.Users.Teachers.Commands.AddStudentByUsername;
 using Elara.Application.Features.Users.Teachers.Commands.DeleteGroupStudent;
 using Elara.Application.Features.Users.Teachers.Commands.DeleteClass;
@@ -184,6 +185,23 @@ namespace Elara.API.Controllers
             var command = new DeleteClassCommand(id);
             await _mediator.Send(command);
             return NoContent();
+        }
+
+        [HttpGet("groups/{id:guid}/roadmap")]
+        [ProducesResponseType(typeof(BaseResponse<TeacherRoadmapDetailDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetGroupRoadmap(Guid id)
+        {
+            var query = new GetGroupRoadmapQuery(id);
+            var result = await _mediator.Send(query);
+            return Ok(new BaseResponse<TeacherRoadmapDetailDto>
+            {
+                Message = "Group roadmap retrieved successfully.",
+                Data = result
+            });
         }
 
         [HttpPost("groups/{id:guid}/announcements")]
