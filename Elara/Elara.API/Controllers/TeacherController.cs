@@ -19,18 +19,17 @@ using Elara.Application.Features.Users.Teachers.Commands.DeleteClass;
 using Elara.Application.Features.Users.Teachers.Commands.AddInsight;
 using Elara.Application.Features.Users.Teachers.Commands.EditInsight;
 using Elara.API.Controllers.Requests;
-using Elara.Application.Features.Users.Teachers.Queries.GetModuleResources;
 using Elara.Application.Features.Users.Teachers.Commands.AddModuleResource;
 using Elara.Application.Features.Users.Teachers.Commands.DeleteModuleResource;
-using Elara.Application.Features.Users.Teachers.Queries.GetHomeworkOverview;
 using Elara.Application.Features.Users.Teachers.Commands.AddHomeworkProblem;
+using Elara.Application.Features.Users.Teachers.Queries.GetHomeworkOverview;
+using Elara.Application.Features.Users.Teachers.Queries.GetModuleResources;
 using Elara.Application.Features.Users.Teachers.Queries.GetHomeworkSubmissions;
 using Elara.Application.Features.Users.Teachers.Queries.GetStudentSubmission;
 using Elara.Application.Features.Users.Teachers.Commands.GradeStudentSubmission;
 using Elara.Application.Features.Users.Teachers.Commands.EditProblem;
 using Elara.Application.Features.Users.Teachers.Commands.DeleteProblem;
 using Elara.Domain.Constants;
-using Elara.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -369,22 +368,6 @@ namespace Elara.API.Controllers
 
         #region Resource Management
 
-        [HttpGet("modules/{moduleId:guid}/resources")]
-        [ProducesResponseType(typeof(BaseResponse<ModuleResourcesDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> GetModuleResources(Guid moduleId, CancellationToken cancellationToken)
-        {
-            var query = new GetModuleResourcesQuery { ModuleId = moduleId };
-            var result = await _mediator.Send(query, cancellationToken);
-            return Ok(new BaseResponse<ModuleResourcesDto>
-            {
-                Message = "Module resources retrieved successfully.",
-                Data = result
-            });
-        }
-
         [HttpPost("modules/{moduleId:guid}/resources")]
         [Consumes("multipart/form-data")]
         [ProducesResponseType(typeof(BaseResponse<ResourceItemDto>), StatusCodes.Status201Created)]
@@ -417,22 +400,6 @@ namespace Elara.API.Controllers
         #endregion
 
         #region Homework Management
-
-        [HttpGet("modules/{moduleId:guid}/homework")]
-        [ProducesResponseType(typeof(BaseResponse<HomeworkOverviewDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> GetHomeworkOverview(Guid moduleId, CancellationToken cancellationToken)
-        {
-            var query = new GetHomeworkOverviewQuery { ModuleId = moduleId };
-            var result = await _mediator.Send(query, cancellationToken);
-            return Ok(new BaseResponse<HomeworkOverviewDto>
-            {
-                Message = "Homework overview retrieved successfully.",
-                Data = result
-            });
-        }
 
         [HttpPost("modules/{moduleId:guid}/homework/problems")]
         [ProducesResponseType(typeof(BaseResponse<HomeworkProblemDto>), StatusCodes.Status201Created)]
