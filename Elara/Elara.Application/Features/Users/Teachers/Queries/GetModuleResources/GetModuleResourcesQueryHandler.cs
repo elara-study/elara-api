@@ -40,10 +40,7 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetModuleResources
                 {
                     Id = resource.Id,
                     Title = resource.Title,
-                    Url = resource.Url,
-                    Type = resource.ResourceType.ToString().ToLower(),
-                    ThumbnailUrl = resource.ThumbnailUrl,
-                    SizeOrDuration = resource.SizeOrDurationText
+                    Url = resource.Url
                 };
 
                 if (resource.ResourceType == ResourceType.Video) dto.Videos.Add(item);

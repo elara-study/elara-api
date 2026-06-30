@@ -391,9 +391,9 @@ namespace Elara.API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> AddModuleResource(Guid moduleId, [FromForm] string title, [FromForm] ResourceType type, IFormFile file, CancellationToken cancellationToken)
+        public async Task<IActionResult> AddModuleResource(Guid moduleId, [FromForm] string title, IFormFile file, CancellationToken cancellationToken)
         {
-            var command = new AddModuleResourceCommand(moduleId, title, type, file);
+            var command = new AddModuleResourceCommand(moduleId, title, file);
             var result = await _mediator.Send(command, cancellationToken);
             return StatusCode(StatusCodes.Status201Created, new BaseResponse<ResourceItemDto>
             {
@@ -403,7 +403,7 @@ namespace Elara.API.Controllers
         }
 
         [HttpDelete("resources/{resourceId:int}")]
-        [ProducesResponseType(typeof(BaseResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -411,11 +411,7 @@ namespace Elara.API.Controllers
         {
             var command = new DeleteModuleResourceCommand { ResourceId = resourceId };
             await _mediator.Send(command, cancellationToken);
-            return Ok(new BaseResponse<bool>
-            {
-                Message = "Resource deleted successfully.",
-                Data = true
-            });
+            return NoContent();
         }
 
         #endregion

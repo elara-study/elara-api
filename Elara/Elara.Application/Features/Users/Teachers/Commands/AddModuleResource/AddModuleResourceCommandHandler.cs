@@ -48,15 +48,16 @@ namespace Elara.Application.Features.Users.Teachers.Commands.AddModuleResource
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException("Failed to upload file.", ex);
+                throw new InvalidOperationException($"Failed to upload file: {ex.Message}", ex);
             }
 
-            string sizeOrDuration = "";
-            if (request.ResourceType == ResourceType.Pdf || request.ResourceType == ResourceType.Image)
+            var resourceType = request.File.ContentType switch
             {
-                var sizeInMb = request.File.Length / (1024.0 * 1024.0);
-                sizeOrDuration = $"{sizeInMb:F1} MB";
-            }
+                var ct when ct.StartsWith("video/") => ResourceType.Video,
+                var ct when ct.StartsWith("image/") => ResourceType.Image,
+                var ct when ct.Equals("application/pdf", StringComparison.OrdinalIgnoreCase) => ResourceType.Pdf,
+                _ => throw new InvalidOperationException($"Unsupported file type: {request.File.ContentType}")
+            };
 
             var resource = new ModuleResource
             {
@@ -64,8 +65,7 @@ namespace Elara.Application.Features.Users.Teachers.Commands.AddModuleResource
                 ModuleId = module.Id,
                 Url = url,
                 CloudId = publicId,
-                ResourceType = request.ResourceType,
-                SizeOrDurationText = sizeOrDuration
+                ResourceType = resourceType
             };
 
             resource = await _resourceRepository.AddAsync(resource, cancellationToken);
@@ -74,10 +74,7 @@ namespace Elara.Application.Features.Users.Teachers.Commands.AddModuleResource
             {
                 Id = resource.Id,
                 Title = resource.Title,
-                Url = resource.Url,
-                Type = resource.ResourceType.ToString().ToLower(),
-                SizeOrDuration = resource.SizeOrDurationText,
-                ThumbnailUrl = resource.ThumbnailUrl
+                Url = resource.Url
             };
 
             return dto;

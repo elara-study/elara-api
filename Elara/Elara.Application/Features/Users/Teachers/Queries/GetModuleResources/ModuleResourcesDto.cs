@@ -14,8 +14,5 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetModuleResources
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Url { get; set; } = string.Empty;
-        public string Type { get; set; } = string.Empty;
-        public string? ThumbnailUrl { get; set; }
-        public string? SizeOrDuration { get; set; }
     }
 }
