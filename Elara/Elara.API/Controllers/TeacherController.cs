@@ -13,6 +13,7 @@ using Elara.Application.Features.Users.Teachers.Queries.GetTeacherProfile;
 using Elara.Application.Features.Users.Teachers.Queries.GetTeacherHome;
 using Elara.Application.Features.Users.Teachers.Queries.GetGroupStudents;
 using Elara.Application.Features.Users.Teachers.Queries.GetGroupRoadmap;
+using Elara.Application.Features.Users.Teachers.Queries.GetStudentDetail;
 using Elara.Application.Features.Users.Teachers.Commands.AddStudentByUsername;
 using Elara.Application.Features.Users.Teachers.Commands.DeleteGroupStudent;
 using Elara.Application.Features.Users.Teachers.Commands.DeleteClass;
@@ -312,6 +313,22 @@ namespace Elara.API.Controllers
             var command = new DeleteGroupStudentCommand(id, studentId);
             await _mediator.Send(command);
             return NoContent();
+        }
+
+        [HttpGet("students/{studentId:guid}")]
+        [ProducesResponseType(typeof(BaseResponse<StudentDetailResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetStudentDetail(Guid studentId)
+        {
+            var query = new GetStudentDetailQuery(studentId);
+            var result = await _mediator.Send(query);
+            return Ok(new BaseResponse<StudentDetailResponse>
+            {
+                Message = "Student details retrieved successfully.",
+                Data = result
+            });
         }
 
         [HttpGet("students/{studentId:guid}/insights")]
