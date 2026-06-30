@@ -3,6 +3,7 @@ using System;
 using Elara.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Elara.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260630041011_RefactorHomeworkDomain")]
+    partial class RefactorHomeworkDomain
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -769,11 +772,6 @@ namespace Elara.Infrastructure.Migrations
                     b.Property<string>("ModuleName")
                         .HasColumnType("text");
 
-                    b.Property<Guid>("PublicId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
-
                     b.Property<int>("RoadmapId")
                         .HasColumnType("integer");
 
@@ -789,10 +787,6 @@ namespace Elara.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("PublicId")
-                        .IsUnique()
-                        .HasDatabaseName("IX_Modules_PublicId");
 
                     b.HasIndex("RoadmapId");
 
@@ -813,9 +807,6 @@ namespace Elara.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("CloudId")
-                        .HasColumnType("text");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -827,6 +818,9 @@ namespace Elara.Infrastructure.Migrations
 
                     b.Property<int>("ModuleId")
                         .HasColumnType("integer");
+
+                    b.Property<string>("PublicId")
+                        .HasColumnType("text");
 
                     b.Property<int>("ResourceType")
                         .HasColumnType("integer");
@@ -998,11 +992,6 @@ namespace Elara.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
-                    b.Property<Guid>("PublicId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
-
                     b.Property<int>("SubjectId")
                         .HasColumnType("integer");
 
@@ -1016,10 +1005,6 @@ namespace Elara.Infrastructure.Migrations
 
                     b.HasIndex("IsDeleted")
                         .HasDatabaseName("IX_Roadmaps_IsDeleted");
-
-                    b.HasIndex("PublicId")
-                        .IsUnique()
-                        .HasDatabaseName("IX_Roadmaps_PublicId");
 
                     b.HasIndex("SubjectId")
                         .HasDatabaseName("IX_Roadmaps_SubjectId");

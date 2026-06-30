@@ -54,9 +54,9 @@ namespace Elara.Infrastructure.Data.Configurations.SubmissionsConfig
                 .HasForeignKey(s => s.StudentId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasOne(s => s.ProblemSet)
+            builder.HasOne(s => s.Homework)
                 .WithMany()
-                .HasForeignKey(s => s.ProblemSetId)
+                .HasForeignKey(s => s.HomeworkId)
                 .OnDelete(DeleteBehavior.Restrict)
                 .IsRequired(false);
 

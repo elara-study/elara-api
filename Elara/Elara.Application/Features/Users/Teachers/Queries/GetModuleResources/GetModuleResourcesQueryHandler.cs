@@ -20,17 +20,17 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetModuleResources
 
         public async Task<ModuleResourcesDto> Handle(GetModuleResourcesQuery request, CancellationToken cancellationToken)
         {
-            var module = await _moduleRepository.GetByIdAsync(request.ModuleId, cancellationToken);
+            var module = (await _moduleRepository.FindAsync(m => m.PublicId == request.ModuleId, cancellationToken)).FirstOrDefault();
             if (module == null)
             {
-                throw new KeyNotFoundException($"Module with id {request.ModuleId} not found.");
+                throw new KeyNotFoundException($"Module not found.");
             }
 
-            var resources = await _resourceRepository.FindAsync(r => r.ModuleId == request.ModuleId, cancellationToken);
+            var resources = await _resourceRepository.FindAsync(r => r.ModuleId == module.Id, cancellationToken);
 
             var dto = new ModuleResourcesDto
             {
-                ModuleId = module.Id,
+                ModuleId = module.PublicId,
                 ModuleName = module.Title
             };
 

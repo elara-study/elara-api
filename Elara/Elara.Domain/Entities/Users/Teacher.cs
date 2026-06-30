@@ -13,7 +13,6 @@ namespace Elara.Domain.Entities.Users
         public virtual Subject? Subject { get; set; }
         public virtual ICollection<StudentTeacher> StudentTeachers { get; set; } = [];
         public virtual ICollection<Class> Classes { get; set; } = [];
-        public virtual ICollection<ProblemSet> ProblemSets { get; set; } = [];
         public virtual ICollection<Roadmap> Roadmaps { get; set; } = [];
     }
 }

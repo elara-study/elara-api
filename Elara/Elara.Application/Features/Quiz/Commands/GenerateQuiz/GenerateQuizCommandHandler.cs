@@ -42,14 +42,14 @@ namespace Elara.Application.Features.Quiz.Commands.GenerateQuiz
             var isEnrolled = await _classRepository.IsStudentJoinedClassAsync(userId, classEntity.Id, cancellationToken);
             if (!isEnrolled) throw new Exception("You are not enrolled in this group");
 
-            var module = await _moduleRepository.GetByIdAsync(request.ModuleId, cancellationToken);
+            var module = (await _moduleRepository.FindAsync(m => m.PublicId == request.ModuleId, cancellationToken)).FirstOrDefault();
             if (module == null) throw new Exception("Module not found");
 
             if (module.RoadmapId != classEntity.RoadmapId)
                 throw new Exception("Module does not belong to this group's roadmap");
 
             var result = await _quizService.GenerateQuizAsync(
-                request.ModuleId,
+                module.Id,
                 request.QuestionCount,
                 request.DifficultyLevel,
                 request.QuestionTypes,
@@ -58,7 +58,7 @@ namespace Elara.Application.Features.Quiz.Commands.GenerateQuiz
             var session = new QuizSession
             {
                 StudentId = userId,
-                ModuleId = request.ModuleId,
+                ModuleId = module.Id,
                 QuestionsJson = result.QuestionsJson,
                 StartedAt = DateTime.UtcNow,
                 Status = Domain.Enums.QuizSessionStatus.InProgress

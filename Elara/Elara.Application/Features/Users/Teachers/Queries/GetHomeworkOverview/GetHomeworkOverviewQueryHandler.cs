@@ -1,6 +1,5 @@
 using Elara.Application.Contracts.Persistence;
 using Elara.Domain.Entities.Educational;
-using Elara.Domain.Enums;
 using MediatR;
 
 namespace Elara.Application.Features.Users.Teachers.Queries.GetHomeworkOverview
@@ -8,65 +7,51 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetHomeworkOverview
     public class GetHomeworkOverviewQueryHandler : IRequestHandler<GetHomeworkOverviewQuery, HomeworkOverviewDto>
     {
         private readonly IAsyncRepository<Module, int> _moduleRepository;
-        private readonly IAsyncRepository<ProblemSet, int> _problemSetRepository;
-        private readonly IAsyncRepository<Question, int> _questionRepository;
+        private readonly IAsyncRepository<Homework, int> _homeworkRepository;
+        private readonly IAsyncRepository<Problem, int> _problemRepository;
 
         public GetHomeworkOverviewQueryHandler(
             IAsyncRepository<Module, int> moduleRepository,
-            IAsyncRepository<ProblemSet, int> problemSetRepository,
-            IAsyncRepository<Question, int> questionRepository)
+            IAsyncRepository<Homework, int> homeworkRepository,
+            IAsyncRepository<Problem, int> problemRepository)
         {
             _moduleRepository = moduleRepository;
-            _problemSetRepository = problemSetRepository;
-            _questionRepository = questionRepository;
+            _homeworkRepository = homeworkRepository;
+            _problemRepository = problemRepository;
         }
 
         public async Task<HomeworkOverviewDto> Handle(GetHomeworkOverviewQuery request, CancellationToken cancellationToken)
         {
-            var module = await _moduleRepository.GetByIdAsync(request.ModuleId, cancellationToken);
+            var module = (await _moduleRepository.FindAsync(m => m.PublicId == request.ModuleId, cancellationToken)).FirstOrDefault();
             if (module == null)
             {
-                throw new KeyNotFoundException($"Module with id {request.ModuleId} not found.");
+                throw new KeyNotFoundException($"Module not found.");
             }
 
-            var problemSet = (await _problemSetRepository.FindAsync(
-                a => a.ModuleId == request.ModuleId && a.ProblemSetType == ProblemSetType.ProblemSet,
-                cancellationToken)).FirstOrDefault();
+            var homework = await _homeworkRepository.FindAsync(
+                h => h.ModuleId == module.Id, cancellationToken);
 
-            if (problemSet == null)
-            {
-                problemSet = new ProblemSet
-                {
-                    Title = $"{module.Title} Homework",
-                    ModuleId = request.ModuleId,
-                    ProblemSetType = ProblemSetType.ProblemSet,
-                    MaxScore = 100,
-                    DifficultyLevel = DifficultyLevel.Medium,
-                    DueDate = DateTime.UtcNow.AddDays(7),
-                    Questions = new List<Question>()
-                };
-                problemSet = await _problemSetRepository.AddAsync(problemSet, cancellationToken);
-            }
-
-            var questions = await _questionRepository.FindAsync(
-                q => q.ProblemSetId == problemSet.Id, cancellationToken);
+            var foundHomework = homework.FirstOrDefault();
 
             var dto = new HomeworkOverviewDto
             {
-                ProblemSetId = problemSet.Id,
                 ModuleName = module.Title,
-                Overview = new HomeworkOverviewStats { TotalScore = problemSet.MaxScore }
+                TotalScoreXp = foundHomework?.MaxScore ?? 0
             };
 
-            foreach (var q in questions)
+            if (foundHomework != null)
             {
-                dto.Problems.Add(new HomeworkProblemDto
+                var problems = await _problemRepository.FindAsync(
+                    p => p.HomeworkId == foundHomework.Id, cancellationToken);
+
+                foreach (var p in problems)
                 {
-                    Id = q.Id,
-                    Question = q.Text,
-                    Type = "text",
-                    AllowImageUpload = true
-                });
+                    dto.Problems.Add(new HomeworkProblemDto
+                    {
+                        ProblemId = p.Id,
+                        Description = p.Text
+                    });
+                }
             }
 
             return dto;

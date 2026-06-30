@@ -25,11 +25,11 @@ namespace Elara.Application.Features.Users.Teachers.Commands.AddModuleResource
 
         public async Task<ResourceItemDto> Handle(AddModuleResourceCommand request, CancellationToken cancellationToken)
         {
-            var module = await _moduleRepository.GetByIdAsync(request.ModuleId, cancellationToken);
+            var module = (await _moduleRepository.FindAsync(m => m.PublicId == request.ModuleId, cancellationToken)).FirstOrDefault();
 
             if (module == null)
             {
-                throw new KeyNotFoundException($"Module with id {request.ModuleId} not found.");
+                throw new KeyNotFoundException($"Module not found.");
             }
 
             if (request.File == null || request.File.Length == 0)
@@ -61,9 +61,9 @@ namespace Elara.Application.Features.Users.Teachers.Commands.AddModuleResource
             var resource = new ModuleResource
             {
                 Title = request.Title,
-                ModuleId = request.ModuleId,
+                ModuleId = module.Id,
                 Url = url,
-                PublicId = publicId,
+                CloudId = publicId,
                 ResourceType = request.ResourceType,
                 SizeOrDurationText = sizeOrDuration
             };

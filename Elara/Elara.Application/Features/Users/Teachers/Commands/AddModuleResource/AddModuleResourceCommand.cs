@@ -7,7 +7,7 @@ namespace Elara.Application.Features.Users.Teachers.Commands.AddModuleResource
 {
     public class AddModuleResourceCommand : IRequest<ResourceItemDto>
     {
-        public AddModuleResourceCommand(int moduleId, string title, ResourceType resourceType, IFormFile file)
+        public AddModuleResourceCommand(Guid moduleId, string title, ResourceType resourceType, IFormFile file)
         {
             ModuleId = moduleId;
             Title = title;
@@ -15,7 +15,7 @@ namespace Elara.Application.Features.Users.Teachers.Commands.AddModuleResource
             File = file;
         }
 
-        public int ModuleId { get; }
+        public Guid ModuleId { get; }
         public string Title { get; }
         public ResourceType ResourceType { get; }
         public IFormFile File { get; }

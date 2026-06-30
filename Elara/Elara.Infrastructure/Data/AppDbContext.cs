@@ -30,11 +30,10 @@ namespace Elara.Infrastructure.Data
         public DbSet<Subject> Subjects { get; set; }
         public DbSet<Module> Modules { get; set; }
         public DbSet<Homework> Homework { get; set; }
-        public DbSet<ProblemSet> ProblemSets { get; set; }
-        public DbSet<Question> Questions { get; set; }
+        public DbSet<Problem> Problems { get; set; }
         public DbSet<Roadmap> Roadmaps { get; set; }
         public DbSet<EducationalVideo> EducationalVideos { get; set; }
-        public DbSet<QuestionOption> QuestionOptions { get; set; }
+        public DbSet<ProblemOption> ProblemOptions { get; set; }
         public DbSet<ModuleResource> ModuleResources { get; set; }
         #endregion
 
@@ -83,12 +82,10 @@ namespace Elara.Infrastructure.Data
 
             // Apply soft delete query filter
             ApplySoftDeleteQueryFilter(modelBuilder);
-
         }
 
         private void ConfigureIdentityTables(ModelBuilder modelBuilder)
         {
-            // Rename Identity tables
             modelBuilder.Entity<ApplicationUser>().ToTable("Users");
             modelBuilder.Entity<ApplicationRole>().ToTable("Roles");
             modelBuilder.Entity<IdentityUserRole<Guid>>().ToTable("UserRoles");
@@ -102,7 +99,7 @@ namespace Elara.Infrastructure.Data
         {
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {
-                if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
+                if (entityType.ClrType.GetProperty(nameof(BaseEntity.IsDeleted)) != null)
                 {
                     var parameter = Expression.Parameter(entityType.ClrType, "e");
                     var body = Expression.Equal(
@@ -117,8 +114,9 @@ namespace Elara.Infrastructure.Data
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            // Auto-set audit fields
-            var entries = ChangeTracker.Entries<BaseEntity>();
+            var entries = ChangeTracker.Entries()
+                .Where(e => e.Entity.GetType().GetProperty(nameof(BaseEntity.IsDeleted)) != null)
+                .ToList();
 
             foreach (var entry in entries)
             {
@@ -129,14 +127,13 @@ namespace Elara.Infrastructure.Data
                         break;
 
                     case EntityState.Modified:
-                        entry.Entity.UpdatedAt = DateTime.UtcNow;
+                        entry.Property(nameof(BaseEntity.UpdatedAt)).CurrentValue = DateTime.UtcNow;
                         break;
 
                     case EntityState.Deleted:
-                        // Soft delete
                         entry.State = EntityState.Modified;
-                        entry.Entity.IsDeleted = true;
-                        entry.Entity.DeletedAt = DateTime.UtcNow;
+                        entry.Property(nameof(BaseEntity.IsDeleted)).CurrentValue = true;
+                        entry.Property(nameof(BaseEntity.DeletedAt)).CurrentValue = DateTime.UtcNow;
                         break;
                 }
             }

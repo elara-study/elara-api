@@ -34,13 +34,13 @@ namespace Elara.Persistence.Repositories.Quiz
             return session.Answers.ElementAt(questionIndex);
         }
 
-        public async Task<ProblemSet?> GetProblemSetWithDetailsAsync(int problemSetId, CancellationToken cancellationToken = default)
+        public async Task<Homework?> GetHomeworkWithDetailsAsync(int homeworkId, CancellationToken cancellationToken = default)
         {
-            return await _context.ProblemSets
-                .Include(a => a.Module)
-                    .ThenInclude(t => t.Subject)
-                .Include(a => a.Questions)
-                .FirstOrDefaultAsync(a => a.Id == problemSetId, cancellationToken);
+            return await _context.Homework
+                .Include(h => h.Module)
+                    .ThenInclude(m => m.Subject)
+                .Include(h => h.Problems)
+                .FirstOrDefaultAsync(h => h.Id == homeworkId, cancellationToken);
         }
 
         public async Task<QuizSession?> GetSessionWithDetailsAsync(int sessionId, CancellationToken cancellationToken = default)

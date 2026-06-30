@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Elara.Domain.Entities.Educational
 {
-    public class QuestionOption : BaseEntity
+    public class ProblemOption : BaseEntity
     {
         [Required]
         [MaxLength(500)]
@@ -10,9 +10,9 @@ namespace Elara.Domain.Entities.Educational
         public bool IsCorrect { get; set; } = false;
 
         // Foreign Key
-        public int QuestionId { get; set; }
+        public int ProblemId { get; set; }
 
         // Navigation Property
-        public virtual Question Question { get; set; } = null!;
+        public virtual Problem Problem { get; set; } = null!;
     }
 }

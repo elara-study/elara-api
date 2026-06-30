@@ -4,9 +4,9 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetTeacherRoadmaps
 {
     public class GetTeacherRoadmapDetailQuery : IRequest<TeacherRoadmapDetailDto>
     {
-        public int RoadmapId { get; }
+        public Guid RoadmapId { get; }
 
-        public GetTeacherRoadmapDetailQuery(int roadmapId)
+        public GetTeacherRoadmapDetailQuery(Guid roadmapId)
         {
             RoadmapId = roadmapId;
         }

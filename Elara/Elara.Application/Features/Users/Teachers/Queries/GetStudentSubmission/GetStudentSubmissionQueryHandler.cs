@@ -10,21 +10,21 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetStudentSubmission
     {
         private readonly IAsyncRepository<StudentSubmission, int> _submissionRepository;
         private readonly IAsyncRepository<StudentSubmissionAnswer, int> _answerRepository;
-        private readonly IAsyncRepository<ProblemSet, int> _problemSetRepository;
-        private readonly IAsyncRepository<Question, int> _questionRepository;
+        private readonly IAsyncRepository<Homework, int> _homeworkRepository;
+        private readonly IAsyncRepository<Problem, int> _problemRepository;
         private readonly IIdentityService _identityService;
 
         public GetStudentSubmissionQueryHandler(
             IAsyncRepository<StudentSubmission, int> submissionRepository,
             IAsyncRepository<StudentSubmissionAnswer, int> answerRepository,
-            IAsyncRepository<ProblemSet, int> problemSetRepository,
-            IAsyncRepository<Question, int> questionRepository,
+            IAsyncRepository<Homework, int> homeworkRepository,
+            IAsyncRepository<Problem, int> problemRepository,
             IIdentityService identityService)
         {
             _submissionRepository = submissionRepository;
             _answerRepository = answerRepository;
-            _problemSetRepository = problemSetRepository;
-            _questionRepository = questionRepository;
+            _homeworkRepository = homeworkRepository;
+            _problemRepository = problemRepository;
             _identityService = identityService;
         }
 
@@ -36,18 +36,17 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetStudentSubmission
                 throw new KeyNotFoundException($"Submission with id {request.SubmissionId} not found.");
             }
 
-            var assignment = await _problemSetRepository.GetByIdAsync(submission.ProblemSetId, cancellationToken);
-            if (assignment == null)
+            var homework = await _homeworkRepository.GetByIdAsync(submission.HomeworkId, cancellationToken);
+            if (homework == null)
             {
-                throw new KeyNotFoundException($"ProblemSet with id {submission.ProblemSetId} not found.");
+                throw new KeyNotFoundException($"Homework with id {submission.HomeworkId} not found.");
             }
 
             var submissionAnswers = await _answerRepository.FindAsync(
                 a => a.StudentSubmissionId == request.SubmissionId, cancellationToken);
-          
-            var assignmentId = submission.ProblemSetId;
-            var allQuestions = await _questionRepository.FindAsync(
-                q => q.ProblemSetId == submission.ProblemSetId, cancellationToken);
+
+            var allProblems = await _problemRepository.FindAsync(
+                q => q.HomeworkId == submission.HomeworkId, cancellationToken);
 
             var studentName = await _identityService.GetUserNameByIdAsync(submission.StudentId) ?? $"Student {submission.StudentId.ToString()[..8]}";
 
@@ -56,19 +55,19 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetStudentSubmission
                 SubmissionId = submission.Id,
                 StudentName = studentName,
                 Score = submission.Score > 0 || !string.IsNullOrWhiteSpace(submission.TeacherFeedback) ? submission.Score : null,
-                MaxScore = assignment.MaxScore
+                MaxScore = homework.MaxScore
             };
 
-            var questionsById = allQuestions.ToDictionary(q => q.Id);
+            var problemsById = allProblems.ToDictionary(q => q.Id);
 
             foreach (var answer in submissionAnswers)
             {
-                questionsById.TryGetValue(answer.QuestionId, out var question);
-                
+                problemsById.TryGetValue(answer.ProblemId, out var problem);
+
                 dto.Answers.Add(new SubmissionAnswerDto
                 {
-                    ProblemId = answer.QuestionId,
-                    ProblemText = question?.Text ?? "Unknown Question",
+                    ProblemId = answer.ProblemId,
+                    ProblemText = problem?.Text ?? "Unknown Question",
                     StudentTextAnswer = answer.TextAnswer,
                     StudentImageUrl = answer.ImageUrl
                 });

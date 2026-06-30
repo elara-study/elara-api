@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Elara.Infrastructure.Data.Configurations.EducationalConfig
 {
-    public class QuestionOptionConfiguration : IEntityTypeConfiguration<QuestionOption>
+    public class ProblemOptionConfiguration : IEntityTypeConfiguration<ProblemOption>
     {
-        public void Configure(EntityTypeBuilder<QuestionOption> builder)
+        public void Configure(EntityTypeBuilder<ProblemOption> builder)
         {
-            builder.ToTable("QuestionOptions");
+            builder.ToTable("ProblemOptions");
 
             builder.HasKey(o => o.Id);
 
@@ -19,17 +19,15 @@ namespace Elara.Infrastructure.Data.Configurations.EducationalConfig
             builder.Property(o => o.IsCorrect)
                 .HasDefaultValue(false);
 
-            builder.Property(o => o.QuestionId)
+            builder.Property(o => o.ProblemId)
                 .IsRequired();
 
-            // Indexes
-            builder.HasIndex(o => o.QuestionId)
-                .HasDatabaseName("IX_QuestionOptions_QuestionId");
+            builder.HasIndex(o => o.ProblemId)
+                .HasDatabaseName("IX_ProblemOptions_ProblemId");
 
-            // Relationships
-            builder.HasOne(o => o.Question)
+            builder.HasOne(o => o.Problem)
                 .WithMany(q => q.Options)
-                .HasForeignKey(o => o.QuestionId)
+                .HasForeignKey(o => o.ProblemId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

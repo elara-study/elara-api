@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Elara.Domain.Entities.Educational
 {
-    public class Question : BaseEntity
+    public class Problem : BaseEntity
     {
         public string Text { get; set; } = string.Empty;
         public QuestionType QuestionType { get; set; }
@@ -15,12 +15,11 @@ namespace Elara.Domain.Entities.Educational
         [Range(0, 100)]
         public double Marks { get; set; } = 10;
 
-        public int ProblemSetId { get; set; }
+        public int HomeworkId { get; set; }
 
-        public virtual ProblemSet ProblemSet { get; set; } = null!;
+        public virtual Homework Homework { get; set; } = null!;
         public virtual ICollection<Hint> Hints { get; set; } = [];
 
-        // Options for MCQ questions only (empty for Essay questions)
-        public virtual ICollection<QuestionOption> Options { get; set; } = [];
+        public virtual ICollection<ProblemOption> Options { get; set; } = [];
     }
 }

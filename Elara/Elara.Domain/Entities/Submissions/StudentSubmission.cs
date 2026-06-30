@@ -13,17 +13,16 @@ namespace Elara.Domain.Entities.Submissions
         public string? AIFeedback { get; set; }
 
         public Guid StudentId { get; set; }
-        public int ProblemSetId { get; set; }
+        public int HomeworkId { get; set; }
 
         public virtual Student Student { get; set; } = null!;
-        public virtual ProblemSet ProblemSet { get; set; } = null!;
+        public virtual Homework Homework { get; set; } = null!;
         public virtual ICollection<StudentSubmissionAnswer> Answers { get; set; } = new List<StudentSubmissionAnswer>();
 
         // Validation
         public bool ValidateScore()
         {
-            return Score >= 0 && Score <= ProblemSet.MaxScore;
+            return Score >= 0 && Score <= Homework.MaxScore;
         }
-
     }
 }

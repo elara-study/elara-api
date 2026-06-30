@@ -14,11 +14,11 @@ namespace Elara.Domain.Entities.Submissions
         public int HintLevel { get; set; } = 1; // 1 = subtle, 5 = very explicit
 
         // Foreign Keys
-        public int QuestionId { get; set; }
+        public int ProblemId { get; set; }
         public Guid StudentId { get; set; }
 
         // Navigation Properties
-        public virtual Question Question { get; set; } = null!;
+        public virtual Problem Problem { get; set; } = null!;
         public virtual Student Student { get; set; }
     }
 }

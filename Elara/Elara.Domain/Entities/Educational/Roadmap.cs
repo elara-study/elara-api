@@ -13,6 +13,9 @@ namespace Elara.Domain.Entities.Educational
 {
     public class Roadmap:BaseEntity
     {
+        [Required]
+        public Guid PublicId { get; set; } = Guid.NewGuid();
+
         public string Name { get; set; } = string.Empty;
         public GradeLevel Grade { get; set; }
         public string? Description { get; set; }

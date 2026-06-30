@@ -1,11 +1,6 @@
 ﻿using Elara.Domain.Entities.Submissions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Elara.Infrastructure.Data.Configurations.SubmissionsConfig
 {
@@ -29,24 +24,22 @@ namespace Elara.Infrastructure.Data.Configurations.SubmissionsConfig
 
             builder.Property(h => h.StudentId)
                 .IsRequired();
-            
-            builder.Property(h=>h.QuestionId)
+
+            builder.Property(h => h.ProblemId)
                 .IsRequired();
 
-            // Indexes
-            builder.HasIndex(h => h.QuestionId)
-                .HasDatabaseName("IX_Hints_QuestionId");
+            builder.HasIndex(h => h.ProblemId)
+                .HasDatabaseName("IX_Hints_ProblemId");
 
             builder.HasIndex(h => h.StudentId)
                 .HasDatabaseName("IX_Hints_StudentId");
 
-            builder.HasIndex(h => new { h.QuestionId, h.StudentId })
-                .HasDatabaseName("IX_Hints_QuestionId_StudentId");
+            builder.HasIndex(h => new { h.ProblemId, h.StudentId })
+                .HasDatabaseName("IX_Hints_ProblemId_StudentId");
 
-            // Relationships
-            builder.HasOne(h => h.Question)
+            builder.HasOne(h => h.Problem)
                 .WithMany(q => q.Hints)
-                .HasForeignKey(h => h.QuestionId)
+                .HasForeignKey(h => h.ProblemId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(h => h.Student)

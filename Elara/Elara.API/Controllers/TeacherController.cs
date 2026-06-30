@@ -2,7 +2,6 @@ using Asp.Versioning;
 using Elara.Application.Features.Users.Teachers.Commands.CreateClass;
 using Elara.Application.Features.Users.Teachers.Commands.CreateRoadmap;
 using Elara.Application.Features.Users.Teachers.Queries.GetTeacherRoadmaps;
-using Elara.Application.Features.Users.Teachers.Queries.GetModuleHomeworks;
 using Elara.Application.Features.Users.Teachers.Commands.AddAnnouncement;
 using Elara.Application.Features.Users.Teachers.Commands.DeleteAnnouncement;
 using Elara.Application.Features.Users.Teachers.Commands.EditAnnouncement;
@@ -27,7 +26,9 @@ using Elara.Application.Features.Users.Teachers.Queries.GetHomeworkOverview;
 using Elara.Application.Features.Users.Teachers.Commands.AddHomeworkProblem;
 using Elara.Application.Features.Users.Teachers.Queries.GetHomeworkSubmissions;
 using Elara.Application.Features.Users.Teachers.Queries.GetStudentSubmission;
-using Elara.Application.Features.Users.Teachers.Commands.RateStudentSubmission;
+using Elara.Application.Features.Users.Teachers.Commands.GradeStudentSubmission;
+using Elara.Application.Features.Users.Teachers.Commands.EditProblem;
+using Elara.Application.Features.Users.Teachers.Commands.DeleteProblem;
 using Elara.Domain.Constants;
 using Elara.Domain.Enums;
 using MediatR;
@@ -145,12 +146,12 @@ namespace Elara.API.Controllers
             });
         }
 
-        [HttpGet("roadmaps/{id}")]
+        [HttpGet("roadmaps/{id:guid}")]
         [ProducesResponseType(typeof(BaseResponse<TeacherRoadmapDetailDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetTeacherRoadmapDetail(int id, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetTeacherRoadmapDetail(Guid id, CancellationToken cancellationToken)
         {
             var result = await _mediator.Send(new GetTeacherRoadmapDetailQuery(id), cancellationToken);
             return Ok(new BaseResponse<TeacherRoadmapDetailDto>
@@ -368,12 +369,12 @@ namespace Elara.API.Controllers
 
         #region Resource Management
 
-        [HttpGet("modules/{moduleId:int}/resources")]
+        [HttpGet("modules/{moduleId:guid}/resources")]
         [ProducesResponseType(typeof(BaseResponse<ModuleResourcesDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> GetModuleResources(int moduleId, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetModuleResources(Guid moduleId, CancellationToken cancellationToken)
         {
             var query = new GetModuleResourcesQuery { ModuleId = moduleId };
             var result = await _mediator.Send(query, cancellationToken);
@@ -384,13 +385,13 @@ namespace Elara.API.Controllers
             });
         }
 
-        [HttpPost("modules/{moduleId:int}/resources")]
+        [HttpPost("modules/{moduleId:guid}/resources")]
         [Consumes("multipart/form-data")]
         [ProducesResponseType(typeof(BaseResponse<ResourceItemDto>), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> AddModuleResource(int moduleId, [FromForm] string title, [FromForm] ResourceType type, IFormFile file, CancellationToken cancellationToken)
+        public async Task<IActionResult> AddModuleResource(Guid moduleId, [FromForm] string title, [FromForm] ResourceType type, IFormFile file, CancellationToken cancellationToken)
         {
             var command = new AddModuleResourceCommand(moduleId, title, type, file);
             var result = await _mediator.Send(command, cancellationToken);
@@ -421,12 +422,12 @@ namespace Elara.API.Controllers
 
         #region Homework Management
 
-        [HttpGet("modules/{moduleId:int}/homework")]
+        [HttpGet("modules/{moduleId:guid}/homework")]
         [ProducesResponseType(typeof(BaseResponse<HomeworkOverviewDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> GetHomeworkOverview(int moduleId, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetHomeworkOverview(Guid moduleId, CancellationToken cancellationToken)
         {
             var query = new GetHomeworkOverviewQuery { ModuleId = moduleId };
             var result = await _mediator.Send(query, cancellationToken);
@@ -437,30 +438,14 @@ namespace Elara.API.Controllers
             });
         }
 
-        [HttpGet("roadmaps/{roadmapId:int}/modules/{moduleId:int}/homeworks")]
-        [ProducesResponseType(typeof(BaseResponse<List<ModuleHomeworkDto>>), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetModuleHomeworks(int roadmapId, int moduleId, CancellationToken cancellationToken)
-        {
-            var result = await _mediator.Send(new GetModuleHomeworksQuery { RoadmapId = roadmapId, ModuleId = moduleId }, cancellationToken);
-            return Ok(new BaseResponse<List<ModuleHomeworkDto>>
-            {
-                Message = "Module homeworks retrieved successfully.",
-                Data = result
-            });
-        }
-
-        [HttpPost("problemsets/{problemSetId:int}/problems")]
+        [HttpPost("modules/{moduleId:guid}/homework/problems")]
         [ProducesResponseType(typeof(BaseResponse<HomeworkProblemDto>), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> AddHomeworkProblem(int problemSetId, [FromBody] AddHomeworkProblemRequest request, CancellationToken cancellationToken)
+        public async Task<IActionResult> AddHomeworkProblem(Guid moduleId, [FromBody] AddHomeworkProblemRequest request, CancellationToken cancellationToken)
         {
-            var command = new AddHomeworkProblemCommand(problemSetId, request.Description);
+            var command = new AddHomeworkProblemCommand(moduleId, request.Description);
             var result = await _mediator.Send(command, cancellationToken);
             return StatusCode(StatusCodes.Status201Created, new BaseResponse<HomeworkProblemDto>
             {
@@ -469,18 +454,48 @@ namespace Elara.API.Controllers
             });
         }
 
+        [HttpPatch("problems/{problemId:int}")]
+        [ProducesResponseType(typeof(BaseResponse<HomeworkProblemDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> EditProblem(int problemId, [FromBody] EditProblemRequest request, CancellationToken cancellationToken)
+        {
+            var command = new EditProblemCommand(problemId, request.Description);
+            var result = await _mediator.Send(command, cancellationToken);
+            return Ok(new BaseResponse<HomeworkProblemDto>
+            {
+                Message = "Problem updated successfully.",
+                Data = result
+            });
+        }
+
+        [HttpDelete("problems/{problemId:int}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteProblem(int problemId, CancellationToken cancellationToken)
+        {
+            var command = new DeleteProblemCommand(problemId);
+            await _mediator.Send(command, cancellationToken);
+            return NoContent();
+        }
+
         #endregion
 
-        #region Submissions & Rating
+        #region Submissions & Grading
 
-        [HttpGet("problemsets/{problemSetId:int}/submissions")]
+        [HttpGet("modules/{moduleId:guid}/homework/submissions")]
         [ProducesResponseType(typeof(BaseResponse<List<HomeworkSubmissionDto>>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> GetHomeworkSubmissions(int problemSetId, [FromQuery] string status = "unrated", CancellationToken cancellationToken = default)
+        public async Task<IActionResult> GetHomeworkSubmissions(Guid moduleId, [FromQuery] string status = "unrated", CancellationToken cancellationToken = default)
         {
-            var query = new GetHomeworkSubmissionsQuery { ProblemSetId = problemSetId, Status = status };
+            var query = new GetHomeworkSubmissionsQuery { ModuleId = moduleId, Status = status };
             var result = await _mediator.Send(query, cancellationToken);
             return Ok(new BaseResponse<List<HomeworkSubmissionDto>>
             {
@@ -506,19 +521,19 @@ namespace Elara.API.Controllers
             });
         }
 
-        [HttpPut("submissions/{submissionId:int}/rate")]
+        [HttpPut("submissions/{submissionId:int}/grade")]
         [ProducesResponseType(typeof(BaseResponse<bool>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> RateSubmission(int submissionId, [FromBody] RateSubmissionRequest request, CancellationToken cancellationToken)
+        public async Task<IActionResult> GradeSubmission(int submissionId, [FromBody] GradeStudentSubmissionRequest request, CancellationToken cancellationToken)
         {
-            var command = new RateStudentSubmissionCommand(submissionId, request.AwardedXp);
+            var command = new GradeStudentSubmissionCommand(submissionId, request.Score, request.Feedback);
             await _mediator.Send(command, cancellationToken);
             return Ok(new BaseResponse<bool>
             {
-                Message = "Submission rated successfully.",
+                Message = "Submission graded successfully.",
                 Data = true
             });
         }

@@ -1,11 +1,7 @@
 using Elara.Application.Common.Interfaces;
 using Elara.Application.Contracts.Identity;
-using Elara.Application.Contracts.Persistence;
 using Elara.Application.Contracts.Persistence.Users;
-using Elara.Domain.Entities.Administrative;
-using Elara.Domain.Entities.Educational;
 using Elara.Domain.Entities.JunctionTables;
-using Elara.Domain.Entities.Submissions;
 using MediatR;
 
 namespace Elara.Application.Features.Users.Teachers.Queries.GetTeacherHome
@@ -30,16 +26,14 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetTeacherHome
         {
             var teacherId = _currentUserService.UserId
                 ?? throw new UnauthorizedAccessException("User must be authenticated");
-          
+
             var response = new TeacherHomeDto();
 
-            // First Name
             var fullName = await _identityService.GetUserNameByIdAsync(teacherId);
             response.FirstName = string.IsNullOrWhiteSpace(fullName)
                  ? "Teacher"
                  : fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "Teacher";
 
-            // Groups
             var classesData = await _teacherRepository.GetClassesByTeacherAsync(teacherId, cancellationToken);
             response.Groups = classesData.Select(c => new TeacherGroupDto
             {
@@ -48,7 +42,6 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetTeacherHome
                 StudentsCount = c.StudentClasses?.Count ?? 0
             }).ToList();
 
-            // Roadmaps
             var roadmapsData = await _teacherRepository.GetRoadmapsByTeacherAsync(teacherId, cancellationToken);
             response.Roadmaps = roadmapsData.Select(r => new TeacherRoadmapDto
             {
@@ -59,12 +52,11 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetTeacherHome
                 Grade = (int)r.Grade
             }).ToList();
 
-            // Stats - Active Students
             var activeStudents = classesData
-            .SelectMany(c => c.StudentClasses ?? new List<StudentClass>())
-            .Select(sc => sc.StudentId)
-            .Distinct()
-            .Count();
+                .SelectMany(c => c.StudentClasses ?? new List<StudentClass>())
+                .Select(sc => sc.StudentId)
+                .Distinct()
+                .Count();
 
             response.Stats.ActiveStudents = new ActiveStudentsStatDto
             {
@@ -72,7 +64,6 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetTeacherHome
                 Delta = 0
             };
 
-            // Stats - Average Completion
             var avgCompletion = await _teacherRepository.GetAvgCompletionByTeacherAsync(teacherId, cancellationToken);
             response.Stats.AvgCompletion = new AvgCompletionStatDto
             {
@@ -80,10 +71,7 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetTeacherHome
                 Delta = 0
             };
 
-            // Pending Tasks
             var pendingTop5 = await _teacherRepository.GetPendingSubmissionsAsync(teacherId, 5, cancellationToken);
-
-            // Recent Activity
             var recentTop5 = await _teacherRepository.GetRecentSubmissionsAsync(teacherId, 5, cancellationToken);
 
             var allStudentIds = pendingTop5.Select(p => p.StudentId)
@@ -100,7 +88,7 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetTeacherHome
                 response.PendingTasks.Add(new TeacherPendingTaskDto
                 {
                     Id = pending.Id.ToString(),
-                    Title = pending.ProblemSet?.Title ?? "Homework",
+                    Title = pending.Homework?.Title ?? "Homework",
                     Meta = $"Submission from {profile?.Name ?? "Unknown Student"}",
                     Type = "rating"
                 });

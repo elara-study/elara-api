@@ -2,7 +2,7 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetTeacherRoadmaps
 {
     public class TeacherRoadmapDetailDto
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
         public int Grade { get; set; }
@@ -13,7 +13,7 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetTeacherRoadmaps
 
     public class RoadmapModuleDto
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
     }

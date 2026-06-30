@@ -13,6 +13,14 @@ namespace Elara.Infrastructure.Data.Configurations.EducationalConfig
 
             builder.HasKey(r => r.Id);
 
+            builder.Property(r => r.PublicId)
+                .IsRequired()
+                .HasDefaultValueSql("gen_random_uuid()");
+
+            builder.HasIndex(r => r.PublicId)
+                .HasDatabaseName("IX_Roadmaps_PublicId")
+                .IsUnique();
+
             builder.Property(r => r.Name)
                 .IsRequired()
                 .HasMaxLength(200);

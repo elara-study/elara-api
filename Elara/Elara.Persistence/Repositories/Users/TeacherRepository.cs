@@ -7,31 +7,39 @@ using Elara.Domain.Entities.Users;
 using Elara.Domain.Entities.JunctionTables;
 using Elara.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+
 namespace Elara.Persistence.Repositories.Users
 {
-    public class TeacherRepository:BaseRepository<Teacher,Guid>,ITeacherRepository
+    public class TeacherRepository : BaseRepository<Teacher, Guid>, ITeacherRepository
     {
-        public TeacherRepository(AppDbContext context) : base(context){}
-        public async Task<(Teacher teacher, Roadmap? roadmap)> GetTeacherWithSubjectAndRoadmapAsync(Guid teacherId,string? roadmapName = null,CancellationToken cancellationToken = default)
+        public TeacherRepository(AppDbContext context) : base(context) { }
+
+        public async Task<(Teacher teacher, Roadmap? roadmap)> GetTeacherWithSubjectAndRoadmapAsync(
+            Guid teacherId, string? roadmapName = null, CancellationToken cancellationToken = default)
         {
             var teacher = await _context.Teachers
-                .Include(t => t.Subject).Include(t => t.Roadmaps)            
-                .ThenInclude(r => r.Subject) 
+                .Include(t => t.Subject)
+                .Include(t => t.Roadmaps)
+                    .ThenInclude(r => r.Subject)
                 .FirstOrDefaultAsync(t => t.Id == teacherId && !t.IsDeleted, cancellationToken);
 
             if (teacher == null)
-            {
                 return (null!, null);
-            }
+
             Roadmap? roadmap = null;
             if (!string.IsNullOrWhiteSpace(roadmapName))
             {
                 var lowerRoadmapName = roadmapName.ToLower();
-                roadmap = await _context.Roadmaps.Include(r => r.Subject)
-                    .Include(r => r.Modules).FirstOrDefaultAsync(r => r.TeacherId == teacherId && r.Name.ToLower() == lowerRoadmapName && !r.IsDeleted, cancellationToken);
+                roadmap = await _context.Roadmaps
+                    .Include(r => r.Subject)
+                    .Include(r => r.Modules)
+                    .FirstOrDefaultAsync(r => r.TeacherId == teacherId &&
+                        r.Name.ToLower() == lowerRoadmapName && !r.IsDeleted, cancellationToken);
             }
+
             return (teacher, roadmap);
         }
+
         public async Task<Teacher?> GetTeacherWithStudentsAsync(Guid teacherId, CancellationToken cancellationToken = default)
         {
             return await _context.Teachers
@@ -57,9 +65,7 @@ namespace Elara.Persistence.Repositories.Users
                 }).FirstOrDefaultAsync(cancellationToken);
 
             if (userProfile == null)
-            {
                 return null;
-            }
 
             var primarySubject = await _context.Teachers
                 .Where(t => t.Id == teacherId)
@@ -78,16 +84,12 @@ namespace Elara.Persistence.Repositories.Users
 
             var subjects = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             if (!string.IsNullOrWhiteSpace(primarySubject))
-            {
                 subjects.Add(primarySubject);
-            }
 
             foreach (var name in classSubjectNames.Concat(roadmapSubjectNames))
             {
                 if (!string.IsNullOrWhiteSpace(name))
-                {
                     subjects.Add(name);
-                }
             }
 
             var totalStudents = await _context.Set<StudentClass>()
@@ -145,24 +147,24 @@ namespace Elara.Persistence.Repositories.Users
         public async Task<double> GetAvgCompletionByTeacherAsync(Guid teacherId, CancellationToken cancellationToken = default)
         {
             var query = _context.StudentSubmissions
-                .Where(s => s.ProblemSet.TeacherId == teacherId &&
-                            s.ProblemSet.MaxScore > 0 &&
+                .Where(s => s.Homework.Module.Roadmap.TeacherId == teacherId &&
+                            s.Homework.MaxScore > 0 &&
                             !s.IsDeleted);
 
             if (!await query.AnyAsync(cancellationToken)) return 0;
 
             return await query
-                .AverageAsync(s => (s.Score / s.ProblemSet.MaxScore) * 100, cancellationToken);
+                .AverageAsync(s => (s.Score / s.Homework.MaxScore) * 100, cancellationToken);
         }
 
         public async Task<List<StudentSubmission>> GetPendingSubmissionsAsync(Guid teacherId, int take, CancellationToken cancellationToken = default)
         {
             return await _context.StudentSubmissions
-                .Where(s => s.ProblemSet.TeacherId == teacherId &&
+                .Where(s => s.Homework.Module.Roadmap.TeacherId == teacherId &&
                             s.Score == 0 &&
                             string.IsNullOrEmpty(s.TeacherFeedback) &&
                             !s.IsDeleted)
-                .Include(s => s.ProblemSet)
+                .Include(s => s.Homework)
                 .OrderBy(s => s.CreatedAt)
                 .Take(take)
                 .ToListAsync(cancellationToken);
@@ -171,7 +173,7 @@ namespace Elara.Persistence.Repositories.Users
         public async Task<List<StudentSubmission>> GetRecentSubmissionsAsync(Guid teacherId, int take, CancellationToken cancellationToken = default)
         {
             return await _context.StudentSubmissions
-                .Where(s => s.ProblemSet.TeacherId == teacherId && !s.IsDeleted)
+                .Where(s => s.Homework.Module.Roadmap.TeacherId == teacherId && !s.IsDeleted)
                 .OrderByDescending(s => s.CreatedAt)
                 .Take(take)
                 .ToListAsync(cancellationToken);

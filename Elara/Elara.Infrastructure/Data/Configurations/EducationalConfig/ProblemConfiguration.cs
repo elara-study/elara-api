@@ -1,4 +1,4 @@
-﻿using Elara.Domain.Entities.Educational;
+using Elara.Domain.Entities.Educational;
 using Elara.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -6,11 +6,11 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Elara.Infrastructure.Data.Configurations.EducationalConfig
 {
-    public class QuestionConfiguration : IEntityTypeConfiguration<Question>
+    public class ProblemConfiguration : IEntityTypeConfiguration<Problem>
     {
-        public void Configure(EntityTypeBuilder<Question> builder)
+        public void Configure(EntityTypeBuilder<Problem> builder)
         {
-            builder.ToTable("Questions");
+            builder.ToTable("Problems");
 
             builder.HasKey(q => q.Id);
 
@@ -38,25 +38,22 @@ namespace Elara.Infrastructure.Data.Configurations.EducationalConfig
                 .HasDefaultValue(10)
                 .HasPrecision(5, 2);
 
-            builder.Property(q => q.ProblemSetId)
+            builder.Property(q => q.HomeworkId)
                 .IsRequired();
 
-            builder.HasIndex(q => q.ProblemSetId)
-                .HasDatabaseName("IX_Questions_ProblemSetId");
+            builder.HasIndex(q => q.HomeworkId)
+                .HasDatabaseName("IX_Problems_HomeworkId");
 
             builder.HasIndex(q => q.QuestionType)
-                .HasDatabaseName("IX_Questions_QuestionType");
+                .HasDatabaseName("IX_Problems_QuestionType");
 
             builder.HasIndex(q => q.DifficultyLevel)
-                .HasDatabaseName("IX_Questions_DifficultyLevel");
+                .HasDatabaseName("IX_Problems_DifficultyLevel");
 
-            // Relationships
-
-            builder.HasOne(q => q.ProblemSet)
-                .WithMany(a => a.Questions)
-                .HasForeignKey(q => q.ProblemSetId)
+            builder.HasOne(q => q.Homework)
+                .WithMany(l => l.Problems)
+                .HasForeignKey(q => q.HomeworkId)
                 .OnDelete(DeleteBehavior.Cascade);
-
         }
     }
 }

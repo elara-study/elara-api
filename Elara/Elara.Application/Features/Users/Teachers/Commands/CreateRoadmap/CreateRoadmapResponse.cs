@@ -2,7 +2,7 @@ namespace Elara.Application.Features.Users.Teachers.Commands.CreateRoadmap
 {
     public class CreateRoadmapResponse
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public int Grade { get; set; }
         public int SubjectId { get; set; }

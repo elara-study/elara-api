@@ -4,6 +4,6 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetHomeworkOverview
 {
     public class GetHomeworkOverviewQuery : IRequest<HomeworkOverviewDto>
     {
-        public int ModuleId { get; set; }
+        public Guid ModuleId { get; set; }
     }
 }

@@ -11,10 +11,10 @@ namespace Elara.Domain.Entities.Submissions
 
         // Foreign Keys
         public int StudentSubmissionId { get; set; }
-        public int QuestionId { get; set; }
+        public int ProblemId { get; set; }
 
         // Navigation Properties
         public virtual StudentSubmission Submission { get; set; } = null!;
-        public virtual Question Question { get; set; } = null!;
+        public virtual Problem Problem { get; set; } = null!;
     }
 }

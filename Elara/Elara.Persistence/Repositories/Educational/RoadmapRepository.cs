@@ -20,5 +20,14 @@ namespace Elara.Persistence.Repositories.Educational
                 .Include(r => r.Modules)
                 .FirstOrDefaultAsync(cancellationToken);
         }
+
+        public async Task<Roadmap?> GetByPublicIdAsync(Guid publicId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Roadmaps
+                .Where(r => r.PublicId == publicId && !r.IsDeleted)
+                .Include(r => r.Subject)
+                .Include(r => r.Modules)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
     }
 }

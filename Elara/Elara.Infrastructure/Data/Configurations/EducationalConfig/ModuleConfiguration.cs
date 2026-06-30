@@ -12,6 +12,14 @@ namespace Elara.Infrastructure.Data.Configurations.EducationalConfig
 
             builder.HasKey(t => t.Id);
 
+            builder.Property(t => t.PublicId)
+                .IsRequired()
+                .HasDefaultValueSql("gen_random_uuid()");
+
+            builder.HasIndex(t => t.PublicId)
+                .HasDatabaseName("IX_Modules_PublicId")
+                .IsUnique();
+
             builder.Property(t => t.Title)
                 .IsRequired()
                 .HasMaxLength(200);
@@ -30,6 +38,11 @@ namespace Elara.Infrastructure.Data.Configurations.EducationalConfig
 
             builder.HasIndex(t => t.SubjectId)
                 .HasDatabaseName("IX_Modules_SubjectId");
+
+            builder.HasOne(t => t.Roadmap)
+                .WithMany(r => r.Modules)
+                .HasForeignKey(t => t.RoadmapId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(t => t.Subject)
                 .WithMany(s => s.Modules)

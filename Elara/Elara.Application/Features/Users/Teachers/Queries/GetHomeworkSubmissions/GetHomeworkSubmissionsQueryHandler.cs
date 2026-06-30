@@ -8,39 +8,50 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetHomeworkSubmissio
 {
     public class GetHomeworkSubmissionsQueryHandler : IRequestHandler<GetHomeworkSubmissionsQuery, List<HomeworkSubmissionDto>>
     {
-        private readonly IAsyncRepository<ProblemSet, int> _problemSetRepository;
+        private readonly IAsyncRepository<Module, int> _moduleRepository;
+        private readonly IAsyncRepository<Homework, int> _homeworkRepository;
         private readonly IAsyncRepository<StudentSubmission, int> _submissionRepository;
-        private readonly IAsyncRepository<Question, int> _questionRepository;
+        private readonly IAsyncRepository<Problem, int> _problemRepository;
         private readonly IIdentityService _identityService;
         private readonly IAsyncRepository<StudentSubmissionAnswer, int> _answerRepository;
 
         public GetHomeworkSubmissionsQueryHandler(
-            IAsyncRepository<ProblemSet, int> problemSetRepository,
+            IAsyncRepository<Module, int> moduleRepository,
+            IAsyncRepository<Homework, int> homeworkRepository,
             IAsyncRepository<StudentSubmission, int> submissionRepository,
-            IAsyncRepository<Question, int> questionRepository,
+            IAsyncRepository<Problem, int> problemRepository,
             IIdentityService identityService,
             IAsyncRepository<StudentSubmissionAnswer, int> answerRepository)
         {
-            _problemSetRepository = problemSetRepository;
+            _moduleRepository = moduleRepository;
+            _homeworkRepository = homeworkRepository;
             _submissionRepository = submissionRepository;
-            _questionRepository = questionRepository;
+            _problemRepository = problemRepository;
             _identityService = identityService;
             _answerRepository = answerRepository;
         }
 
         public async Task<List<HomeworkSubmissionDto>> Handle(GetHomeworkSubmissionsQuery request, CancellationToken cancellationToken)
         {
-            var problemSet = await _problemSetRepository.GetByIdAsync(request.ProblemSetId, cancellationToken);
-            if (problemSet == null)
+            var module = (await _moduleRepository.FindAsync(m => m.PublicId == request.ModuleId, cancellationToken)).FirstOrDefault();
+            if (module == null)
             {
-                throw new KeyNotFoundException($"ProblemSet with id {request.ProblemSetId} not found.");
+                throw new KeyNotFoundException($"Module not found.");
+            }
+
+            var homework = (await _homeworkRepository.FindAsync(
+                h => h.ModuleId == module.Id, cancellationToken)).FirstOrDefault();
+
+            if (homework == null)
+            {
+                return new List<HomeworkSubmissionDto>();
             }
 
             var assignmentSubmissions = await _submissionRepository.FindAsync(
-                s => s.ProblemSetId == request.ProblemSetId, cancellationToken);
+                s => s.HomeworkId == homework.Id, cancellationToken);
 
-            var totalProblems = await _questionRepository.CountAsync(
-                 q => q.ProblemSetId == request.ProblemSetId, cancellationToken);
+            var totalProblems = await _problemRepository.CountAsync(
+                 q => q.HomeworkId == homework.Id, cancellationToken);
 
             var isRatedRequest = request.Status.Equals("rated", StringComparison.OrdinalIgnoreCase);
 
@@ -51,9 +62,9 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetHomeworkSubmissio
                 var studentName = await _identityService.GetUserNameByIdAsync(sub.StudentId) ?? $"Student {sub.StudentId.ToString()[..8]}";
                 var userImage = await _identityService.GetUserImageDataAsync(sub.StudentId);
                 var avatarUrl = userImage?.ImageUrl;
-                
+
                 var isRated = sub.Score > 0 || !string.IsNullOrWhiteSpace(sub.TeacherFeedback);
-                
+
                 if (isRatedRequest && isRated)
                 {
                     result.Add(new HomeworkSubmissionDto
@@ -63,14 +74,13 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetHomeworkSubmissio
                         StudentName = studentName,
                         AvatarUrl = avatarUrl,
                         Score = sub.Score,
-                        MaxScore = problemSet.MaxScore
+                        MaxScore = homework.MaxScore
                     });
                 }
                 else if (!isRatedRequest && !isRated)
                 {
-                    // For unrated, count submitted answers
                     var submittedAnswers = await _answerRepository.CountAsync(
-    a => a              .StudentSubmissionId == sub.Id, cancellationToken);
+    a => a.StudentSubmissionId == sub.Id, cancellationToken);
 
                     result.Add(new HomeworkSubmissionDto
                     {
