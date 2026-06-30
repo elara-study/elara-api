@@ -17,6 +17,8 @@ using Elara.Application.Features.Users.Teachers.Queries.GetStudentDetail;
 using Elara.Application.Features.Users.Teachers.Commands.AddStudentByUsername;
 using Elara.Application.Features.Users.Teachers.Commands.DeleteGroupStudent;
 using Elara.Application.Features.Users.Teachers.Commands.DeleteClass;
+using Elara.Application.Features.Users.Teachers.Commands.AddInsight;
+using Elara.Application.Features.Users.Teachers.Commands.EditInsight;
 using Elara.API.Controllers.Requests;
 using Elara.Application.Features.Users.Teachers.Queries.GetModuleResources;
 using Elara.Application.Features.Users.Teachers.Commands.AddModuleResource;
@@ -32,7 +34,6 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Elara.Application.Responses;
-using Elara.Application.Features.ChatAnalysisReport.Queries.GetStudentInsightsForTeacher;
 using System.Security.Claims;
 
 namespace Elara.API.Controllers
@@ -315,6 +316,40 @@ namespace Elara.API.Controllers
             return NoContent();
         }
 
+        [HttpPost("students/{studentId:guid}/insights")]
+        [ProducesResponseType(typeof(BaseResponse<AddInsightResponse>), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> AddInsight(Guid studentId, [FromBody] AddInsightRequest request)
+        {
+            var command = new AddInsightCommand(studentId, request.Content);
+            var result = await _mediator.Send(command);
+            return StatusCode(StatusCodes.Status201Created, new BaseResponse<AddInsightResponse>
+            {
+                Message = "Insight added successfully.",
+                Data = result
+            });
+        }
+
+        [HttpPatch("insights/{insightId:guid}")]
+        [ProducesResponseType(typeof(BaseResponse<AddInsightResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> EditInsight(Guid insightId, [FromBody] EditInsightRequest request)
+        {
+            var command = new EditInsightCommand(insightId, request.Content);
+            var result = await _mediator.Send(command);
+            return Ok(new BaseResponse<AddInsightResponse>
+            {
+                Message = "Insight updated successfully.",
+                Data = result
+            });
+        }
+
         [HttpGet("students/{studentId:guid}")]
         [ProducesResponseType(typeof(BaseResponse<StudentDetailResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -327,22 +362,6 @@ namespace Elara.API.Controllers
             return Ok(new BaseResponse<StudentDetailResponse>
             {
                 Message = "Student details retrieved successfully.",
-                Data = result
-            });
-        }
-
-        [HttpGet("students/{studentId:guid}/insights")]
-        [ProducesResponseType(typeof(BaseResponse<StudentInsightForTeacherDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetStudentInsights(Guid studentId, CancellationToken cancellationToken)
-        {
-            var result = await _mediator.Send(
-                new GetStudentInsightsForTeacherQuery { StudentId = studentId }, cancellationToken);
-            return Ok(new BaseResponse<StudentInsightForTeacherDto>
-            {
-                Message = "Student insights retrieved successfully.",
                 Data = result
             });
         }

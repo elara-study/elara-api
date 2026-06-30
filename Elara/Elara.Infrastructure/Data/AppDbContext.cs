@@ -54,6 +54,7 @@ namespace Elara.Infrastructure.Data
         public DbSet<Announcement> Announcements { get; set; }
         public DbSet<NotificationPreference> NotificationPreferences { get; set; }
         public DbSet<DeviceToken> DeviceTokens { get; set; }
+        public DbSet<TeacherInsight> TeacherInsights { get; set; }
         #endregion
 
         #region Junction Tables DbSets

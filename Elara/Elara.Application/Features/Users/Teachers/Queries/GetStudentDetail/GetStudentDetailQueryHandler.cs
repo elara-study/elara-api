@@ -5,6 +5,7 @@ using Elara.Application.Contracts.Persistence.Administrative;
 using Elara.Application.Contracts.Persistence.Chat;
 using Elara.Application.Contracts.Persistence.Users;
 using Elara.Application.Features.Users.Students.Queries.GetStudentGroups;
+using Elara.Domain.Entities.Administrative;
 using Elara.Domain.Entities.Submissions;
 using Elara.Domain.Enums;
 using MediatR;
@@ -18,6 +19,7 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetStudentDetail
         private readonly IClassRepository _classRepository;
         private readonly IChatRepository _chatRepository;
         private readonly IAsyncRepository<QuizSession, int> _quizSessionRepository;
+        private readonly IAsyncRepository<TeacherInsight, int> _teacherInsightRepository;
         private readonly ICurrentUserService _currentUserService;
 
         public GetStudentDetailQueryHandler(
@@ -26,6 +28,7 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetStudentDetail
             IClassRepository classRepository,
             IChatRepository chatRepository,
             IAsyncRepository<QuizSession, int> quizSessionRepository,
+            IAsyncRepository<TeacherInsight, int> teacherInsightRepository,
             ICurrentUserService currentUserService)
         {
             _teacherRepository = teacherRepository;
@@ -33,6 +36,7 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetStudentDetail
             _classRepository = classRepository;
             _chatRepository = chatRepository;
             _quizSessionRepository = quizSessionRepository;
+            _teacherInsightRepository = teacherInsightRepository;
             _currentUserService = currentUserService;
         }
 
@@ -68,8 +72,26 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetStudentDetail
                 ? Math.Round((double)profile.TotalXP / xpTarget * 100, 2)
                 : 100.0;
 
-            var reports = await _chatRepository.GetReportsByStudentIdAsync(request.StudentId, cancellationToken);
-            var latestReport = reports.FirstOrDefault();
+            var aiReports = await _chatRepository.GetReportsByStudentIdAsync(request.StudentId, cancellationToken);
+            var teacherInsights = await _teacherInsightRepository.FindAsync(
+                t => t.StudentId == request.StudentId && !t.IsDeleted, cancellationToken);
+
+            var insights = new List<StudentDetailInsightDto>();
+            insights.AddRange(aiReports.Select(r => new StudentDetailInsightDto
+            {
+                Id = r.PublicId,
+                Source = "ai",
+                LastUpdated = r.UpdatedAt ?? r.CreatedAt,
+                Content = r.ReportText
+            }));
+            insights.AddRange(teacherInsights.Select(t => new StudentDetailInsightDto
+            {
+                Id = t.PublicId,
+                Source = "teacher",
+                LastUpdated = t.CreatedAt,
+                Content = t.Content
+            }));
+            insights = insights.OrderByDescending(i => i.LastUpdated).ToList();
 
             return new StudentDetailResponse
             {
@@ -103,12 +125,7 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetStudentDetail
                     FullName = p.FullName,
                     AvatarUrl = p.AvatarUrl
                 }).ToList(),
-                Insights = latestReport == null ? null : new StudentDetailInsightDto
-                {
-                    InsightId = latestReport.PublicId,
-                    LastUpdated = latestReport.UpdatedAt ?? latestReport.CreatedAt,
-                    Content = latestReport.ReportText
-                }
+                Insights = insights
             };
         }
     }

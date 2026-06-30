@@ -6,7 +6,7 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetStudentDetail
         public StudentDetailGamificationDto Gamification { get; set; } = new();
         public StudentDetailStatsDto Stats { get; set; } = new();
         public List<StudentDetailParentDto> Parents { get; set; } = [];
-        public StudentDetailInsightDto? Insights { get; set; }
+        public List<StudentDetailInsightDto> Insights { get; set; } = [];
     }
 
     public class StudentDetailUserDto
@@ -45,7 +45,8 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetStudentDetail
 
     public class StudentDetailInsightDto
     {
-        public Guid InsightId { get; set; }
+        public Guid Id { get; set; }
+        public string Source { get; set; } = string.Empty;
         public DateTime LastUpdated { get; set; }
         public string Content { get; set; } = string.Empty;
     }
