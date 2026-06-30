@@ -53,7 +53,6 @@ namespace Elara.Application.Features.Rewards.Queries.GetBadges
                  cancellationToken);
 
             var badges = new List<BadgeDto>();
-
             foreach (var achievement in allAchievements)
             {
                 var earnedRecord = earnedAchievements.FirstOrDefault(sa => sa.AchievementId == achievement.Id);
@@ -61,16 +60,7 @@ namespace Elara.Application.Features.Rewards.Queries.GetBadges
 
                 BadgeProgressDto? progress = null;
 
-                if (isEarned)
-                {
-                    progress = new BadgeProgressDto
-                    {
-                        Current = achievement.TargetValue,
-                        Target = achievement.TargetValue,
-                        Percentage = 100
-                    };
-                }
-                else if (achievement.TargetValue > 0)
+                if (!isEarned && achievement.TargetValue > 0)
                 {
                     int currentValue = 0;
                     switch (achievement.AchievementType)
@@ -108,8 +98,7 @@ namespace Elara.Application.Features.Rewards.Queries.GetBadges
                     progress = new BadgeProgressDto
                     {
                         Current = currentValue,
-                        Target = achievement.TargetValue,
-                        Percentage = (int)((double)currentValue / achievement.TargetValue * 100)
+                        Target = achievement.TargetValue
                     };
                 }
 
@@ -118,14 +107,14 @@ namespace Elara.Application.Features.Rewards.Queries.GetBadges
                     Id = achievement.Id,
                     Title = achievement.Title,
                     Description = achievement.Description,
-                    ImageUrl = achievement.ImageUrl,
-                    IsEarned = isEarned,
+                    IconUrl = achievement.ImageUrl, 
+                    IsUnlocked = isEarned,
                     EarnedAt = earnedRecord?.EarnedAt,
                     Progress = progress
                 });
             }
 
-            return badges.OrderBy(b => b.IsEarned ? 0 : 1).ThenBy(b => b.Id).ToList();
+            return badges.OrderBy(b => b.IsUnlocked ? 0 : 1).ThenBy(b => b.Id).ToList();
         }
     }
 }

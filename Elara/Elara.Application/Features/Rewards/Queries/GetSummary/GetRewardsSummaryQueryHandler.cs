@@ -5,6 +5,7 @@ using Elara.Domain.Entities.Administrative;
 using Elara.Domain.Entities.Submissions;
 using MediatR;
 using Elara.Application.Contracts.Persistence.Users;
+using Elara.Domain.Enums;
 
 namespace Elara.Application.Features.Rewards.Queries.GetSummary
 {
@@ -43,15 +44,15 @@ namespace Elara.Application.Features.Rewards.Queries.GetSummary
 
             // Get lessons completed 
             int completedLessons = await _quizSessionRepository.CountAsync(
-                s => s.StudentId == userId && s.Status == Domain.Enums.QuizSessionStatus.Completed,
+                s => s.StudentId == userId && s.Status == QuizSessionStatus.Completed,
                 cancellationToken);
 
             return new RewardSummaryDto
             {
                 TotalXp = student.TotalXP,
-                CurrentStreak = student.CurrentStreak,
                 LessonsCompleted = completedLessons,
-                BadgesCount = new BadgesCountDto
+                StreakDays = student.CurrentStreak,
+                Badges = new BadgesCountDto
                 {
                     Earned = earnedBadges,
                     Total = totalBadges
