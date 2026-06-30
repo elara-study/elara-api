@@ -5,6 +5,7 @@ using Elara.Application.Features.Users.Teachers.Queries.GetTeacherRoadmaps;
 using Elara.Application.Features.Users.Teachers.Queries.GetModuleHomeworks;
 using Elara.Application.Features.Users.Teachers.Commands.AddAnnouncement;
 using Elara.Application.Features.Users.Teachers.Commands.DeleteAnnouncement;
+using Elara.Application.Features.Users.Teachers.Commands.EditAnnouncement;
 using Elara.Application.Features.Users.Teachers.Queries.GetAnnouncements;
 using Elara.Application.Features.Users.Teachers.Queries.GetClassInfo;
 using Elara.Application.Features.Users.Teachers.Queries.GetTeacherClasses;
@@ -233,6 +234,23 @@ namespace Elara.API.Controllers
             return Ok(new BaseResponse<List<GetAnnouncementsResponse>>
             {
                 Message = "Announcements retrieved successfully.",
+                Data = result
+            });
+        }
+
+        [HttpPatch("groups/{id:guid}/announcements/{announcementId:guid}")]
+        [ProducesResponseType(typeof(BaseResponse<AddAnnouncementResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> EditAnnouncement(Guid id, Guid announcementId, [FromBody] EditAnnouncementRequest request)
+        {
+            var command = new EditAnnouncementCommand(id, announcementId, request.Title, request.Content);
+            var result = await _mediator.Send(command);
+            return Ok(new BaseResponse<AddAnnouncementResponse>
+            {
+                Message = "Announcement updated successfully.",
                 Data = result
             });
         }
