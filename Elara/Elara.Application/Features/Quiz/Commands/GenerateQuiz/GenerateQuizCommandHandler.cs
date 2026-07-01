@@ -74,7 +74,7 @@ namespace Elara.Application.Features.Quiz.Commands.GenerateQuiz
                 QuestionNumber = i + 1,
                 Text = q.Text,
                 QuestionType = q.Type,
-                HasHint = !string.IsNullOrEmpty(q.Hint),
+                Hint = string.IsNullOrEmpty(q.Hint) ? null : q.Hint,
                 Options = q.Options?.Select(o => o.Text).ToList() ?? new()
             }).ToList() ?? new();
 

@@ -1,9 +1,8 @@
 using Asp.Versioning;
-using Elara.Application.Features.Quiz.Commands.AskForHint;
+using Elara.Application.Features.Quiz.DTOs;
 using Elara.Application.Features.Quiz.Commands.FinishQuiz;
 using Elara.Application.Features.Quiz.Commands.GenerateQuiz;
 using Elara.Application.Features.Quiz.Commands.SubmitAnswer;
-using Elara.Application.Features.Quiz.DTOs;
 using Elara.Application.Features.Quiz.Queries.GetHistory;
 using Elara.Application.Responses;
 using MediatR;
@@ -33,18 +32,6 @@ namespace Elara.API.Controllers
             return StatusCode(StatusCodes.Status201Created, new BaseResponse<GeneratedQuizDto>
             {
                 Message = "Quiz generated successfully.",
-                Data = result
-            });
-        }
-
-        [HttpPost("sessions/{sessionId}/questions/{questionNumber}/hint")]
-        [ProducesResponseType(typeof(BaseResponse<HintDto>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetHint(int sessionId, int questionNumber)
-        {
-            var result = await _mediator.Send(new AskForHintCommand { SessionId = sessionId, QuestionNumber = questionNumber });
-            return Ok(new BaseResponse<HintDto>
-            {
-                Message = "Hint retrieved successfully.",
                 Data = result
             });
         }
