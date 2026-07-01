@@ -123,16 +123,49 @@ namespace Elara.Infrastructure.Quiz
             }
         }
 
-        public async Task<string> GenerateQuizInsightAsync(int correctCount, int totalCount, string quizTitle, CancellationToken cancellationToken)
+        public async Task<string> GenerateQuizInsightAsync(string questionsJson, ICollection<QuizAnswer> answers, string quizTitle, CancellationToken cancellationToken)
         {
-            double accuracy = totalCount > 0 ? (double)correctCount / totalCount * 100 : 0;
+            var quizData = JsonSerializer.Deserialize<AIQuizResult>(questionsJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            if (quizData?.Questions == null || answers == null || answers.Count == 0)
+                return "Complete the quiz to receive personalized insights.";
 
-            if (accuracy >= 80)
-                return "Excellent work! You have mastered this lesson.";
-            else if (accuracy >= 50)
-                return "Good job, but there's room for improvement.";
-            else
-                return "Don't give up! This topic needs more focus.";
+            var answerLookup = answers.ToDictionary(a => a.QuestionText, a => a, StringComparer.OrdinalIgnoreCase);
+
+            var resultsLines = new List<string>();
+            foreach (var q in quizData.Questions)
+            {
+                var studentGotItRight = answerLookup.TryGetValue(q.Text, out var answer) && answer.IsCorrect == true;
+                var mark = studentGotItRight ? "[✓]" : "[✗]";
+                var correctText = q.Options?.FirstOrDefault(o => o.IsCorrect)?.Text ?? "";
+                resultsLines.Add($"{mark} Q: {q.Text}");
+                if (!studentGotItRight)
+                    resultsLines.Add($"   Correct answer: {correctText}");
+            }
+
+            var resultsText = string.Join("\n", resultsLines);
+            string prompt = $@"The student completed the quiz '{quizTitle}'. Here are their results:
+
+{resultsText}
+
+Give a VERY concise insight (2-3 sentences max) identifying the student's weak points based on what they got wrong. Suggest what topics they should review. Be encouraging and specific. Do NOT use markdown or bullet points.";
+
+            try
+            {
+                var insight = await _geminiService.GenerateResponseAsync(prompt, "", [], cancellationToken);
+                return insight.Replace("```", "").Trim();
+            }
+            catch
+            {
+                int correctCount = answers.Count(a => a.IsCorrect == true);
+                int totalCount = quizData.Questions.Count;
+                double accuracy = totalCount > 0 ? (double)correctCount / totalCount * 100 : 0;
+                if (accuracy >= 80)
+                    return "Excellent work! You have mastered this lesson.";
+                else if (accuracy >= 50)
+                    return "Good job, but there's room for improvement. Review the topics you missed.";
+                else
+                    return "This topic needs more focus. Try reviewing the material and retaking the quiz.";
+            }
         }
 
         public async Task<int> CalculateTotalXpAsync(QuizSession session, CancellationToken cancellationToken)

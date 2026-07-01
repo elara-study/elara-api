@@ -44,7 +44,7 @@ namespace Elara.Application.Features.Quiz.Commands.FinishQuiz
             session.UnansweredCount = totalQuestions - session.Answers.Count;
 
             var quizTitle = quizData?.Title ?? "Quiz";
-            session.ElaraInsight = await _quizService.GenerateQuizInsightAsync(session.CorrectAnswers, totalQuestions, quizTitle, cancellationToken);
+            session.ElaraInsight = await _quizService.GenerateQuizInsightAsync(session.QuestionsJson, session.Answers, quizTitle, cancellationToken);
 
             int xpEarned = await _quizService.CalculateTotalXpAsync(session, cancellationToken);
             session.XpEarned = xpEarned;
