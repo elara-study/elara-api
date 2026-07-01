@@ -122,7 +122,7 @@ namespace Elara.API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> CreateRoadmap([FromBody] CreateRoadmapRequest request)
         {
-            var command = new CreateRoadmapCommand(request.Name, request.Grade, request.Subject);
+            var command = new CreateRoadmapCommand(request.Name, request.Grade);
             var result = await _mediator.Send(command);
             return CreatedAtAction(nameof(CreateRoadmap), new BaseResponse<CreateRoadmapResponse>
             {

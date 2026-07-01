@@ -11,20 +11,17 @@ namespace Elara.Application.Features.Users.Teachers.Commands.CreateRoadmap
     public class CreateRoadmapCommandHandler : IRequestHandler<CreateRoadmapCommand, CreateRoadmapResponse>
     {
         private readonly IRoadmapRepository _roadmapRepository;
-        private readonly ISubjectRepository _subjectRepository;
         private readonly ITeacherRepository _teacherRepository;
         private readonly ICurrentUserService _currentUserService;
         private readonly IMapper _mapper;
 
         public CreateRoadmapCommandHandler(
             IRoadmapRepository roadmapRepository,
-            ISubjectRepository subjectRepository,
             ITeacherRepository teacherRepository,
             ICurrentUserService currentUserService,
             IMapper mapper)
         {
             _roadmapRepository = roadmapRepository;
-            _subjectRepository = subjectRepository;
             _teacherRepository = teacherRepository;
             _currentUserService = currentUserService;
             _mapper = mapper;
@@ -39,15 +36,14 @@ namespace Elara.Application.Features.Users.Teachers.Commands.CreateRoadmap
             if (teacher == null)
                 throw new KeyNotFoundException($"Teacher with ID {teacherId} not found.");
 
-            var subject = await _subjectRepository.GetByNameAsync(request.Subject.ToString(), cancellationToken);
-            if (subject == null)
-                throw new KeyNotFoundException($"Subject '{request.Subject}' not found.");
+            if (teacher.SubjectId == null)
+                throw new InvalidOperationException("Teacher must be assigned to a subject before creating roadmaps.");
 
             var roadmap = new Roadmap
             {
                 Name = request.Name,
                 Grade = (GradeLevel)request.Grade,
-                SubjectId = subject.Id,
+                SubjectId = teacher.SubjectId.Value,
                 TeacherId = teacherId,
             };
 

@@ -15,9 +15,6 @@ namespace Elara.Application.Features.Users.Teachers.Commands.CreateRoadmap
             RuleFor(x => x.Grade)
                 .Must(grade => Enum.IsDefined(typeof(GradeLevel), grade))
                 .WithMessage("Grade must be one of the allowed domain grade levels.");
-
-            RuleFor(x => x.Subject)
-                .IsInEnum().WithMessage("Subject must be a valid value.");
         }
     }
 }
