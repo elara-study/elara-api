@@ -1,4 +1,3 @@
-using Elara.Application.Common.Gamification;
 using Elara.Application.Common.Interfaces;
 using Elara.Application.Contracts.Persistence.Users;
 using Elara.Application.Features.Rewards.DTOs;
@@ -29,49 +28,59 @@ namespace Elara.Application.Features.Rewards.Queries.GetLeaderboard
             // Calculate top students
             var topStudentsEntities = await _studentRepository.GetTopStudentsAsync(page, pageSize, cancellationToken);
             var studentIds = topStudentsEntities.Select(s => s.Id).ToList();
+
+            if (!studentIds.Contains(userId))
+            {
+                studentIds.Add(userId);
+            }
+
             var studentNamesMap = await _studentRepository.GetStudentNamesAsync(studentIds, cancellationToken);
 
-            var topStudentsDto = new List<LeaderboardStudentDto>();
+            var leaderboard = new List<LeaderboardStudentDto>();
             int currentRank = ((page - 1) * pageSize) + 1;
+            bool currentUserInTop = false;
 
             foreach (var student in topStudentsEntities)
             {
                 bool isCurrentUser = student.Id == userId;
+                if (isCurrentUser) currentUserInTop = true;
+
                 string realName = studentNamesMap.TryGetValue(student.Id, out var name) ? name : "Unknown Student";
 
-                topStudentsDto.Add(new LeaderboardStudentDto
+                leaderboard.Add(new LeaderboardStudentDto
                 {
                     Rank = currentRank++,
+                    UserId = student.Id.ToString(),
                     Name = isCurrentUser ? "You" : realName, 
                     Xp = student.TotalXP,
-                    Level = StudentGamification.CalculateLevel(student.TotalXP),
-                    IsCurrentUser = isCurrentUser,
-                    PhotoUrl = null
+                    AvatarUrl = null,
+                    IsCurrentUser = isCurrentUser
                 });
             }
 
             // Find current user's rank
-            var currentUserEntity = topStudentsEntities.FirstOrDefault(s => s.Id == userId) 
-                ?? await _studentRepository.GetByIdAsync(userId, cancellationToken);
-                
-            if (currentUserEntity == null) throw new Exception("Current user not found");
-
-            var userRank = await _studentRepository.GetStudentRankAsync(userId, currentUserEntity.TotalXP, currentUserEntity.CreatedAt, cancellationToken);
-
-            var currentUserRankDto = new LeaderboardStudentDto
+            if (!currentUserInTop && page == 1)
             {
-                Rank = userRank,
-                Name = "You",
-                Xp = currentUserEntity.TotalXP,
-                Level = StudentGamification.CalculateLevel(currentUserEntity.TotalXP),
-                IsCurrentUser = true,
-                PhotoUrl = null
-            };
+                var currentUserEntity = await _studentRepository.GetByIdAsync(userId, cancellationToken);
+                if (currentUserEntity != null)
+                {
+                    var userRank = await _studentRepository.GetStudentRankAsync(userId, currentUserEntity.TotalXP, currentUserEntity.CreatedAt, cancellationToken);
+
+                    leaderboard.Add(new LeaderboardStudentDto
+                    {
+                        Rank = userRank,
+                        UserId = userId.ToString(),
+                        Name = "You",
+                        Xp = currentUserEntity.TotalXP,
+                        AvatarUrl = null,
+                        IsCurrentUser = true
+                    });
+                }
+            }
 
             return new LeaderboardDto
             {
-                TopStudents = topStudentsDto,
-                CurrentUserRank = currentUserRankDto
+                Leaderboard = leaderboard 
             };
         }
     }

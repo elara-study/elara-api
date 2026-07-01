@@ -5,8 +5,8 @@ namespace Elara.Application.Features.Rewards.DTOs
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
-        public string? ImageUrl { get; set; }
-        public bool IsEarned { get; set; }
+        public string? IconUrl { get; set; }
+        public bool IsUnlocked { get; set; }
         public DateTime? EarnedAt { get; set; }
         public BadgeProgressDto? Progress { get; set; }
     }
@@ -15,6 +15,5 @@ namespace Elara.Application.Features.Rewards.DTOs
     {
         public int Current { get; set; }
         public int Target { get; set; }
-        public int Percentage { get; set; }
     }
 }

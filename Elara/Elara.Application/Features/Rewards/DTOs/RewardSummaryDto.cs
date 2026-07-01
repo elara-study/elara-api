@@ -4,8 +4,8 @@ namespace Elara.Application.Features.Rewards.DTOs
     {
         public int TotalXp { get; set; }
         public int LessonsCompleted { get; set; }
-        public int CurrentStreak { get; set; }
-        public BadgesCountDto BadgesCount { get; set; } = new();
+        public int StreakDays { get; set; }
+        public BadgesCountDto Badges { get; set; } = new();
     }
 
     public class BadgesCountDto
