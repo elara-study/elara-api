@@ -9,7 +9,7 @@ namespace Elara.Application.Features.Users.Students.Queries.GetStudentGroupModul
 
     public class ModuleDto
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
     }

@@ -220,7 +220,7 @@ namespace Elara.Persistence.Repositories.Administrative
                         ? new List<ModuleDto>()
                         : c.Roadmap.Modules.Select(m => new ModuleDto
                         {
-                            Id = m.Id,
+                            Id = m.PublicId,
                             Title = m.Title,
                             Description = m.Description
                         }).ToList()
