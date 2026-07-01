@@ -1,4 +1,5 @@
 using Elara.Domain.Entities.JunctionTables;
+using Elara.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -11,6 +12,13 @@ namespace Elara.Infrastructure.Data.Configurations.JunctionTablesConfig
             builder.ToTable("StudentParents");
 
             builder.HasKey(sp => sp.Id);
+
+            builder.Property(sp => sp.Status)
+                .IsRequired()
+                .HasDefaultValue(StudentParentRelationStatus.Pending);
+
+            builder.Property(sp => sp.InitiatedById)
+                .IsRequired(false);
 
             builder.HasIndex(sp => new { sp.StudentId, sp.ParentId })
                 .IsUnique()

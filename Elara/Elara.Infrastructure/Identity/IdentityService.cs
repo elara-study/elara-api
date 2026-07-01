@@ -111,6 +111,15 @@ namespace Elara.Infrastructure.Identity
                     };
                     await _context.Students.AddAsync(newStudent);
                 }
+                else if (requestedRole == Roles.Parent)
+                {
+                    var newParent = new Parent
+                    {
+                        Id = user.Id,
+                        IsDeleted = false
+                    };
+                    await _context.Parents.AddAsync(newParent);
+                }
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();

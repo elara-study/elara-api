@@ -1,7 +1,9 @@
 using Elara.Application.Contracts.Persistence.Users;
+using Elara.Application.Features.Users.Parents.Queries.GetParentChildren;
 using Elara.Application.Models.Users;
 using Elara.Domain.Entities.JunctionTables;
 using Elara.Domain.Entities.Users;
+using Elara.Domain.Entities.Submissions;
 using Elara.Domain.Enums;
 using Elara.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -29,7 +31,7 @@ namespace Elara.Persistence.Repositories.Users
         public async Task<IReadOnlyList<Student>> GetByParentIdAsync(Guid parentId, CancellationToken cancellationToken = default)
         {
             return await _context.StudentParents
-                .Where(sp => sp.ParentId == parentId)
+                .Where(sp => sp.ParentId == parentId && sp.Status == StudentParentRelationStatus.Accepted)
                 .Select(sp => sp.Student)
                 .Where(s => !s.IsDeleted)
                 .ToListAsync(cancellationToken);
@@ -38,7 +40,7 @@ namespace Elara.Persistence.Repositories.Users
         public async Task<IReadOnlyList<Guid>> GetParentIdsByStudentIdAsync(Guid studentId, CancellationToken cancellationToken = default)
         {
             return await _context.StudentParents
-                .Where(sp => sp.StudentId == studentId)
+                .Where(sp => sp.StudentId == studentId && sp.Status == StudentParentRelationStatus.Accepted)
                 .Select(sp => sp.ParentId)
                 .ToListAsync(cancellationToken);
         }
@@ -46,7 +48,7 @@ namespace Elara.Persistence.Repositories.Users
         public async Task<bool> IsParentOfStudentAsync(Guid parentId, Guid studentId, CancellationToken cancellationToken = default)
         {
             return await _context.StudentParents
-                .AnyAsync(sp => sp.ParentId == parentId && sp.StudentId == studentId, cancellationToken);
+                .AnyAsync(sp => sp.ParentId == parentId && sp.StudentId == studentId && sp.Status == StudentParentRelationStatus.Accepted, cancellationToken);
         }
 
         public async Task<IReadOnlyList<Guid>> GetTeacherIdsByStudentIdAsync(Guid studentId, CancellationToken cancellationToken = default)
@@ -290,6 +292,144 @@ namespace Elara.Persistence.Repositories.Users
                     PublicId = sc.Class.PublicId,
                     ClassName = sc.Class.ClassName
                 })
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<StudentParentWithStatsDto>> GetParentChildrenWithStatsAsync(string parentId, CancellationToken cancellationToken)
+        {
+            var parentGuid = Guid.Parse(parentId);
+
+            return await _context.StudentParents
+                .Where(sp => sp.ParentId == parentGuid && !sp.IsDeleted)
+                .Select(sp => new StudentParentWithStatsDto
+                {
+                    Id = sp.Id,
+                    StudentId = sp.StudentId,
+                    Status = sp.Status,
+                    CreatedAt = sp.CreatedAt,
+                    GradeLevel = sp.Student.GradeLevel,
+                    TotalXP = sp.Student.TotalXP,
+                    CurrentStreak = sp.Student.CurrentStreak,
+                    CompletedLessonsCount = sp.Student.QuizSessions.Count(s => s.Status == QuizSessionStatus.Completed && !s.IsDeleted)
+                })
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<Dictionary<Guid, double>> GetLatestCompletionRatesAsync(List<Guid> studentIds, CancellationToken cancellationToken)
+        {
+            if (studentIds == null || !studentIds.Any())
+                return new Dictionary<Guid, double>();
+
+            var reports = await _context.Reports
+                .Where(r => studentIds.Contains(r.StudentId))
+                .GroupBy(r => r.StudentId)
+                .Select(g => new
+                {
+                    StudentId = g.Key,
+                    CompletionRate = g.OrderByDescending(r => r.GeneratedDate)
+                                      .Select(r => r.CompletionRate)
+                                      .FirstOrDefault()
+                })
+                .ToListAsync(cancellationToken);
+
+            return reports.ToDictionary(r => r.StudentId, r => r.CompletionRate);
+        }
+
+        public async Task<Dictionary<Guid, List<ChildSubjectProgressDto>>> GetRealSubjectProgressForStudentsAsync(List<Guid> studentIds, CancellationToken cancellationToken)
+        {
+            if (studentIds == null || !studentIds.Any())
+                return new Dictionary<Guid, List<ChildSubjectProgressDto>>();
+
+            var progressData = await _context.Classes
+                .Where(c => c.StudentClasses.Any(sc => studentIds.Contains(sc.StudentId) && sc.IsActive && !sc.IsDeleted) && !c.IsDeleted)
+                .SelectMany(c => c.StudentClasses
+                    .Where(sc => studentIds.Contains(sc.StudentId) && sc.IsActive && !sc.IsDeleted)
+                    .Select(sc => new
+                    {
+                        StudentId = sc.StudentId,
+                        SubjectName = c.Subject.Name,
+                        TotalItems = c.Roadmap != null
+                            ? c.Roadmap.Modules.SelectMany(m => m.Homeworks).Count()
+                            : 0,
+                        CompletedItems = c.Roadmap != null
+                            ? _context.StudentSubmissions.Count(sub => 
+                                sub.StudentId == sc.StudentId && 
+                                !sub.IsDeleted &&
+                                _context.Homework.Any(h => h.Id == sub.HomeworkId && h.Module.RoadmapId == c.RoadmapId))
+                            : 0
+                    }))
+                .ToListAsync(cancellationToken);
+
+            var grouped = progressData
+                .GroupBy(x => x.StudentId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.GroupBy(x => x.SubjectName)
+                          .Select(sg => new ChildSubjectProgressDto
+                          {
+                              subject = sg.Key ?? "Unknown",
+                              progress_percentage = sg.Sum(x => x.TotalItems) == 0 ? 0 :
+                                  (int)Math.Round((double)sg.Sum(x => x.CompletedItems) / sg.Sum(x => x.TotalItems) * 100)
+                          })
+                          .ToList()
+                );
+
+            return grouped;
+        }
+
+        public async Task<Dictionary<Guid, ChildDashboardStatsDto>> GetChildrenDashboardStatsAsync(List<Guid> studentIds, CancellationToken cancellationToken)
+        {
+            if (studentIds == null || !studentIds.Any())
+                return new Dictionary<Guid, ChildDashboardStatsDto>();
+
+            var statsList = await _context.Students
+                .Where(s => studentIds.Contains(s.Id))
+                .Select(s => new
+                {
+                    StudentId = s.Id,
+                    TotalLessons = s.StudentClasses
+                        .Where(sc => sc.IsActive && !sc.IsDeleted && !sc.Class.IsDeleted)
+                        .Select(sc => sc.Class.Roadmap == null 
+                            ? 0 
+                            : sc.Class.Roadmap.Modules.SelectMany(m => m.Homeworks).Count())
+                        .Sum(),
+                    CompletedLessons = s.QuizSessions
+                        .Count(qs => qs.Status == QuizSessionStatus.Completed && !qs.IsDeleted)
+                })
+                .ToListAsync(cancellationToken);
+
+            return statsList.ToDictionary(
+                x => x.StudentId,
+                x => new ChildDashboardStatsDto
+                {
+                    TotalLessons = x.TotalLessons,
+                    CompletedLessons = x.CompletedLessons
+                });
+        }
+
+        public async Task<List<StudentSubmission>> GetRecentSubmissionsForStudentsAsync(List<Guid> studentIds, int count, CancellationToken cancellationToken)
+        {
+            if (studentIds == null || !studentIds.Any())
+                return new List<StudentSubmission>();
+
+            return await _context.StudentSubmissions
+                .AsNoTracking()
+                .Where(s => studentIds.Contains(s.StudentId))
+                .OrderByDescending(s => s.CreatedAt)
+                .Take(count)
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<QuizSession>> GetRecentCompletedQuizSessionsForStudentsAsync(List<Guid> studentIds, int count, CancellationToken cancellationToken)
+        {
+            if (studentIds == null || !studentIds.Any())
+                return new List<QuizSession>();
+
+            return await _context.QuizSessions
+                .AsNoTracking()
+                .Where(qs => studentIds.Contains(qs.StudentId) && qs.Status == QuizSessionStatus.Completed && !qs.IsDeleted)
+                .OrderByDescending(qs => qs.CompletedAt ?? qs.CreatedAt)
+                .Take(count)
                 .ToListAsync(cancellationToken);
         }
     }
