@@ -1,4 +1,5 @@
 using Elara.Application.Contracts.Persistence.Users;
+using Elara.Application.Features.Users.Parents.Queries.GetParentChildren;
 using Elara.Application.Models.Users;
 using Elara.Domain.Entities.JunctionTables;
 using Elara.Domain.Entities.Users;
@@ -29,7 +30,7 @@ namespace Elara.Persistence.Repositories.Users
         public async Task<IReadOnlyList<Student>> GetByParentIdAsync(Guid parentId, CancellationToken cancellationToken = default)
         {
             return await _context.StudentParents
-                .Where(sp => sp.ParentId == parentId)
+                .Where(sp => sp.ParentId == parentId && sp.Status == StudentParentRelationStatus.Accepted)
                 .Select(sp => sp.Student)
                 .Where(s => !s.IsDeleted)
                 .ToListAsync(cancellationToken);
@@ -38,7 +39,7 @@ namespace Elara.Persistence.Repositories.Users
         public async Task<IReadOnlyList<Guid>> GetParentIdsByStudentIdAsync(Guid studentId, CancellationToken cancellationToken = default)
         {
             return await _context.StudentParents
-                .Where(sp => sp.StudentId == studentId)
+                .Where(sp => sp.StudentId == studentId && sp.Status == StudentParentRelationStatus.Accepted)
                 .Select(sp => sp.ParentId)
                 .ToListAsync(cancellationToken);
         }
@@ -46,7 +47,7 @@ namespace Elara.Persistence.Repositories.Users
         public async Task<bool> IsParentOfStudentAsync(Guid parentId, Guid studentId, CancellationToken cancellationToken = default)
         {
             return await _context.StudentParents
-                .AnyAsync(sp => sp.ParentId == parentId && sp.StudentId == studentId, cancellationToken);
+                .AnyAsync(sp => sp.ParentId == parentId && sp.StudentId == studentId && sp.Status == StudentParentRelationStatus.Accepted, cancellationToken);
         }
 
         public async Task<IReadOnlyList<Guid>> GetTeacherIdsByStudentIdAsync(Guid studentId, CancellationToken cancellationToken = default)
@@ -291,6 +292,86 @@ namespace Elara.Persistence.Repositories.Users
                     ClassName = sc.Class.ClassName
                 })
                 .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<StudentParent>> GetParentChildrenWithStatsAsync(string parentId, CancellationToken cancellationToken)
+        {
+            var parentGuid = Guid.Parse(parentId);
+
+            return await _context.StudentParents
+                .Include(sp => sp.Student)
+                    .ThenInclude(s => s.QuizSessions)
+                .Include(sp => sp.Student)
+                    .ThenInclude(s => s.StudentClasses)
+                        .ThenInclude(sc => sc.Class)
+                            .ThenInclude(c => c.Roadmap)
+                                .ThenInclude(r => r.Modules)
+                                    .ThenInclude(m => m.Homeworks)
+                .Where(sp => sp.ParentId == parentGuid && !sp.IsDeleted)
+                .AsSplitQuery() 
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<Dictionary<Guid, double>> GetLatestCompletionRatesAsync(List<Guid> studentIds, CancellationToken cancellationToken)
+        {
+            if (studentIds == null || !studentIds.Any())
+                return new Dictionary<Guid, double>();
+
+            var reports = await _context.Reports
+                .Where(r => studentIds.Contains(r.StudentId))
+                .GroupBy(r => r.StudentId)
+                .Select(g => new
+                {
+                    StudentId = g.Key,
+                    CompletionRate = g.OrderByDescending(r => r.GeneratedDate)
+                                      .Select(r => r.CompletionRate)
+                                      .FirstOrDefault()
+                })
+                .ToListAsync(cancellationToken);
+
+            return reports.ToDictionary(r => r.StudentId, r => r.CompletionRate);
+        }
+
+        public async Task<Dictionary<Guid, List<ChildSubjectProgressDto>>> GetRealSubjectProgressForStudentsAsync(List<Guid> studentIds, CancellationToken cancellationToken)
+        {
+            if (studentIds == null || !studentIds.Any())
+                return new Dictionary<Guid, List<ChildSubjectProgressDto>>();
+
+            var progressData = await _context.Classes
+                .Where(c => c.StudentClasses.Any(sc => studentIds.Contains(sc.StudentId) && sc.IsActive && !sc.IsDeleted) && !c.IsDeleted)
+                .SelectMany(c => c.StudentClasses
+                    .Where(sc => studentIds.Contains(sc.StudentId) && sc.IsActive && !sc.IsDeleted)
+                    .Select(sc => new
+                    {
+                        StudentId = sc.StudentId,
+                        SubjectName = c.Subject.Name,
+                        TotalItems = c.Roadmap != null
+                            ? c.Roadmap.Modules.SelectMany(m => m.Homeworks).Count()
+                            : 0,
+                        CompletedItems = c.Roadmap != null
+                            ? _context.StudentSubmissions.Count(sub => 
+                                sub.StudentId == sc.StudentId && 
+                                !sub.IsDeleted &&
+                                _context.Homework.Any(h => h.Id == sub.HomeworkId && h.Module.RoadmapId == c.RoadmapId))
+                            : 0
+                    }))
+                .ToListAsync(cancellationToken);
+
+            var grouped = progressData
+                .GroupBy(x => x.StudentId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.GroupBy(x => x.SubjectName)
+                          .Select(sg => new ChildSubjectProgressDto
+                          {
+                              subject = sg.Key ?? "Unknown",
+                              progress_percentage = sg.Sum(x => x.TotalItems) == 0 ? 0 :
+                                  (int)Math.Round((double)sg.Sum(x => x.CompletedItems) / sg.Sum(x => x.TotalItems) * 100)
+                          })
+                          .ToList()
+                );
+
+            return grouped;
         }
     }
 }

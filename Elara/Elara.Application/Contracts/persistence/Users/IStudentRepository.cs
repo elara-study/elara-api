@@ -1,4 +1,6 @@
+using Elara.Application.Features.Users.Parents.Queries.GetParentChildren;
 using Elara.Application.Models.Users;
+using Elara.Domain.Entities.JunctionTables;
 using Elara.Domain.Entities.Users;
 
 namespace Elara.Application.Contracts.Persistence.Users
@@ -22,5 +24,8 @@ namespace Elara.Application.Contracts.Persistence.Users
         Task<int> GetCompletedHomeworkInModuleAsync(Guid studentId, int moduleId, CancellationToken cancellationToken = default);
         Task<IReadOnlyList<TodayQuizSessionReadModel>> GetTodayQuizSessionsAsync(Guid studentId, DateTime todayStart, CancellationToken cancellationToken = default);
         Task<IReadOnlyList<EnrolledClassReadModel>> GetStudentEnrolledClassesAsync(Guid studentId, CancellationToken cancellationToken = default);
+        Task<List<StudentParent>> GetParentChildrenWithStatsAsync(string parentId, CancellationToken cancellationToken);
+        Task<Dictionary<Guid, double>> GetLatestCompletionRatesAsync(List<Guid> studentIds, CancellationToken cancellationToken);
+        Task<Dictionary<Guid, List<ChildSubjectProgressDto>>> GetRealSubjectProgressForStudentsAsync(List<Guid> studentIds, CancellationToken cancellationToken);
     }
 }
