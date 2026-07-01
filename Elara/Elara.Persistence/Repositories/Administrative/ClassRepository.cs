@@ -19,7 +19,6 @@ namespace Elara.Persistence.Repositories.Administrative
             return await _context.Classes
                 .Where(c => c.TeacherId == teacherId && !c.IsDeleted)
                 .Include(c => c.Subject)
-                .Include(c => c.StudentClasses)
                 .ToListAsync(cancellationToken);
         }
 
@@ -66,7 +65,7 @@ namespace Elara.Persistence.Repositories.Administrative
                         .FirstOrDefault() ?? string.Empty,
                     Stats = new GetStudentGroupStats
                     {
-                        StudentsCount = c.StudentClasses.Count(s => s.IsActive),
+                        StudentsCount = c.StudentClasses.Count(s => s.IsActive && s.Student.IsActive),
                         Lessons = new GetStudentGroupLessons
                         {
                             Total = c.Roadmap == null
@@ -102,7 +101,7 @@ namespace Elara.Persistence.Repositories.Administrative
                     SubjectName = c.Subject.Name,
                     Grade = (int)c.Level,
                     c.TeacherId,
-                    StudentsCount = c.StudentClasses.Count(sc => sc.IsActive),
+                    StudentsCount = c.StudentClasses.Count(sc => sc.IsActive && sc.Student.IsActive),
                     TotalLessons = c.Roadmap == null
                         ? 0
                         : c.Roadmap.Modules.SelectMany(t => t.Homeworks).Count()
@@ -147,14 +146,14 @@ namespace Elara.Persistence.Repositories.Administrative
         public async Task<int> GetStudentsCountAsync(int classId, CancellationToken cancellationToken = default)
         {
             return await _context.StudentClasses
-                .Where(sc => sc.ClassId == classId)
+                .Where(sc => sc.ClassId == classId && sc.IsActive && sc.Student.IsActive)
                 .CountAsync(cancellationToken);
         }
 
         public async Task<bool> IsStudentJoinedClassAsync(Guid studentId, int classId, CancellationToken cancellationToken = default)
         {
             return await _context.StudentClasses
-                .AnyAsync(sc => sc.StudentId == studentId && sc.ClassId == classId && sc.IsActive, cancellationToken);
+                .AnyAsync(sc => sc.StudentId == studentId && sc.ClassId == classId && !sc.IsDeleted, cancellationToken);
         }
 
         public async Task JoinClassAsync(Guid studentId, int classId, CancellationToken cancellationToken = default)
@@ -233,7 +232,8 @@ namespace Elara.Persistence.Repositories.Administrative
             var query = from sc in _context.StudentClasses
                         join c in _context.Classes on sc.ClassId equals c.Id
                         join u in _context.Users on sc.StudentId equals u.Id
-                        where c.PublicId == classPublicId && c.TeacherId == teacherId && !c.IsDeleted && sc.IsActive
+                        join s in _context.Students on sc.StudentId equals s.Id
+                        where c.PublicId == classPublicId && c.TeacherId == teacherId && !c.IsDeleted && sc.IsActive && s.IsActive
                         select new GetGroupStudentsResponse
                         {
                             Id = sc.StudentId,
@@ -249,7 +249,7 @@ namespace Elara.Persistence.Repositories.Administrative
         public async Task<List<Guid>> GetStudentIdsByClassIdAsync(int classId, CancellationToken cancellationToken = default)
         {
             return await _context.StudentClasses
-                .Where(sc => sc.ClassId == classId && sc.IsActive)
+                .Where(sc => sc.ClassId == classId && sc.IsActive && sc.Student.IsActive)
                 .Select(sc => sc.StudentId)
                 .ToListAsync(cancellationToken);
         }
@@ -261,7 +261,7 @@ namespace Elara.Persistence.Repositories.Administrative
 
             if (studentClass != null)
             {
-                studentClass.IsActive = false;
+                _context.StudentClasses.Remove(studentClass);
                 await _context.SaveChangesAsync(cancellationToken);
             }
         }

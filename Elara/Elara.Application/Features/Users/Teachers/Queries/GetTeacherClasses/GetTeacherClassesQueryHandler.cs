@@ -24,8 +24,18 @@ namespace Elara.Application.Features.Users.Teachers.Queries.GetTeacherClasses
                 ?? throw new UnauthorizedAccessException("User is not authenticated.");
 
             var classes = await _classRepository.GetClassesByTeacherIdAsync(teacherId, cancellationToken);
+            var response = _mapper.Map<List<GetTeacherClassesResponse>>(classes);
 
-            return _mapper.Map<List<GetTeacherClassesResponse>>(classes);
+            foreach (var item in response)
+            {
+                var classEntity = classes.FirstOrDefault(c => c.PublicId == item.Id);
+                if (classEntity != null)
+                {
+                    item.StudentsCount = await _classRepository.GetStudentsCountAsync(classEntity.Id, cancellationToken);
+                }
+            }
+
+            return response;
         }
     }
 }

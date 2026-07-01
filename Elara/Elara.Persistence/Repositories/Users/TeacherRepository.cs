@@ -129,7 +129,7 @@ namespace Elara.Persistence.Repositories.Users
         {
             return await _context.Classes
                 .Where(c => c.TeacherId == teacherId && !c.IsDeleted)
-                .Include(c => c.StudentClasses)
+                .Include(c => c.StudentClasses.Where(sc => sc.IsActive))
                 .ToListAsync(cancellationToken);
         }
 
