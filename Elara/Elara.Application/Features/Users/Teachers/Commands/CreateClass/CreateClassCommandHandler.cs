@@ -56,13 +56,6 @@ namespace Elara.Application.Features.Users.Teachers.Commands.CreateClass
                     throw new UnauthorizedAccessException("You can only use your own roadmaps.");
                 }
 
-                if (roadmap.SubjectId != teacher.SubjectId)
-                {
-                    throw new InvalidOperationException(
-                        $"The roadmap '{roadmap.Name}' is for a different subject. " +
-                        $"Your subject: {teacher.Subject.Name}, Roadmap subject ID: {roadmap.SubjectId}");
-                }
-
                 if ((int)roadmap.Grade != request.Grade)
                 {
                     throw new InvalidOperationException(
