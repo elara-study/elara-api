@@ -1,9 +1,8 @@
 using Asp.Versioning;
 using Elara.Application.Common;
 using Elara.Application.Features.ChatAnalysisReport.Queries.GetParentChildInsights;
-using Elara.API.Controllers.Requests;
 using Elara.Application.Features.ChatAnalysisReport.Queries.GetSingleChildInsights;
-using Elara.Application.Features.Notifications.Commands.MarkAllAsRead;
+using Elara.API.Controllers.Requests;
 using Elara.Application.Features.Users.Parents.Queries.GetParentNotifications;
 using Elara.Application.Features.Users.Parents.Queries.GetParentDashboard;
 using Elara.Application.Features.Users.Parents.Queries.GetParentChildren;
@@ -227,20 +226,6 @@ namespace Elara.API.Controllers
             {
                 Message = "Notifications retrieved successfully.",
                 Data = result
-            });
-        }
-
-        [HttpPut("/api/v{version:apiVersion}/alerts/mark-all-read")]
-        [ProducesResponseType(typeof(BaseResponse<object>), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> MarkAllParentNotificationsAsRead(CancellationToken cancellationToken)
-        {
-            var userId = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : Guid.Empty;
-            await _mediator.Send(new MarkAllAsReadCommand(userId), cancellationToken);
-            return Ok(new BaseResponse<object>
-            {
-                Message = "All notifications marked as read.",
-                Data = new { }
             });
         }
     }

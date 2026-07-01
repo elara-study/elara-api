@@ -79,34 +79,30 @@ namespace Elara.Application.Features.Users.Parents.Queries.GetParentChildren
 
                 foreach (var relation in activeRelations)
                 {
-                    var child = relation.Student;
-                    if (child == null) continue;
-
-                    var profile = profiles.GetValueOrDefault(child.Id);
-                    var name = profile?.Name ?? child.Id.ToString();
+                    var profile = profiles.GetValueOrDefault(relation.StudentId);
+                    var name = profile?.Name ?? relation.StudentId.ToString();
 
                     // Get gamification level
                     StudentGamification.GetRemainingXpToNextLevel(
-                        child.TotalXP,
+                        relation.TotalXP,
                         out var currentLevel,
                         out _,
                         out _);
 
-                    var lessonsCompleted = child.QuizSessions
-                        .Count(s => s.Status == QuizSessionStatus.Completed && !s.IsDeleted);
+                    var lessonsCompleted = relation.CompletedLessonsCount;
 
-                    var realSubjectProgress = realProgressMap.GetValueOrDefault(child.Id) ?? new List<ChildSubjectProgressDto>();
+                    var realSubjectProgress = realProgressMap.GetValueOrDefault(relation.StudentId) ?? new List<ChildSubjectProgressDto>();
 
                     response.my_children.Add(new MyChildDto
                     {
-                        id = child.Id.ToString(),
+                        id = relation.StudentId.ToString(),
                         name = name,
-                        grade = (int)child.GradeLevel,
+                        grade = (int)relation.GradeLevel,
                         level = currentLevel,
                         stats = new ChildStatsDto
                         {
-                            day_streak = child.CurrentStreak,
-                            total_xp = child.TotalXP,
+                            day_streak = relation.CurrentStreak,
+                            total_xp = relation.TotalXP,
                             lessons_completed = lessonsCompleted
                         },
                         subject_progress = realSubjectProgress

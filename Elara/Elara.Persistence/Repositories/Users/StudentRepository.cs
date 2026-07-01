@@ -3,6 +3,7 @@ using Elara.Application.Features.Users.Parents.Queries.GetParentChildren;
 using Elara.Application.Models.Users;
 using Elara.Domain.Entities.JunctionTables;
 using Elara.Domain.Entities.Users;
+using Elara.Domain.Entities.Submissions;
 using Elara.Domain.Enums;
 using Elara.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -294,21 +295,23 @@ namespace Elara.Persistence.Repositories.Users
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<StudentParent>> GetParentChildrenWithStatsAsync(string parentId, CancellationToken cancellationToken)
+        public async Task<List<StudentParentWithStatsDto>> GetParentChildrenWithStatsAsync(string parentId, CancellationToken cancellationToken)
         {
             var parentGuid = Guid.Parse(parentId);
 
             return await _context.StudentParents
-                .Include(sp => sp.Student)
-                    .ThenInclude(s => s.QuizSessions)
-                .Include(sp => sp.Student)
-                    .ThenInclude(s => s.StudentClasses)
-                        .ThenInclude(sc => sc.Class)
-                            .ThenInclude(c => c.Roadmap)
-                                .ThenInclude(r => r.Modules)
-                                    .ThenInclude(m => m.Homeworks)
                 .Where(sp => sp.ParentId == parentGuid && !sp.IsDeleted)
-                .AsSplitQuery() 
+                .Select(sp => new StudentParentWithStatsDto
+                {
+                    Id = sp.Id,
+                    StudentId = sp.StudentId,
+                    Status = sp.Status,
+                    CreatedAt = sp.CreatedAt,
+                    GradeLevel = sp.Student.GradeLevel,
+                    TotalXP = sp.Student.TotalXP,
+                    CurrentStreak = sp.Student.CurrentStreak,
+                    CompletedLessonsCount = sp.Student.QuizSessions.Count(s => s.Status == QuizSessionStatus.Completed && !s.IsDeleted)
+                })
                 .ToListAsync(cancellationToken);
         }
 
@@ -372,6 +375,62 @@ namespace Elara.Persistence.Repositories.Users
                 );
 
             return grouped;
+        }
+
+        public async Task<Dictionary<Guid, ChildDashboardStatsDto>> GetChildrenDashboardStatsAsync(List<Guid> studentIds, CancellationToken cancellationToken)
+        {
+            if (studentIds == null || !studentIds.Any())
+                return new Dictionary<Guid, ChildDashboardStatsDto>();
+
+            var statsList = await _context.Students
+                .Where(s => studentIds.Contains(s.Id))
+                .Select(s => new
+                {
+                    StudentId = s.Id,
+                    TotalLessons = s.StudentClasses
+                        .Where(sc => sc.IsActive && !sc.IsDeleted && !sc.Class.IsDeleted)
+                        .Select(sc => sc.Class.Roadmap == null 
+                            ? 0 
+                            : sc.Class.Roadmap.Modules.SelectMany(m => m.Homeworks).Count())
+                        .Sum(),
+                    CompletedLessons = s.QuizSessions
+                        .Count(qs => qs.Status == QuizSessionStatus.Completed && !qs.IsDeleted)
+                })
+                .ToListAsync(cancellationToken);
+
+            return statsList.ToDictionary(
+                x => x.StudentId,
+                x => new ChildDashboardStatsDto
+                {
+                    TotalLessons = x.TotalLessons,
+                    CompletedLessons = x.CompletedLessons
+                });
+        }
+
+        public async Task<List<StudentSubmission>> GetRecentSubmissionsForStudentsAsync(List<Guid> studentIds, int count, CancellationToken cancellationToken)
+        {
+            if (studentIds == null || !studentIds.Any())
+                return new List<StudentSubmission>();
+
+            return await _context.StudentSubmissions
+                .AsNoTracking()
+                .Where(s => studentIds.Contains(s.StudentId))
+                .OrderByDescending(s => s.CreatedAt)
+                .Take(count)
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<QuizSession>> GetRecentCompletedQuizSessionsForStudentsAsync(List<Guid> studentIds, int count, CancellationToken cancellationToken)
+        {
+            if (studentIds == null || !studentIds.Any())
+                return new List<QuizSession>();
+
+            return await _context.QuizSessions
+                .AsNoTracking()
+                .Where(qs => studentIds.Contains(qs.StudentId) && qs.Status == QuizSessionStatus.Completed && !qs.IsDeleted)
+                .OrderByDescending(qs => qs.CompletedAt ?? qs.CreatedAt)
+                .Take(count)
+                .ToListAsync(cancellationToken);
         }
     }
 }

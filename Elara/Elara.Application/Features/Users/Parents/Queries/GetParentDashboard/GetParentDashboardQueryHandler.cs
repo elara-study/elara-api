@@ -1,11 +1,8 @@
 using Elara.Application.Common.Interfaces;
 using Elara.Application.Contracts.Identity;
 using Elara.Application.Contracts.Persistence;
-using Elara.Application.Contracts.Persistence.Administrative;
 using Elara.Application.Contracts.Persistence.Users;
 using Elara.Domain.Entities.Educational;
-using Elara.Domain.Entities.Submissions;
-using Elara.Domain.Enums;
 using MediatR;
 
 namespace Elara.Application.Features.Users.Parents.Queries.GetParentDashboard
@@ -13,9 +10,6 @@ namespace Elara.Application.Features.Users.Parents.Queries.GetParentDashboard
     public class GetParentDashboardQueryHandler : IRequestHandler<GetParentDashboardQuery, ParentDashboardDto>
     {
         private readonly IStudentRepository _studentRepository;
-        private readonly IClassRepository _classRepository;
-        private readonly IAsyncRepository<StudentSubmission, int> _submissionRepository;
-        private readonly IAsyncRepository<QuizSession, int> _quizSessionRepository;
         private readonly IAsyncRepository<Homework, int> _homeworkRepository;
         private readonly IAsyncRepository<Module, int> _moduleRepository;
         private readonly IIdentityService _identityService;
@@ -23,18 +17,12 @@ namespace Elara.Application.Features.Users.Parents.Queries.GetParentDashboard
 
         public GetParentDashboardQueryHandler(
             IStudentRepository studentRepository,
-            IClassRepository classRepository,
-            IAsyncRepository<StudentSubmission, int> submissionRepository,
-            IAsyncRepository<QuizSession, int> quizSessionRepository,
             IAsyncRepository<Homework, int> homeworkRepository,
             IAsyncRepository<Module, int> moduleRepository,
             IIdentityService identityService,
             ICurrentUserService currentUserService)
         {
             _studentRepository = studentRepository;
-            _classRepository = classRepository;
-            _submissionRepository = submissionRepository;
-            _quizSessionRepository = quizSessionRepository;
             _homeworkRepository = homeworkRepository;
             _moduleRepository = moduleRepository;
             _identityService = identityService;
@@ -65,6 +53,8 @@ namespace Elara.Application.Features.Users.Parents.Queries.GetParentDashboard
             var profiles = await _identityService.GetUserProfilesByIdsAsync(childIds, cancellationToken);
             var images = await _identityService.GetUserImagesByIdsAsync(childIds, cancellationToken);
 
+            var dashboardStatsMap = await _studentRepository.GetChildrenDashboardStatsAsync(childIds, cancellationToken);
+
             var totalCompletionPercentage = 0;
             var totalAttendancePercentage = 0;
 
@@ -74,12 +64,9 @@ namespace Elara.Application.Features.Users.Parents.Queries.GetParentDashboard
                 var imageUrl = images.GetValueOrDefault(child.Id, string.Empty);
                 var name = profile?.Name ?? child.Id.ToString();
           
-                var studentClasses = await _classRepository.GetStudentGroupsByStudentIdAsync(child.Id, cancellationToken);
-                var totalLessons = studentClasses.Sum(c => c.Stats.Lessons.Total);
-                
-                var lessonsCompleted = await _quizSessionRepository.CountAsync(
-                    s => s.StudentId == child.Id && s.Status == QuizSessionStatus.Completed && !s.IsDeleted, 
-                    cancellationToken);
+                var stats = dashboardStatsMap.GetValueOrDefault(child.Id);
+                var totalLessons = stats?.TotalLessons ?? 0;
+                var lessonsCompleted = stats?.CompletedLessons ?? 0;
 
                 var completionPercentage = totalLessons > 0 
                     ? (int)Math.Round((double)lessonsCompleted / totalLessons * 100) 
@@ -115,16 +102,9 @@ namespace Elara.Application.Features.Users.Parents.Queries.GetParentDashboard
                 avg_attendance = (int)Math.Round((double)totalAttendancePercentage / children.Count)
             };
 
-            var activities = new List<RecentActivityDto>();
+            var tempActivities = new List<(DateTime Date, RecentActivityDto Dto)>();
 
-            var allSubmissions = await _submissionRepository.FindAsync(
-                s => childIds.Contains(s.StudentId), 
-                cancellationToken);
-
-            var recentSubmissions = allSubmissions
-                .OrderByDescending(s => s.CreatedAt)
-                .Take(5)
-                .ToList();
+            var recentSubmissions = await _studentRepository.GetRecentSubmissionsForStudentsAsync(childIds, 5, cancellationToken);
 
             if (recentSubmissions.Any())
             {
@@ -138,25 +118,21 @@ namespace Elara.Application.Features.Users.Parents.Queries.GetParentDashboard
                     var childName = profile?.Name ?? "Child";
                     var hw = homeworkMap.GetValueOrDefault(sub.HomeworkId);
 
-                    activities.Add(new RecentActivityDto
-                    {
-                        id = $"act_sub_{sub.Id}",
-                        type = "homework_submission",
-                        title = "Homework Submission",
-                        description = $"{childName} submitted {hw?.Title ?? "Homework"}",
-                        time_ago = GetTimeAgo(sub.CreatedAt)
-                    });
+                    tempActivities.Add((
+                        sub.CreatedAt,
+                        new RecentActivityDto
+                        {
+                            id = $"act_sub_{sub.Id}",
+                            type = "homework_submission",
+                            title = "Homework Submission",
+                            description = $"{childName} submitted {hw?.Title ?? "Homework"}",
+                            time_ago = GetTimeAgo(sub.CreatedAt)
+                        }
+                    ));
                 }
             }
 
-            var allSessions = await _quizSessionRepository.FindAsync(
-                s => childIds.Contains(s.StudentId) && s.Status == QuizSessionStatus.Completed && !s.IsDeleted, 
-                cancellationToken);
-
-            var recentSessions = allSessions
-                .OrderByDescending(s => s.CompletedAt ?? s.CreatedAt)
-                .Take(5)
-                .ToList();
+            var recentSessions = await _studentRepository.GetRecentCompletedQuizSessionsForStudentsAsync(childIds, 5, cancellationToken);
 
             if (recentSessions.Any())
             {
@@ -175,18 +151,25 @@ namespace Elara.Application.Features.Users.Parents.Queries.GetParentDashboard
                     var completedTime = session.CompletedAt ?? session.CreatedAt;
                     var mod = session.ModuleId.HasValue ? moduleMap.GetValueOrDefault(session.ModuleId.Value) : null;
 
-                    activities.Add(new RecentActivityDto
-                    {
-                        id = $"act_session_{session.Id}",
-                        type = "lesson_completion",
-                        title = "Lesson Completion",
-                        description = $"{childName} completed {mod?.Title ?? "Module"}",
-                        time_ago = GetTimeAgo(completedTime)
-                    });
+                    tempActivities.Add((
+                        completedTime,
+                        new RecentActivityDto
+                        {
+                            id = $"act_session_{session.Id}",
+                            type = "lesson_completion",
+                            title = "Lesson Completion",
+                            description = $"{childName} completed {mod?.Title ?? "Module"}",
+                            time_ago = GetTimeAgo(completedTime)
+                        }
+                    ));
                 }
             }
 
-            response.recent_activity = activities.Take(5).ToList();
+            response.recent_activity = tempActivities
+                .OrderByDescending(a => a.Date)
+                .Take(5)
+                .Select(a => a.Dto)
+                .ToList();
 
             return response;
         }

@@ -1,7 +1,7 @@
 using Elara.Application.Features.Users.Parents.Queries.GetParentChildren;
 using Elara.Application.Models.Users;
-using Elara.Domain.Entities.JunctionTables;
 using Elara.Domain.Entities.Users;
+using Elara.Domain.Entities.Submissions;
 
 namespace Elara.Application.Contracts.Persistence.Users
 {
@@ -24,8 +24,11 @@ namespace Elara.Application.Contracts.Persistence.Users
         Task<int> GetCompletedHomeworkInModuleAsync(Guid studentId, int moduleId, CancellationToken cancellationToken = default);
         Task<IReadOnlyList<TodayQuizSessionReadModel>> GetTodayQuizSessionsAsync(Guid studentId, DateTime todayStart, CancellationToken cancellationToken = default);
         Task<IReadOnlyList<EnrolledClassReadModel>> GetStudentEnrolledClassesAsync(Guid studentId, CancellationToken cancellationToken = default);
-        Task<List<StudentParent>> GetParentChildrenWithStatsAsync(string parentId, CancellationToken cancellationToken);
+        Task<List<StudentParentWithStatsDto>> GetParentChildrenWithStatsAsync(string parentId, CancellationToken cancellationToken);
         Task<Dictionary<Guid, double>> GetLatestCompletionRatesAsync(List<Guid> studentIds, CancellationToken cancellationToken);
         Task<Dictionary<Guid, List<ChildSubjectProgressDto>>> GetRealSubjectProgressForStudentsAsync(List<Guid> studentIds, CancellationToken cancellationToken);
+        Task<Dictionary<Guid, ChildDashboardStatsDto>> GetChildrenDashboardStatsAsync(List<Guid> studentIds, CancellationToken cancellationToken);
+        Task<List<StudentSubmission>> GetRecentSubmissionsForStudentsAsync(List<Guid> studentIds, int count, CancellationToken cancellationToken);
+        Task<List<QuizSession>> GetRecentCompletedQuizSessionsForStudentsAsync(List<Guid> studentIds, int count, CancellationToken cancellationToken);
     }
 }
